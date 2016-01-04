@@ -1,0 +1,19 @@
+# # # # AR5 Models to download
+
+# CCSM4
+# CNRM-CM5
+# GFDL-CM3
+# GISS-E2-R
+# IPSL-CM5A-LR
+# MPI-ESM-LR
+# MRI-CGCM3
+
+# # # # # # # # # # #																							
+
+# variables are rsds and hur
+
+
+
+137.229.94.86
+
+																														
