@@ -55,3 +55,8 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# DS_Store from SublimeText
+*.DS_Store
+*._.DS_Store
+
