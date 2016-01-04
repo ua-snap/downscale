@@ -4,7 +4,6 @@
 import rasterio, xray, os, glob
 import numpy as np
 import pandas as pd
-import numpy as np
 
 class DownscalingUtils( object ):
 	def write_gtiff( self, output_arr, template_meta, output_filename, compress=True ):
@@ -197,7 +196,7 @@ class DownscalingUtils( object ):
 						np.array(anom_df['lat'].tolist()), \
 						np.array(anom_df['anom'].tolist()), grid=meshgrid_tuple, method='cubic' ) 
 
-		src_nodata = -9999.0 # nodata
+		# src_nodata = -9999.0 # nodata
 		interp_arr[ np.isnan( interp_arr ) ] = src_nodata
 		dat, lons = self.shiftgrid( 180., interp_arr, lons_pcll, start=False )
 		output_arr = np.empty_like( template_raster.read( 1 ) )
@@ -262,8 +261,9 @@ class DownscalingUtils( object ):
 		# both files need to be masked here since we use a RIDICULOUS oob value...
 		# for both tas and cld, values less than -200 are out of the range of acceptable values and it
 		# grabs the -3.4... mask values. so lets mask using this
-		baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
-		anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
+
+		# baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
+		# anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
 
 		output_arr = operation_switch[ downscaling_operation ]( baseline_arr, anom_arr )
 		output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ]
@@ -301,6 +301,7 @@ class DownscaleAR5( object ):
 		self.utils = DownscalingUtils()
 		self.post_downscale_function = post_downscale_function
 		self.src_crs = src_crs
+		self.write_anomalies = write_anomalies
 
 	@staticmethod
 	def standardized_fn_to_vars( fn ):
@@ -339,7 +340,6 @@ class DownscaleAR5( object ):
 			# climatology
 			climatology = ds.loc[ {'time':slice(self.climatology_begin,self.climatology_end)} ]
 			climatology = climatology[ variable ].groupby( 'time.month' ).mean( 'time' )
-
 		else:
 			NameError( 'ERROR: must have both ar5_modeled and ar5_historical, or just ar5_historical' )
 
@@ -433,7 +433,6 @@ class DownscaleAR5( object ):
 			os.makedirs( downscaled_path )
 
 		#  * * * * * * * * * *
-
 		# calc the anomalies
 		anomalies = self._calc_anomalies()
 		anomalies_pcll, lons_pcll = self.utils.shiftgrid( 0., anomalies, anomalies.lon.data ) # grabs lons from the xray ds
@@ -489,7 +488,7 @@ class DownscaleAR5( object ):
 
 		# run anomalies interpolation and downscaling in a single go.
 		# ( anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, src_transform, src_crs, src_nodata, output_filename, write_anomalies ) 	
-		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list, nproc=self.ncores )
+		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list[:1], nproc=self.ncores ) # CHANGED!!
 		return 'downscaling complete. files output at: %s' % base_path
 
 if __name__ == '__main__':
@@ -507,4 +506,3 @@ if __name__ == '__main__':
 	# EXAMPLE RUN -- TESTING
 	down = DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, ncores=32) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
 	output = down.downscale_ar5_ts()
-
