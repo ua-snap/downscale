@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/ua-snap/downscale.svg?label=ready&title=Ready)](http://waffle.io/ua-snap/downscale)
 downscale
 ---------
 
