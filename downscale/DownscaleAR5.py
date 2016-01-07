@@ -152,6 +152,37 @@ class DownscalingUtils( object ):
 		zi = np.flipud( zi.astype( output_dtype ) )
 		return zi
 	# make this a simple regrid command instead of interpolating the anomalies
+	# I think this should be something that is broken into separate functions for:
+	# 1. interpolation to a new grid
+	# --> USE XYZ->GRID
+
+	# 2. reprojection to the AKCAN extent
+
+	isnt this just rasterio.warp.reproject?
+
+	# def regrid( self, src_arr, dst_arr, src_transform, src_crs, src_nodata, \
+	# 	dst_transform, dst_crs, dst_nodata, dst_mask, method='bilinear', *args, **kwargs ):
+	# 	'''
+
+	# 	'''
+	# 	method_switch = {'average' : RESAMPLING.average
+	# 					'cubic' : RESAMPLING.cubic
+	# 					'lanczos' : RESAMPLING.lanczos
+	# 					'bilinear' : RESAMPLING.bilinear
+	# 					'cubic_spline' : RESAMPLING.cubic_spline
+	# 					'mode' : RESAMPLING.mode
+	# 					'count' : RESAMPLING.count
+	# 					'nearest' : RESAMPLING.nearest }
+	# 	resampling_method = method_switch[ method ]
+	# 	reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+	# 		dst_transform=template_meta['affine'], dst_crs=template_meta['crs'],\
+	# 		dst_nodata=None, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
+
+
+
+
+	# 3. * any other masking and stuff
+	# 4. write_anomalies should be its own function
 	def interpolate_anomalies( self, anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, \
 		src_transform, src_crs, src_nodata, output_filename, write_anomalies, *args, **kwargs ):
 		'''
@@ -196,9 +227,13 @@ class DownscalingUtils( object ):
 						np.array(anom_df['lat'].tolist()), \
 						np.array(anom_df['anom'].tolist()), grid=meshgrid_tuple, method='cubic' ) 
 
-		# src_nodata = -9999.0 # nodata
 		interp_arr[ np.isnan( interp_arr ) ] = src_nodata
-		dat, lons = self.shiftgrid( 180., interp_arr, lons_pcll, start=False )
+
+		print np.unique(interp_arr)
+		print anom_df.anom.unique()
+
+		# shift back to greenwich centering for reprojection since that seems a more stable transform
+		dat, lons = self.shiftgrid( 180., interp_arr, lons_pcll, start=False ) # DangerZone
 		output_arr = np.empty_like( template_raster.read( 1 ) )
 
 		reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
@@ -208,12 +243,86 @@ class DownscalingUtils( object ):
 		output_arr = np.ma.masked_where( template_raster.read_masks( 1 ) == 0, output_arr )
 		output_arr.fill_value = template_meta[ 'nodata' ]
 		output_arr = output_arr.filled()
+
 		if write_anomalies == True:
 			out = self.write_gtiff( output_arr, template_meta, output_filename, compress=True )
 		elif write_anomalies == False:
 			out = ( output_arr, template_meta )
 		else:
-			AttributeError( 'interpolate_anomalies: write_anomalies can be True or False only.')
+			AttributeError( 'interpolate_anomalies: write_anomalies can be True or False only.' )
+		return out
+	def interpolate_anomalies2( self, anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, \
+		src_transform, src_crs, src_nodata, output_filename, write_anomalies, *args, **kwargs ):
+		'''
+		run the interpolation to a grid, and reprojection / resampling to the Alaska / Canada rasters
+		extent, resolution, origin (template_raster).
+
+		This function is intended to be used to run a pathos.multiprocessing Pool's map function
+		across a list of pre-computed arguments.
+
+		ARGUMENTS:
+		---------
+		anom_df = []
+		meshgrid_tuple = [] 
+		template_raster_fn = [] 
+		lons_pcll = [] 
+		src_transform = [] 
+		src_crs = [] 
+		src_nodata = [] 
+		output_filename = [] 
+		write_anomalies = [] 
+				
+		RETURNS:
+		-------
+
+		if write_anomalies == True: [str] path to the output filename generated
+
+		if write_anomalies == False: [tuple] interpolated NumPy ndarray representing the 
+			interpolated anomalies and the rasterio-style metadata dictionary describing
+			the newly generated raster.
+
+		'''
+		from rasterio.warp import reproject, RESAMPLING
+		import affine
+
+		template_raster = rasterio.open( template_raster_fn )
+		template_meta = template_raster.meta
+		if 'transform' in template_meta.keys():
+			template_meta.pop( 'transform' )
+		# update some meta configs
+		template_meta.update( compress='lzw', crs={'init':'epsg:3338'} )
+
+		# interp_arr = self.xyz_to_grid( np.array(anom_df['lon'].tolist()), \
+		# 				np.array(anom_df['lat'].tolist()), \
+		# 				np.array(anom_df['anom'].tolist()), grid=meshgrid_tuple, method='cubic' ) 
+
+		# interp_arr[ np.isnan( interp_arr ) ] = src_nodata
+
+		# print np.unique(interp_arr)
+		# print anom_df.anom.unique()
+
+		# shift back to greenwich centering for reprojection since that seems a more stable transform
+		dat, lons = self.shiftgrid( 180., anom_df, lons_pcll, start=False ) # DangerZone
+
+		# new
+		a,b,c,d,e,f,g,h,i = src_transform
+		src_transform = affine.Affine( a,b,-180.0,d,e,180.0 )
+		output_arr = np.empty_like( template_raster.read( 1 ) )
+
+		reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+					dst_transform=template_meta['affine'], dst_crs=template_meta['crs'],\
+					dst_nodata=None, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
+		# mask it with the internal mask in the template raster, where 0 is oob.
+		output_arr = np.ma.masked_where( template_raster.read_masks( 1 ) == 0, output_arr )
+		output_arr.fill_value = template_meta[ 'nodata' ]
+		output_arr = output_arr.filled()
+
+		if write_anomalies == True:
+			out = self.write_gtiff( output_arr, template_meta, output_filename, compress=True )
+		elif write_anomalies == False:
+			out = ( output_arr, template_meta )
+		else:
+			AttributeError( 'interpolate_anomalies: write_anomalies can be True or False only.' )
 		return out
 	def downscale( self, anom_arr, baseline_arr, output_filename, \
 		downscaling_operation, meta, post_downscale_function, *args, **kwargs ):
@@ -262,8 +371,8 @@ class DownscalingUtils( object ):
 		# for both tas and cld, values less than -200 are out of the range of acceptable values and it
 		# grabs the -3.4... mask values. so lets mask using this
 
-		# baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
-		# anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
+		baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
+		anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
 
 		output_arr = operation_switch[ downscaling_operation ]( baseline_arr, anom_arr )
 		output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ]
@@ -394,7 +503,7 @@ class DownscaleAR5( object ):
 		output_filename = args_dict[ 'output_filename' ]
 		args_dict.update( output_filename=output_filename.replace( 'downscaled', 'anom' ) )
 
-		anom = self.utils.interpolate_anomalies( **args_dict )
+		anom = self.utils.interpolate_anomalies2( **args_dict )
 
 		if isinstance( anom, basestring ):
 			rst = rasterio.open( anom )
@@ -435,20 +544,24 @@ class DownscaleAR5( object ):
 		#  * * * * * * * * * *
 		# calc the anomalies
 		anomalies = self._calc_anomalies()
-		anomalies_pcll, lons_pcll = self.utils.shiftgrid( 0., anomalies, anomalies.lon.data ) # grabs lons from the xray ds
+		# anomalies_pcll, lons_pcll = self.utils.shiftgrid( 0., anomalies, anomalies.lon.data ) # grabs lons from the xray ds
 
 		# mesh the lons and lats and unravel them to 1-D
-		lo, la = [ i.ravel() for i in np.meshgrid( lons_pcll, anomalies.lat ) ]
+		lo, la = [ i.ravel() for i in np.meshgrid( anomalies.lon, anomalies.lat ) ]
 		
 		# convert into pandas.DataFrame and drop all the NaNs -- land-only dataset
-		anom_df_list = [ pd.DataFrame({ 'anom':i.ravel(), 'lat':la, 'lon':lo }).dropna( axis=0, how='any' ) for i in anomalies_pcll ]
-		xi, yi = np.meshgrid( lons_pcll, anomalies.lat.data )
+		anom_df_list = [ pd.DataFrame({ 'anom':i.ravel(), 'lat':la, 'lon':lo }).dropna( axis=0, how='any' ) for i in anomalies.data ]
+		xi, yi = np.meshgrid( anomalies.lon.data, anomalies.lat.data )
+
+		global anom_df_list
 
 		# some metadata
 		src_transform = self._calc_ar5_affine()
+		global src_transform
+
 		# argument setup -- HARDWIRED
-		src_nodata = None # DangerTown
-		# src_crs = {'init':'epsg:4326'} # DangerTown
+		src_nodata = None # DangerTown™
+		# src_crs = {'init':'epsg:4326'} # DangerTown™
 
 		# output_filenames setup
 		dates = anomalies.time.to_pandas()
@@ -475,7 +588,7 @@ class DownscaleAR5( object ):
 		args_list = [ { 'anom_df':anom_df, 
 						'meshgrid_tuple':(xi, yi), 
 						'template_raster_fn':template_raster_fn, 
-						'lons_pcll':lons_pcll, 
+						'lons_pcll':anomalies.lon.data, 
 						'src_transform':src_transform, 
 						'src_crs':self.src_crs,
 						'src_nodata':src_nodata,
@@ -484,7 +597,8 @@ class DownscaleAR5( object ):
 						'downscaling_operation':downscaling_operation, 
 						'post_downscale_function':self.post_downscale_function,
 						'write_anomalies':self.write_anomalies }
-							for anom_df, out_fn in zip( anom_df_list, output_filenames ) ]
+							for anom_df, out_fn in zip( anomalies.data, output_filenames ) ]
+
 
 		# run anomalies interpolation and downscaling in a single go.
 		# ( anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, src_transform, src_crs, src_nodata, output_filename, write_anomalies ) 	
