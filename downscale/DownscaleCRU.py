@@ -6,6 +6,9 @@
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
 
+from downscale import DownscalingUtils
+import os
+
 class DownscaleCRU( object ):
 	'''
 	methods to downscale the Climatic Research Unit's (CRU) Historical 
@@ -28,7 +31,7 @@ class DownscaleCRU( object ):
 		self.variable = variable
 		self.post_downscale_function = post_downscale_function
 		self.src_crs = src_crs
-		self.utils = DownscalingUtils()
+		self.utils = DownscalingUtils.DownscalingUtils()
 		self.write_anomalies = write_anomalies
 
 	@staticmethod

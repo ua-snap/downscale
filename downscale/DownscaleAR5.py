@@ -7,6 +7,7 @@
 # # #
 
 from downscale import DownscalingUtils
+import os
 
 class DownscaleAR5( object ):
 	def __init__( self, ar5_modeled=None, ar5_historical=None, base_path=None, clim_path=None, climatology_begin='1961', climatology_end='1990', \
@@ -262,12 +263,12 @@ class DownscaleAR5( object ):
 # 	# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 # 	# input args
-# 	ar5_modeled = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/data/prepped/clt_prepped/IPSL-CM5A-LR/clt/clt_Amon_IPSL-CM5A-LR_rcp26_r1i1p1_200601_210012.nc'
-# 	ar5_historical = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/data/prepped/clt_prepped/IPSL-CM5A-LR/clt/clt_Amon_IPSL-CM5A-LR_historical_r1i1p1_185001_200512.nc'
-# 	clim_path = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/cru_october_final/cru_cl20/cld/akcan'
-# 	template_raster_fn = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/templates/tas_mean_C_AR5_GFDL-CM3_historical_01_1860.tif'
-# 	base_path = '/atlas_scratch/malindgren/CMIP5/TEST_AR5'
+	ar5_modeled = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/data/prepped/clt_prepped/IPSL-CM5A-LR/clt/clt_Amon_IPSL-CM5A-LR_rcp26_r1i1p1_200601_210012.nc'
+	ar5_historical = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/data/prepped/clt_prepped/IPSL-CM5A-LR/clt/clt_Amon_IPSL-CM5A-LR_historical_r1i1p1_185001_200512.nc'
+	clim_path = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/cru_october_final/cru_cl20/cld/akcan'
+	template_raster_fn = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/templates/tas_mean_C_AR5_GFDL-CM3_historical_01_1860.tif'
+	base_path = '/atlas_scratch/malindgren/CMIP5/TEST_AR5'
 
-# 	# EXAMPLE RUN -- TESTING
-# 	down = DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
-# 	output = down.downscale_ar5_ts()
+	# EXAMPLE RUN -- TESTING
+	down = DownscaleAR5.DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
+	output = down.downscale_ar5_ts()
