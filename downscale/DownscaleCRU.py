@@ -239,25 +239,3 @@ class DownscaleCRU( object ):
 		# run anomalies interpolation and downscaling in a single go.
 		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list, nproc=self.ncores )
 		return 'downscaling complete. files output at: %s' % self.base_path
-
-# if __name__ == '__main__':
-# 	# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-# 	# example of use of the new DownscaleCRU / DownscalingUtils classes
-# 	# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
-# 	# example of post_downscale_function - pass in at DownscaleCRU()
-# 	def clamp_vals( x ):
-# 		''' clamp the values following the relative humidity downscaling '''
-# 		x[ (x > 100) & (x < 500) ] = 95
-# 		return x
-
-# 	# minimum required arguments
-# 	cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.cld.dat.nc'
-# 	clim_path = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/cru_october_final/cru_cl20/cld/akcan'
-# 	template_raster_fn = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/templates/tas_mean_C_AR5_GFDL-CM3_historical_01_1860.tif'
-# 	base_path = '/atlas_scratch/malindgren/CMIP5/CRU2'
-	
-# 	# run example
-# 	down = DownscaleCRU( cru_ts, clim_path, template_raster_fn, base_path, absolute=False, ncores=32 )
-# 	output = down.downscale_cru_ts()
-
