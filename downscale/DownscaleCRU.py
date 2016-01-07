@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 # # #
 # Downscale CRU Historical TS3.x data to a pre-processed climatology
 #  extent, resolution, reference system

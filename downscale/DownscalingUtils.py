@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 # # # # 
 # the beginnings of a class that will store utiity functions for downscaling
 # these will be called by the individual downscaling scripts or read into the object

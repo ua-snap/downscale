@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 # # #
 # Downscale PCMDI AR5 data to a pre-processed climatology
 #  extent, resolution, reference system
