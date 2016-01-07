@@ -21,7 +21,7 @@ classifiers = [
 		'Programming Language :: Python :: 2.7'
 		]
 
-setup(	name='downscale_cmip5',
+setup(	name='downscale',
 		version='0.1a',
 		description='tool to downscale CMIP5 model outputs for use in regional climate modelling',
 		url='https://github.com/ua-snap/downscale',
