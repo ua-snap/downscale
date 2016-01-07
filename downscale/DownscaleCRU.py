@@ -14,6 +14,8 @@ import rasterio, xray, os
 import numpy as np
 import pandas as pd
 import numpy as np
+# this is the way we need to interact with the package internally
+# from downscale import DownscalingUtils
 
 class DownscalingUtils( object ):
 	def write_gtiff( self, output_arr, template_meta, output_filename, compress=True ):

@@ -1,9 +1,10 @@
 # # # # #
 # Tool to downscale the CMIP5 data from the PCMDI group. 
 # # # # #
-import rasterio, xray, os, glob
+import rasterio, xray, os
 import numpy as np
 import pandas as pd
+import numpy as np
 
 class DownscalingUtils( object ):
 	def write_gtiff( self, output_arr, template_meta, output_filename, compress=True ):
@@ -151,6 +152,8 @@ class DownscalingUtils( object ):
 		zi = griddata( (x, y), z, grid, method=method )
 		zi = np.flipud( zi.astype( output_dtype ) )
 		return zi
+<<<<<<< HEAD
+=======
 	# make this a simple regrid command instead of interpolating the anomalies
 	def interpolate_anomalies( self, anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, \
 		src_transform, src_crs, src_nodata, output_filename, write_anomalies, *args, **kwargs ):
@@ -294,8 +297,9 @@ class DownscalingUtils( object ):
 		else:
 			AttributeError( 'interpolate_anomalies: write_anomalies can be True or False only.' )
 		return out
+>>>>>>> master
 	def downscale( self, anom_arr, baseline_arr, output_filename, \
-		downscaling_operation, meta, post_downscale_function, *args, **kwargs ):
+		downscaling_operation, meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
 		'''
 		downscale an anomaly array with a baseline array from the same period.
 
@@ -336,6 +340,14 @@ class DownscalingUtils( object ):
 		except:
 			AttributeError( 'downscale: incorrect downscaling_operation str' )
 		
+<<<<<<< HEAD
+		# # [ CHECK ] This may be something better to be done before passing to this function
+		# # both files need to be masked here since we use a RIDICULOUS oob value...
+		# # for both tas and cld, values less than -200 are out of the range of acceptable values and it
+		# # grabs the -3.4... mask values. so lets mask using this
+		# baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
+		# anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
+=======
 		# [ CHECK ] This may be something better to be done before passing to this function
 		# both files need to be masked here since we use a RIDICULOUS oob value...
 		# for both tas and cld, values less than -200 are out of the range of acceptable values and it
@@ -343,9 +355,13 @@ class DownscalingUtils( object ):
 
 		baseline_arr = np.ma.masked_where( baseline_arr < -200, baseline_arr )
 		anom_arr = np.ma.masked_where( anom_arr < -200, anom_arr )
+>>>>>>> master
 
 		output_arr = operation_switch[ downscaling_operation ]( baseline_arr, anom_arr )
 		output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ]
+
+		if isinstance(mask, np.ndarray):
+			output_arr[ mask == 1 ] = mask_value
 
 		if post_downscale_function != None:
 			output_arr = post_downscale_function( output_arr )
@@ -361,7 +377,7 @@ class DownscalingUtils( object ):
 
 class DownscaleAR5( object ):
 	def __init__( self, ar5_modeled=None, ar5_historical=None, base_path=None, clim_path=None, climatology_begin='1961', climatology_end='1990', \
-		plev=None, absolute=True, metric='metric', variable=None, ncores=2, post_downscale_function=None, src_crs={'init':'epsg:3338'}, write_anomalies=True, *args, **kwargs ):
+		plev=None, absolute=True, metric='metric', variable=None, ncores=2, post_downscale_function=None, src_crs={'init':'epsg:4326'}, write_anomalies=True, *args, **kwargs ):
 		'''
 		NEW METHODS FOR AR5 DOWNSCALING USING THE NEW
 		API-ECOSYSTEM.
@@ -470,11 +486,52 @@ class DownscaleAR5( object ):
 		'''
 		interpolate anomalies and downscale to the baseline arr
 		'''
+		import rasterio
+		from rasterio.warp import RESAMPLING, reproject
+
+		# unpack some of the args_dict
 		output_filename = args_dict[ 'output_filename' ]
-		args_dict.update( output_filename=output_filename.replace( 'downscaled', 'anom' ) )
+		anom_filename = output_filename.replace( 'downscaled', 'anom' )
 
+		anom_arr = args_dict[ 'anom_arr' ]
+		meshgrid_tuple = args_dict[ 'meshgrid_tuple' ]
+		template_raster_fn = args_dict[ 'template_raster_fn' ]
+		lons_pcll = args_dict[ 'lons_pcll' ]
+		src_transform = args_dict[ 'src_transform' ]
+		src_crs = args_dict[ 'src_crs' ]
+		src_nodata = args_dict[ 'src_nodata' ]
+		write_anomalies = args_dict[ 'write_anomalies' ]
+
+		# read in the template raster
+		template_raster = rasterio.open( template_raster_fn )
+		template_meta = template_raster.meta
+
+		# rotate globe back to -180.0 to 180.0 longitudes
+		dat, lons = self.utils.shiftgrid( 180., anom_arr, lons_pcll, start=False ) # DangerZone
+		output_arr = np.empty_like( template_raster.read( 1 ) )
+
+		# reproject it
+		reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+			dst_transform=template_meta['affine'], dst_crs=template_meta['crs'],\
+			dst_nodata=None, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
+
+		# mask it with the internal mask in the template raster, where 0 is oob. DangerTown™
+		mask = template_raster.read_masks( 1 ) == 0
+		output_arr[ mask ] = template_meta[ 'nodata' ]
+
+<<<<<<< HEAD
+		# write or return anomalies...
+		if write_anomalies == True:
+			anom = self.utils.write_gtiff( output_arr, template_meta, anom_filename, compress=True )
+		elif write_anomalies == False:
+			anom = ( output_arr, template_meta )
+		else:
+			AttributeError( '_interp_downscale_wrapper: write_anomalies can be True or False only.' )
+=======
 		anom = self.utils.interpolate_anomalies2( **args_dict )
+>>>>>>> master
 
+		# downscale -- handle output GTIff or not, this could be much cleaner
 		if isinstance( anom, basestring ):
 			rst = rasterio.open( anom )
 			meta = rst.meta
@@ -514,6 +571,21 @@ class DownscaleAR5( object ):
 		#  * * * * * * * * * *
 		# calc the anomalies
 		anomalies = self._calc_anomalies()
+<<<<<<< HEAD
+	
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( anomalies.lon.data, anomalies.lat.data )
+		
+		# some metadata
+		src_transform = self._calc_ar5_affine()
+
+		# flip it to the greenwich centering
+		a,b,c,d,e,f,g,h,i = src_transform
+		src_transform = affine.Affine( a, b, -180.0, d, e, 180.0 )
+
+		# argument setup -- HARDWIRED
+		src_nodata = None # DangerTown™
+=======
 		# anomalies_pcll, lons_pcll = self.utils.shiftgrid( 0., anomalies, anomalies.lon.data ) # grabs lons from the xray ds
 
 		# mesh the lons and lats and unravel them to 1-D
@@ -532,6 +604,7 @@ class DownscaleAR5( object ):
 		# argument setup -- HARDWIRED
 		src_nodata = None # DangerTown™
 		# src_crs = {'init':'epsg:4326'} # DangerTown
+>>>>>>> master
 
 		# output_filenames setup
 		dates = anomalies.time.to_pandas()
@@ -555,7 +628,7 @@ class DownscaleAR5( object ):
 		else:
 			AttributeError( 'downscaling operation: self.absolute must be boolean' )
 
-		args_list = [ { 'anom_df':anom_df, 
+		args_list = [ { 'anom_arr':anom_arr, 
 						'meshgrid_tuple':(xi, yi), 
 						'template_raster_fn':template_raster_fn, 
 						'lons_pcll':anomalies.lon.data, 
@@ -567,12 +640,16 @@ class DownscaleAR5( object ):
 						'downscaling_operation':downscaling_operation, 
 						'post_downscale_function':self.post_downscale_function,
 						'write_anomalies':self.write_anomalies }
+<<<<<<< HEAD
+							for anom_arr, out_fn in zip( anomalies.data, output_filenames ) ]
+=======
 							for anom_df, out_fn in zip( anomalies.data, output_filenames ) ]
+>>>>>>> master
 
 
 		# run anomalies interpolation and downscaling in a single go.
 		# ( anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, src_transform, src_crs, src_nodata, output_filename, write_anomalies ) 	
-		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list[:1], nproc=self.ncores ) # CHANGED!!
+		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list, nproc=self.ncores )
 		return 'downscaling complete. files output at: %s' % base_path
 
 if __name__ == '__main__':
@@ -588,5 +665,5 @@ if __name__ == '__main__':
 	base_path = '/atlas_scratch/malindgren/CMIP5/TEST_AR5'
 
 	# EXAMPLE RUN -- TESTING
-	down = DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, ncores=32) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
+	down = DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
 	output = down.downscale_ar5_ts()
