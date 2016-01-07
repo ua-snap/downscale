@@ -1,4 +1,5 @@
 [![Stories in Ready](https://badge.waffle.io/ua-snap/downscale.svg?label=ready&title=Ready)](http://waffle.io/ua-snap/downscale)
+
 downscale
 ---------
 
@@ -25,4 +26,9 @@ if __name__ == '__main__':
 	# EXAMPLE RUN -- TESTING
 	down = DownscaleAR5.DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, template_raster_fn=template_raster_fn, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
 	output = down.downscale_ar5_ts()
+```
+
+##### CRU
+```python
+
 ```
