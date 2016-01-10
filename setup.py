@@ -34,5 +34,7 @@ setup(	name='downscale',
 		include_package_data=True,
 		dependency_links=['https://github.com/uqfoundation/pathos'],
 		scripts=scripts_list,
-		classifiers=classifiers
+		classifiers=classifiers,
+		test_suite='nose.collector',
+	    tests_require=['nose']
 	)
