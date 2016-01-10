@@ -5,9 +5,6 @@
 # as an object comprehension
 # # # # 
 
-import rasterio, xray, os
-import numpy as np
-import pandas as pd
 import numpy as np
 
 def write_gtiff( output_arr, template_meta, output_filename, compress=True ):
@@ -39,7 +36,8 @@ def write_gtiff( output_arr, template_meta, output_filename, compress=True ):
 	string path to the new output_filename created
 
 	'''
-	import os
+	import os, rasterio
+
 	if 'transform' in template_meta.keys():
 		_ = template_meta.pop( 'transform' )
 	if not output_filename.endswith( '.tif' ):
@@ -183,6 +181,8 @@ def downscale( anom_arr, baseline_arr, output_filename, \
 	output_filename of newly generated downscaled raster.
 
 	'''
+	import rasterio
+
 	def add( base, anom ):
 		return base + anom
 	def mult( base, anom ):

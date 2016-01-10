@@ -5,14 +5,15 @@
 #
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
-
-from downscale import DownscalingUtils
-import rasterio, xray, os
-import numpy as np
-import pandas as pd
+import rasterio, os
 import numpy as np
 
 class DownscaleAR5( object ):
+	'''
+	class used in downscaling the PCMDI CMIP3/5 modeled future or historical 
+	screnarios data to a new extent resolution and AOI.
+	'''
+
 	def __init__( self, ar5_modeled=None, ar5_historical=None, base_path=None, clim_path=None, climatology_begin='1961', climatology_end='1990', \
 		plev=None, absolute=True, metric='metric', variable=None, ncores=2, post_downscale_function=None, src_crs={'init':'epsg:4326'}, write_anomalies=True, \
 		template_raster_fn=None, *args, **kwargs ):
@@ -20,6 +21,8 @@ class DownscaleAR5( object ):
 		NEW METHODS FOR AR5 DOWNSCALING USING THE NEW
 		API-ECOSYSTEM.
 		'''
+		from downscale import DownscalingUtils
+
 		self.ar5_modeled = ar5_modeled
 		self.ar5_historical = ar5_historical
 		self.base_path = base_path
@@ -31,7 +34,7 @@ class DownscaleAR5( object ):
 		self.metric = metric
 		self.variable = variable
 		self.ncores = ncores
-		self.utils = DownscalingUtils.DownscalingUtils()
+		self.utils = DownscalingUtils
 		self.post_downscale_function = post_downscale_function
 		self.src_crs = src_crs
 		self.write_anomalies = write_anomalies
