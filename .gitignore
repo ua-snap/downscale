@@ -59,4 +59,6 @@ target/
 # DS_Store from SublimeText
 *.DS_Store
 *._.DS_Store
+# this one may be a gotcha
+*._*
 

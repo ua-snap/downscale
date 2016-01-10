@@ -6,10 +6,7 @@
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
 
-from downscale import DownscalingUtils
-import rasterio, xray, os
-import numpy as np
-import pandas as pd
+import rasterio, os
 import numpy as np
 
 class DownscaleCRU( object ):
@@ -20,8 +17,11 @@ class DownscaleCRU( object ):
 	CRU CL2.0 climatology for these purposes.
 
 	'''
+	
 	def __init__( self, cru_ts, clim_path, template_raster_fn, base_path, climatology_begin='1961', climatology_end='1990', ncores=2, \
 		absolute=True, metric='metric', variable=None, post_downscale_function=None, src_crs={'init':'epsg:4326'}, write_anomalies=True, *args, **kwargs ):
+		
+		from downscale import DownscalingUtils
 		self.cru_ts = cru_ts
 		self.clim_path = clim_path
 		self.template_raster_fn = template_raster_fn
@@ -34,7 +34,7 @@ class DownscaleCRU( object ):
 		self.variable = variable
 		self.post_downscale_function = post_downscale_function
 		self.src_crs = src_crs
-		self.utils = DownscalingUtils.DownscalingUtils()
+		self.utils = DownscalingUtils
 		self.write_anomalies = write_anomalies
 
 	@staticmethod
