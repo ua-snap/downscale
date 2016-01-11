@@ -149,9 +149,10 @@ class DownscaleAR5( object ):
 		template_raster = rasterio.open( template_raster_fn )
 		template_meta = template_raster.meta
 
-		# rotate globe back to -180.0 to 180.0 longitudes
-		dat, lons = self.utils.shiftgrid( 180., anom_arr, lons_pcll, start=False ) # DangerZone
-		output_arr = np.empty_like( template_raster.read( 1 ) )
+		if np.where( lons_pcll > 200.0 ).any() == True:
+			# rotate globe back to -180.0 to 180.0 longitudes if needed
+			dat, lons = self.utils.shiftgrid( 180., anom_arr, lons_pcll, start=False )
+			output_arr = np.empty_like( template_raster.read( 1 ) )
 
 		# reproject it
 		reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
@@ -190,13 +191,14 @@ class DownscaleAR5( object ):
 		import glob, affine, rasterio
 
 		nc_varname = self._get_varname_ar5()
+		
 		# handle cases where the desired varname != one parsed from file.
 		if self.variable == None:
 			variable = nc_varname
 		else:
 			variable = self.variable
 		
-		print variable
+		print( 'downscaling: %s' % variable )
 
 		# build output dirs
 		anomalies_path = os.path.join( self.base_path, variable, 'anom' )
@@ -234,7 +236,7 @@ class DownscaleAR5( object ):
 		clim_list = sorted( glob.glob( os.path.join( self.clim_path, '*.tif' ) ) ) # this could catch you.
 		clim_dict = { month:rasterio.open( fn ).read( 1 ) for month, fn in zip( months, clim_list ) }
 		
-		# [!] THIS BELOW NEEDS RE-WORKING FOR THE AR5 DATA MODELED DATA 
+		# [!] THIS BELOW NEEDS RE-WORKING FOR THE AR5 DATA MODELED DATA # DangerTown™
 		output_filenames = [ os.path.join( downscaled_path, '_'.join([ variable, self.metric, 'ar5', 'downscaled', month, str(year) ])+'.tif' )
 								for month, year in month_year ]
 
@@ -260,8 +262,6 @@ class DownscaleAR5( object ):
 						'write_anomalies':self.write_anomalies }
 							for anom_arr, out_fn in zip( anomalies.data, output_filenames ) ]
 
-
 		# run anomalies interpolation and downscaling in a single go.
-		# ( anom_df, meshgrid_tuple, template_raster_fn, lons_pcll, src_transform, src_crs, src_nodata, output_filename, write_anomalies ) 	
 		out = mp_map( lambda args: self._interp_downscale_wrapper( args_dict=args ), args_list, nproc=self.ncores )
 		return 'downscaling complete. files output at: %s' % self.base_path

@@ -120,9 +120,10 @@ class DownscaleCRU( object ):
 						np.array(anom_df['lat'].tolist()), \
 						np.array(anom_df['anom'].tolist()), grid=meshgrid_tuple, method='cubic' )
 
-		# shiftgrid back to -180.0 to 180.0
-		dat, lons = self.utils.shiftgrid( 180., interp_arr, lons_pcll, start=False ) # DangerZone
-		output_arr = np.empty_like( template_raster.read( 1 ) )
+		if np.where( lons_pcll > 200.0 ).any() == True:
+			# rotate globe back to -180.0 to 180.0 longitudes if needed
+			dat, lons = self.utils.shiftgrid( 180., interp_arr, lons_pcll, start=False )
+			output_arr = np.empty_like( template_raster.read( 1 ) )
 
 		# reproject it
 		reproject( dat, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
