@@ -3,6 +3,7 @@
 # # # # 
 
 import unittest
+
 class TestWriteGTiff( unittest.TestCase ):
 	''' tests for testing write_gtiff function '''
 	def setUp( self ):
