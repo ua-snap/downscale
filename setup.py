@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 dependencies_list = [ 'xray','rasterio','pandas','numpy','rasterio','pathos' ]
 scripts_list = []
@@ -22,13 +22,13 @@ classifiers = [
 		]
 
 setup(	name='downscale',
-		version='0.1a',
+		version='0.0a1',
 		description='tool to downscale CMIP5 model outputs for use in regional climate modelling',
 		url='https://github.com/ua-snap/downscale',
 		author='Michael Lindgren',
 		author_email='malindgren@alaska.edu',
 		license='MIT',
-		packages=['downscale'],
+		packages=find_packages(),
 		install_requires=dependencies_list,
 		zip_safe=False,
 		include_package_data=True,
@@ -36,5 +36,11 @@ setup(	name='downscale',
 		scripts=scripts_list,
 		classifiers=classifiers,
 		test_suite='nose.collector',
-	    tests_require=['nose']
-	)
+		tests_require=['nose']
+		)
+
+# if the tests are not running try this:
+# $ cd tests
+# $ chmod -x *.py
+# and run again
+
