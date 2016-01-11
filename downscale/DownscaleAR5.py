@@ -151,7 +151,7 @@ class DownscaleAR5( object ):
 
 		if ( lons_pcll > 200.0 ).any() == True:
 			# rotate globe back to -180.0 to 180.0 longitudes if needed
-			dat, lons = self.utils.shiftgrid( 180., interp_arr, lons_pcll, start=False )
+			dat, lons = self.utils.shiftgrid( 180., anom_arr, lons_pcll, start=False )
 			output_arr = np.empty_like( template_raster.read( 1 ) )
 
 		# reproject it
