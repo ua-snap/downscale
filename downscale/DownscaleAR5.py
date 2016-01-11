@@ -149,9 +149,9 @@ class DownscaleAR5( object ):
 		template_raster = rasterio.open( template_raster_fn )
 		template_meta = template_raster.meta
 
-		if np.where( lons_pcll > 200.0 ).any() == True:
+		if ( lons_pcll > 200.0 ).any() == True:
 			# rotate globe back to -180.0 to 180.0 longitudes if needed
-			dat, lons = self.utils.shiftgrid( 180., anom_arr, lons_pcll, start=False )
+			dat, lons = self.utils.shiftgrid( 180., interp_arr, lons_pcll, start=False )
 			output_arr = np.empty_like( template_raster.read( 1 ) )
 
 		# reproject it
