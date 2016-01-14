@@ -69,7 +69,7 @@ class DownscaleAR5( object ):
 			del clim_ds
 
 		elif self.ar5_historical is not None and self.ar5_modeled is None:
-			output_naming_dict = standardized_fn_to_vars( self.ar5_historical )
+			output_naming_dict = self.standardized_fn_to_vars( self.ar5_historical )
 			variable = output_naming_dict[ 'variable' ]
 
 			# read in historical
