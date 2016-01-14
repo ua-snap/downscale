@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 # # # # 
 # beginnings of a test suite for the utility functions
 # # # # 
