@@ -1,4 +1,5 @@
 [![Stories in Ready](https://badge.waffle.io/ua-snap/downscale.svg?label=ready&title=Ready)](http://waffle.io/ua-snap/downscale)
+[![Build Status](https://travis-ci.org/ua-snap/downscale.svg?branch=master)](https://travis-ci.org/ua-snap/downscale)
 
 downscale
 ---------
