@@ -38,7 +38,7 @@ before_install:
 install:
   - "pip wheel -r requirements-dev.txt"
 
-script:nosetests
+script: nosetests
 
 
 # command to install dependencies
