@@ -1,20 +1,51 @@
 language: python
+sudo: false
+
+cache:
+  directories:
+    - $GDALINST
+    - ~/.cache/pip
+env:
+  global:
+    - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
+    - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
+    - GDALINST=$HOME/gdalinstall
+    - GDALBUILD=$HOME/gdalbuild
+  matrix:
+    - GDALVERSION = "1.9.2"
+    - GDALVERSION = "1.11.2"
+    - GDALVERSION = "2.0.1"
+addons:
+  apt:
+    packages:
+    - libgdal1h
+    - gdal-bin
+    - libgdal-dev
+    - libatlas-dev
+    - libatlas-base-dev
+    - gfortran
 python:
-  - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
-  - "3.5"
-  - "3.5-dev" # 3.5 development branch
-  - "nightly" # currently points to 3.6-dev
+before_install:
+  - pip install -U pip
+  - pip install wheel
+  - . ./scripts/travis_gdal_install.sh
+  - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
+  - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
+install:
+  - "pip wheel -r requirements-dev.txt"
+
+script:nosetests
+
 
 # command to install dependencies
 # install: "pip install -r requirements.txt"
 
 # command to run tests
 # script: nosetests
-script: python downscale/tests/test_DownscalingUtils.py
+# script: python downscale/tests/test_DownscalingUtils.py
 branches:
   only:
     - master

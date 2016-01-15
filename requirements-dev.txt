@@ -1,0 +1,4 @@
+affine
+rasterio
+numpy>=1.10
+pandas>=0.16
