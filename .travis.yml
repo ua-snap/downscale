@@ -1,6 +1,11 @@
 language: python
 sudo: false
 
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+
 cache:
   directories:
     - $GDALINST
@@ -24,10 +29,6 @@ addons:
     - libatlas-dev
     - libatlas-base-dev
     - gfortran
-python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
 before_install:
   - pip install -U pip
   - pip install wheel
