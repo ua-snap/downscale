@@ -4,6 +4,7 @@
 # # # # 
 
 import unittest
+import rasterio
 
 class TestWriteGTiff( unittest.TestCase ):
 	''' tests for testing write_gtiff function '''
