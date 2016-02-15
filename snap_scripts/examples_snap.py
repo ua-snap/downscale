@@ -16,7 +16,6 @@ pre.write_nc( output_path='/workspace/Shared/Tech_Projects/ESGF_Data_Access/proj
 
 
 
-
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tasmin_tasmax_access/docker_move/synda/sdt/data/cmip5/output1/NOAA-GFDL/GFDL-CM3/rcp26/mon/atmos/Amon/r1i1p1/v20120227'
 # model = 'GFDL-CM3'
