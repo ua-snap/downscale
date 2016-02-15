@@ -3,9 +3,14 @@
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 class Preprocess( object ):
 	'''
-	class to store the data and methods for preprocessing
+	class for preprocessing downloaded CMIP5 data from the PCMDI.
+
+	The idea here is that this will wrap some of the ugliness involved with how 
+	some modeling groups slice up the data holdings for a variable.  We @SNAP 
+	would rather work with these data in a single file prepped file when passing
+	into the downscaling application.
+
 	'''
-	# ['variable', 'cmor_table', 'model', 'scenario', 'experiment', 'years']
 	def __init__( self, path, variable, model, scenario, experiment, years, *args, **kwargs ):
 		'''
 		path = [str] path cotaining potentially multiple files for a single series to bwe
@@ -84,7 +89,7 @@ class Preprocess( object ):
 	def _concat_nc_list( self ):
 		import xarray
 		import pandas as pd
-		# #  this line is something that used to be needed for a model.  may need again.  keep it.
+		# NOTE: the below line is something that used to be needed for a misbehaving model. may need again. keep it.
 		# ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in files) )
 		ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
 		ds = self._year_greater_yearlimit_workaround( ds, self.years[0], self.years[1], int(self._fileyears_dict['minyear']), int(self._fileyears_dict['maxyear']) )
