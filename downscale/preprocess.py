@@ -11,6 +11,7 @@ class Preprocess( object ):
 	into the downscaling application.
 
 	'''
+	EXT = '.nc' # hardwired, but unlikely to change given current standard
 	def __init__( self, path, variable, model, scenario, experiment, years, *args, **kwargs ):
 		'''
 		path = [str] path cotaining potentially multiple files for a single series to bwe
@@ -26,16 +27,16 @@ class Preprocess( object ):
 		self.scenario = scenario
 		self.experiment = experiment
 		self.years = years
-		ext = '*.nc' # hardwired, but unlikely to change given current standard
-		self.list_files( ext=ext)
-		self._get_files_years( )
-		self._concat_nc_list( )
+		self.filelist = self.list_files( ext=self.ext )
+		self._fileyears_dict = self._get_files_years( )
+		self.ds = self._concat_nc_list( )
 
-	def list_files( self, ext='.nc' ):
+	def list_files( self ):
 		import os, glob
-		globber = os.path.join( self.path, '*'.join([ self.variable, self.model, self.scenario, self.experiment, ext ]) )
+		globber = os.path.join( self.path, '*'.join([ self.variable, self.model, \
+										self.scenario, self.experiment, self.ext ]) )
 		files = glob.glob( globber )
-		self.filelist = sorted( files )
+		return sorted( files )
 	def _get_files_years( self ):
 		'''
 		we have to get the years from the naming convention 
@@ -49,9 +50,10 @@ class Preprocess( object ):
 		minmonth = years.begin.min()[-2:]
 		maxyear = years.end.max()[:4]
 		maxmonth = years.end.max()[-2:]
-		self._fileyears_dict = { 'minmonth':minmonth, 'minyear':minyear, 'maxmonth':maxmonth, 'maxyear':maxyear }
+		return { 'minmonth':minmonth, 'minyear':minyear, 'maxmonth':maxmonth, 'maxyear':maxyear }
 	@staticmethod
-	def _year_greater_yearlimit_workaround( xarray_dataset, desired_year_begin, desired_year_end, file_year_begin, file_year_end ):
+	def _year_greater_yearlimit_workaround( xarray_dataset, desired_year_begin, \
+		desired_year_end, file_year_begin, file_year_end ):
 		'''
 		very specific function to deal with an issue in how PANDAS deals with datetime.
 		its max datetime value in 64-bit nanoseconds from somewhere near year 1100, ends
@@ -96,7 +98,7 @@ class Preprocess( object ):
 		if ds.time.dtype =='O':
 			print( '\nWARNING: Preprocess: modified time -- bad type\n' )
 			ds['time'] = pd.date_range(str(self.years[0]), str(self.years[1]+1), freq='M') # MONTHLY so leap doesnt matter and neither do days
-		self.ds = ds
+		return ds
 	def write_nc( self, output_path=None, overwrite=True, nc_format='NETCDF4' ):
 		'''
 		output_path = [str] path to output the newly prepped file. if None, input `path` will be used.
