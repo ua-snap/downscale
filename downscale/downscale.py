@@ -28,9 +28,10 @@ class Baseline( object ):
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = [ rasterio.open( fn ).read( 1 ) for fn in self.filelist ]
 
+
 class Dataset( object ):
-	def __init__( self, fn, variable, model, scenario, units=None, interp=False, ncpus=2, \
-					method='cubic', *args, **kwargs ):
+	def __init__( self, fn, variable, model, scenario, units=None, interp=False, ncpus=32, \
+					method='cubic', *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -50,9 +51,13 @@ class Dataset( object ):
 		self.units = units
 		self.interp = interp
 		self.ncpus = ncpus
+		self.method = method
+		self._rotated = False
+
 		if interp:
 			print( 'running interpolation across NAs' )
-			self._interpna( method=method )
+			# self._interpna( method=method )
+			self.run = self.run()
 
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
@@ -66,45 +71,67 @@ class Dataset( object ):
 		else:
 			raise AttributeError( 'to_pacific can be only one of True or False' )
 		return dat, lons
-	def _interpna( self, method='cubic' ):
+	@staticmethod
+	def _wrap( x ):
+		# a function to make this easier for function passing
+		return utils.xyz_to_grid( **x )
+	def _interpna_setup( self ):
 		'''
 		np.float32
 		method = [str] one of 'cubic', 'near', 'linear'
 		'''
-		from pathos import multiprocessing
-		# import multiprocessing
-		# output_dtype = np.float32
+		# import pathos
+		# from pathos import multiprocessing
+		# from pathos.mp_map import mp_map
+		# from pathos.multiprocessing import ProcessingPool as Pool
+		from functools import partial
+		from copy import copy
+		import multiprocessing
+		print 'interp with %s' % self.ncpus
+		output_dtype = np.float32
 		
-		rotated = None
-		# [GOTCHA]: if greenwich-centered, lets rotate it to pcll since we are interested in ALASKA
-		if not ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.rotate( self.ds[ self.variable ].data, self.ds.lon, to_pacific=True )
-			rotated = True
-		else:
+		# if greenwich-centered, lets rotate it to pcll since we are interested in ALASKA
+		if ( self.ds.lon > 200.0 ).any() == True:
 			dat, lons = self.ds[ self.variable ].data, self.ds.lon
+			self._lonpc = lons
+		else:
+			dat, lons = self.rotate( self.ds[ self.variable ].data, self.ds.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
 
 		# mesh the lons and lats and unravel them to 1-D
-		xi,yi = np.meshgrid( lons, self.ds.lat )
+		xi,yi = np.meshgrid( lons, self.ds.lat.data )
 		lo, la = [ i.ravel() for i in (xi,yi) ]
 
 		# setup args for multiprocessing
-		args = [ pd.DataFrame( {'x':lo,'y':la,'z':d.ravel()} ).dropna( axis=0, how='any' ).to_dict( orient='list' ) for d in dat ]
-		[ arg.update( grid=(xi,yi), method=method ) for arg in args ] #, output_dtype=output_dtype
-		def wrap( x ):
-			return utils.xyz_to_grid( **x )
-			# return xyz_to_grid( **x )
-		print self.ncpus
-		pool = multiprocessing.Pool( self.ncpus )
-		out = pool.map( wrap, args )
+		args = [ pd.DataFrame( \
+					{'x':copy(lo),'y':copy(la),'z':d.copy().ravel()} ).dropna( axis=0, how='any' ).to_dict( orient='list' ) \
+					for d in dat ]
+		_ = [ arg.update( grid=copy((xi,yi)), method=self.method, output_dtype=copy(output_dtype) ) for arg in args ]
+		return args
+	@staticmethod
+	def _interpna( args_dict ):
+		return utils.xyz_to_grid( **args_dict )
+	def run( self ):
+		# from pathos.multiprocessing import Pool
+		from pathos.multiprocessing import ProcessPool as Pool
+		args = self._interpna_setup( )
+		pool = Pool( processes=self.ncpus )
+		out = pool.map( self._interpna, args[:400] )
 		pool.close()
-
+		lons = self._lonpc
 		# stack em and roll-its axis so time is dim0
 		dat = np.rollaxis( np.dstack( out ), -1 )
-		if rotated: # rotate it back
-			dat, lons = self.rotate( dat, lons, to_pacific=True )
+		if self._rotated == True: # rotate it back
+			dat, lons = self.rotate( dat, lons, to_pacific=False )
 		# place back into a new xarray.Dataset object for further processing
-		self.ds[ self.variable ].data = dat
-		print( 'ds interpolated and placed back into self.ds' )
+		# function to make a new xarray.Dataset object with the mdata we need?
+		# ds = self.ds
+		# var = ds[ self.variable ]
+		# setattr( var, 'data', dat )
+		# self.ds = ds
+		print( 'ds interpolated updated into self.ds' )
+		return dat
 
 
 class DeltaDownscale( object ):

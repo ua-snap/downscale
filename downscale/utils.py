@@ -137,7 +137,7 @@ def padded_bounds( rst, npixels, crs ):
 	resolution = rst.res[0]
 	new_bounds = [ bound+(expand*resolution) for bound, expand in zip( rst.bounds, npixels ) ]
 	return new_bounds
-def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32 ):
+def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, **kwargs ):
 	'''
 	interpolate points to a grid. simple wrapper around
 	scipy.interpolate.griddata. Points and grid must be

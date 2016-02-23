@@ -22,8 +22,8 @@ classifiers = [
 		]
 
 setup(	name='downscale',
-		version='0.0a1',
-		description='tool to downscale CMIP5 model outputs for use in regional climate modelling',
+		version='0.01',
+		description='tool to downscale CMIP5 model outputs for use in regional climate modeling',
 		url='https://github.com/ua-snap/downscale',
 		author='Michael Lindgren',
 		author_email='malindgren@alaska.edu',
