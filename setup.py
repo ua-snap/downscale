@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-dependencies_list = [ 'xarray','rasterio','pandas','numpy','rasterio','pathos' ] #,'pathos'
+dependencies_list = [ 'xarray','rasterio','pandas','numpy','rasterio','pathos' ]
 scripts_list = []
 
 classifiers = [
@@ -23,7 +23,7 @@ classifiers = [
 
 setup(	name='downscale',
 		version='0.01',
-		description='tool to downscale CMIP5 model outputs for use in regional climate modeling',
+		description='simple delta downscaling using low-res NetCDF and a higher res 12-month climatology.',
 		url='https://github.com/ua-snap/downscale',
 		author='Michael Lindgren',
 		author_email='malindgren@alaska.edu',
@@ -32,7 +32,7 @@ setup(	name='downscale',
 		install_requires=dependencies_list,
 		zip_safe=False,
 		include_package_data=True,
-		dependency_links=['git+ssh://git@github.com:ua-snap/downscale.git'],
+		dependency_links=['git+https://git@github.com:ua-snap/downscale.git'],
 		scripts=scripts_list,
 		classifiers=classifiers,
 		test_suite='nose.collector',
