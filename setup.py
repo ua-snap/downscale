@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-dependencies_list = [ 'xarray','rasterio','pandas','numpy','rasterio','pathos','pynio' ]
+dependencies_list = [ 'xarray','rasterio','pandas','numpy','rasterio','pathos' ]
 scripts_list = []
 
 classifiers = [
@@ -32,7 +32,7 @@ setup(	name='downscale',
 		install_requires=dependencies_list,
 		zip_safe=False,
 		include_package_data=True,
-		dependency_links=['https://github.com/uqfoundation/pathos','https://github.com/nioinnovation/pynio'],
+		dependency_links=['git+git@github.com:ua-snap/downscale.git'],
 		scripts=scripts_list,
 		classifiers=classifiers,
 		test_suite='nose.collector',
