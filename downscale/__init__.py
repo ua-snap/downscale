@@ -1,2 +1,2 @@
-# from downscale import *
-# from utils import *
+from downscale.ds import *
+from downscale.dataset import *
