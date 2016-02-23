@@ -40,7 +40,6 @@ install:
 
 script: nosetests
 
-
 # command to install dependencies
 # install: "pip install -r requirements.txt"
 
