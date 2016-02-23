@@ -8,7 +8,8 @@
 import rasterio, os
 import numpy as np
 import pandas as pd
-import downscale.utils as utils
+from downscale import utils
+# import utils
 
 class Baseline( object ):
 	'''
