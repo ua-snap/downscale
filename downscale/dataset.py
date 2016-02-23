@@ -39,7 +39,7 @@ class Dataset( object ):
 		scenario = [str] name of the scenario being read
 		units = [str] abbreviation of the units of the variable
 		interp = [bool] if True interpolate across NA's using a spline. 
-					if False (default) do nothing.
+					if False (default) do nothing.interp=False, ncpus=32,
 		ncpus = [ int ] number of cores to use if interp=True. default:2.
 		'''
 		import xarray as xr
@@ -49,86 +49,81 @@ class Dataset( object ):
 		self.model = model
 		self.scenario = scenario
 		self.units = units
+
 		self.interp = interp
 		self.ncpus = ncpus
 		self.method = method
 		self._rotated = False
-
+		self._lonpc = None
 		if interp:
 			print( 'running interpolation across NAs' )
-			# self._interpna( method=method )
-			self.run = self.run()
+			self.interp_na( )
 
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
-		if to_pacific == False:
-			# to -180.0 - 180.0 
-			dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
-		elif to_pacific == True:
+		if to_pacific == True:
 			# to 0 - 360
 			dat, lons = utils.shiftgrid( 0., dat, lons )
+		elif to_pacific == False:
+			# to -180.0 - 180.0 
+			dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
 		else:
-			raise AttributeError( 'to_pacific can be only one of True or False' )
+			raise AttributeError( 'to_pacific must be boolean True:False' )
 		return dat, lons
-	@staticmethod
-	def _wrap( x ):
-		# a function to make this easier for function passing
-		return utils.xyz_to_grid( **x )
-	def _interpna_setup( self ):
+	def interp_na( self ):
 		'''
 		np.float32
 		method = [str] one of 'cubic', 'near', 'linear'
+
+		return a list of dicts to pass to the xyz_to_grid hopefully in parallel
 		'''
-		# import pathos
-		# from pathos import multiprocessing
-		# from pathos.mp_map import mp_map
-		# from pathos.multiprocessing import ProcessingPool as Pool
-		from functools import partial
 		from copy import copy
-		import multiprocessing
+		from pathos.multiprocessing import Pool
+		# from multiprocessing import Pool
+
 		print 'interp with %s' % self.ncpus
 		output_dtype = np.float32
 		
-		# if greenwich-centered, lets rotate it to pcll since we are interested in ALASKA
+		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
+
 			dat, lons = self.ds[ self.variable ].data, self.ds.lon
 			self._lonpc = lons
 		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
 			dat, lons = self.rotate( self.ds[ self.variable ].data, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
 		# mesh the lons and lats and unravel them to 1-D
 		xi,yi = np.meshgrid( lons, self.ds.lat.data )
-		lo, la = [ i.ravel() for i in (xi,yi) ]
+		lo, la = [ i.flatten() for i in (xi,yi) ]
 
 		# setup args for multiprocessing
-		args = [ pd.DataFrame( \
-					{'x':copy(lo),'y':copy(la),'z':d.copy().ravel()} ).dropna( axis=0, how='any' ).to_dict( orient='list' ) \
-					for d in dat ]
-		_ = [ arg.update( grid=copy((xi,yi)), method=self.method, output_dtype=copy(output_dtype) ) for arg in args ]
-		return args
-	@staticmethod
-	def _interpna( args_dict ):
-		return utils.xyz_to_grid( **args_dict )
-	def run( self ):
-		# from pathos.multiprocessing import Pool
-		from pathos.multiprocessing import ProcessPool as Pool
-		args = self._interpna_setup( )
-		pool = Pool( processes=self.ncpus )
-		out = pool.map( self._interpna, args[:400] )
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.flatten() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
+
+		pool = Pool( self.ncpus )
+		out = pool.map( _interpna, args )
 		pool.close()
 		lons = self._lonpc
 		# stack em and roll-its axis so time is dim0
 		dat = np.rollaxis( np.dstack( out ), -1 )
 		if self._rotated == True: # rotate it back
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
+		
 		# place back into a new xarray.Dataset object for further processing
-		# function to make a new xarray.Dataset object with the mdata we need?
-		# ds = self.ds
-		# var = ds[ self.variable ]
-		# setattr( var, 'data', dat )
-		# self.ds = ds
+		ds = self.ds
+		var = ds[ self.variable ]
+		setattr( var, 'data', dat )
+		self.ds = ds
 		print( 'ds interpolated updated into self.ds' )
 		return dat
+	@staticmethod
+	def _interpna( args_dict ):
+		return utils.xyz_to_grid( **args_dict )
+
+
