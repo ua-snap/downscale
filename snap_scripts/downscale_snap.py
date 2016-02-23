@@ -22,6 +22,7 @@ ar5.downscale( output_dir='/workspace/Shared/Tech_Projects/ESGF_Data_Access/proj
 
 # CRU historical
 cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.cld.dat.nc'
+# cru_ds = Dataset( cru_ts, 'cld', 'cru_ts31', 'observed', units=None, interp=True )
 cru_ds = downscale.Dataset( cru_ts, 'cld', 'cru_ts31', 'observed', units=None, interp=True )
 clim_begin = '1961'
 clim_end = '1990'

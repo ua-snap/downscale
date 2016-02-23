@@ -107,14 +107,14 @@ class Dataset( object ):
 				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 
 		pool = Pool( self.ncpus )
-		out = pool.map( _interpna, args )
+		out = pool.map( self._interpna, args )
 		pool.close()
 		lons = self._lonpc
 		# stack em and roll-its axis so time is dim0
 		dat = np.rollaxis( np.dstack( out ), -1 )
 		if self._rotated == True: # rotate it back
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
-		
+				
 		# place back into a new xarray.Dataset object for further processing
 		ds = self.ds
 		var = ds[ self.variable ]
