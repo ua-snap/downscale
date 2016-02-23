@@ -4,9 +4,7 @@
 # these will be called by the individual downscaling scripts or read into the object
 # as an object comprehension
 # # # # 
-
 import numpy as np
-
 def write_gtiff( output_arr, template_meta, output_filename, compress=True ):
 	'''
 	DESCRIPTION:

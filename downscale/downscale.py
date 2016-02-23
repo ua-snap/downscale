@@ -8,8 +8,7 @@
 import rasterio, os
 import numpy as np
 import pandas as pd
-# from downscale import DownscalingUtils as utils #utils
-from downscale import utils
+import downscale.utils as utils
 
 class Baseline( object ):
 	'''
@@ -133,7 +132,6 @@ class Dataset( object ):
 		# self.ds = ds
 		print( 'ds interpolated updated into self.ds' )
 		return dat
-
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
@@ -279,50 +277,3 @@ class DeltaDownscale( object ):
 		# pool.join()
 		pool.close()
 		return output_dir
-
-#  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-
-
-# OLDER LEGACY CLASS -- NON-WORKING:
-# class Downscale( object ):
-# 	''' downscaling... '''
-# 	def __init__( self, data, baseline, *args, **kwargs ):
-# 		self.data = data
-# 		self.baseline = baseline
-# 		self.historical = self.data.historical
-# 	def rotate( self ):
-# 		'''rotate globe back to -180.0 to 180.0 longitudes'''
-# 		if ( self.historical.ds.lon > 200.0 ).any() == True:
-# 			dat, lons = utils.shiftgrid( 180., self.data.anomalies, self.historical.ds.lon, start=False )
-# 		else:
-# 			dat, lons = ( self.historical.ds.data, self.historical.ds.lon )
-# 		return dat, lons
-# 	def reproject( self ):
-# 		'''	reproject / resample / crop to baseline	'''
-# 		rst = rasterio.open( self.baseline.filelist[0] )
-# 		output_arr = np.empty_like( rst.read( 1 ) )
-# 		a,b,c,d,e,f,g,h,i = self.affine #flip it to the greenwich-centering
-# 		src_transform = affine.Affine( a, b, -180.0, d, e, 180.0 )
-# 		src_crs = {'init':'epsg:3338'}
-# 		src_nodata = None # DangerTown™
-# 		baseline_meta = self.baseline.meta
-# 		baseline_meta.update( compress='lzw' )
-# 		# rotate if needed:
-# 		dat, lons = self.rotate( )
-
-# 		dat_list = [ arr for arr in dat ]
-
-# 		# reproject it
-# 		reproject( dat, output_arr, src_transform=self.affine, src_crs=src_crs, src_nodata=src_nodata, \
-# 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-# 				dst_nodata=None, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
-
-# 		# mask it with the internal mask in the template raster, where 0 is oob. DangerTown™
-# 		mask = rst.read_masks( 1 ) == 0
-# 		output_arr[ mask ] = baseline_meta[ 'nodata' ]
-
-# 	# now we need to use the downscale function from the utilities module and write to disk.
-
-
-
-
