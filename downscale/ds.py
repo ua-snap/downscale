@@ -20,7 +20,7 @@ class DeltaDownscale( object ):
 		this is great and means it should be built as a generic downscale class
 		# a class for the AR5 would need to have
 		1. historical
-		2. modeled
+		2. future
 		3. BaselineArr
 		4. metric? --
 		5. delta downscaletype
@@ -53,7 +53,7 @@ class DeltaDownscale( object ):
 		return affine.Affine( lon_res, 0.0, 0.0, 0.0, -lat_res, 360.0 )
 	def _concat_nc( self ):
 		if self.historical and self.future:
-			ds = xr.concat([ self.historical.ds, self.modeled.ds ])
+			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
 		else:
 			ds = self.historical.ds
 		ds = ds[ self.historical.variable ]
