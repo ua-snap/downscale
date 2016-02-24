@@ -3,8 +3,8 @@ sudo: false
 
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
+  # - "3.3"
+  # - "3.4"
 
 cache:
   directories:
@@ -36,7 +36,7 @@ before_install:
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
   - export LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH
 install:
-  - "pip wheel -r requirements-dev.txt"
+  - "pip install -r requirements-dev.txt"
 
 script: nosetests
 
