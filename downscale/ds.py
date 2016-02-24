@@ -9,6 +9,7 @@
 import rasterio, os
 import numpy as np
 import pandas as pd
+import xarray as xr
 from downscale import utils
 
 class DeltaDownscale( object ):
@@ -45,7 +46,6 @@ class DeltaDownscale( object ):
 		this assumes 0-360 longitude-ordering (pacific-centered)
 		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
 		'''
-		import xarray as xr
 		import affine
 		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
 		lat_res = 180.0 / lat_shape
