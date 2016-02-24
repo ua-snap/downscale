@@ -3,4 +3,4 @@ rasterio
 numpy>=1.10
 pandas>=0.16
 xarray>=0.7
-pathos>=0.1
+#pathos>=0.1
