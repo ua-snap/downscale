@@ -12,7 +12,7 @@ import pandas as pd
 import xarray as xr
 from downscale import utils
 
-class DeltaDownscale( object ):
+class Delta( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		metric='mean', ds_type='absolute', level=None, level_name=None ):
 		'''
@@ -20,15 +20,17 @@ class DeltaDownscale( object ):
 
 		Arguments:
 		----------
-		baseline = []
-		clim_begin = []
-		clim_end = []
-		historical = []
-		future = []
-		metric = []
-		ds_type = []
-		level = []
-		level_name = []
+		baseline = [ downscale.Baseline ] downscale baseline climatology object read in with Baseline.
+		clim_begin = [ int ] year of the beginning of the monthly climatology
+		clim_end = [ int ] year of the edning of the monthly climatology
+		historical = [ downscale.Dataset ] historical timeseries to process read in with Dataset()
+		future = [ downscale.Dataset ] future timeseries to process read in with Dataset()
+		metric = [ str ] metric that describes the data -- default `mean` which refers to monthly means.
+		ds_type = [ str ] string that determines the type of downscaling to perform. Supported types are:
+					['absolute', 'relative'].  default='absolute'
+		level = [ int ] the level desired to be extracted from the 4th dimension of the file.  
+					i.e. pressure levels
+		level_name = [ str ] the name of the 4th dimension level. i.e. 'plev' default=None
 
 		Returns:
 		--------
@@ -43,15 +45,15 @@ class DeltaDownscale( object ):
 		self.ds_type = ds_type
 		self.level = level
 		self.level_name = level_name
-		self.affine = self._calc_ar5_affine()
+		self.affine = self._calc_affine()
 		self._concat_nc()
 		self._calc_climatolgy()
 		self._calc_anomalies()
 
-	def _calc_ar5_affine( self, *args, **kwargs ):
+	def _calc_affine( self, *args, **kwargs ):
 		'''
-		this assumes 0-360 longitude-ordering (pacific-centered)
-		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
+		return an affine.affine object describing the affine transformation matrix for the input
+		dataset
 		'''
 		import affine
 		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
@@ -60,6 +62,16 @@ class DeltaDownscale( object ):
 		lon_res = 360.0 / lon_shape
 		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
 	def _concat_nc( self ):
+		'''
+		if there are both historical and futures provided stack them on the 
+		time dimension.
+
+		this is especially useful when the climatology period is outside of 
+		the range of the input time series.  i.e. 2006-2100 dataset, but a 
+		climatology period of 1961-1990, which would require the historical
+		model data to perform the downscaling.
+
+		'''
 		if self.historical and self.future:
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
 		else:
@@ -77,6 +89,7 @@ class DeltaDownscale( object ):
 		except Exception:
 			raise AttributeError( 'non-overlapping climatology period and series' )
 	def _calc_anomalies( self ):
+		''' calculate the anomalies '''
 		# anomalies
 		if self.ds_type == 'absolute':
 			anomalies = self.ds.groupby( 'time.month' ) - self.climatology
@@ -88,6 +101,10 @@ class DeltaDownscale( object ):
 	@staticmethod
 	def interp_ds( anom, base, output_filename, src_transform, downscaling_operation, post_downscale_function=None, mask=None, mask_value=0 ):
 		'''	
+		regrid the data to the baseline extent, resolution, crs and downscale.
+
+		Arguments:
+		----------
 		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
 		base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
 		output_filename = [str] path to the output file to be created following downscaling
@@ -96,6 +113,10 @@ class DeltaDownscale( object ):
 		post_downscale_function = [function] function that takes as input a single 2-d array and returns a 2-d array in the same shape as the input.  
 		mask = [numpy.ndarray] 2-d array showing what values should be masked. Masked=0, unmasked=1. must be same shape as base.
 		mask_value = [int] what value to use as the masked values. default=0.
+
+		Returns:
+		--------
+
 
 		'''		
 		from rasterio.warp import reproject, RESAMPLING
@@ -116,6 +137,7 @@ class DeltaDownscale( object ):
 		return utils.downscale( output_arr, baseline_arr, output_filename, downscaling_operation, \
 				baseline_meta, post_downscale_function, mask, mask_value )
 	def downscale( self, output_dir, prefix=None, ncpus=32 ):
+		''' downscale the data using the Dataset()'s and the Baseline(). '''
 		import affine
 		import itertools
 		from functools import partial
@@ -150,15 +172,14 @@ class DeltaDownscale( object ):
 		# determine operation type
 		downscaling_operation_switch = {'absolute':'add', 'relative':'mult'}
 		downscaling_operation = downscaling_operation_switch[ self.ds_type ]
-		# partial and wrapper
+		
+		# partial-ly fill the function and wrap it for multiprocessing
 		f = partial( self.interp_ds, src_transform=src_transform, downscaling_operation=downscaling_operation, \
 						post_downscale_function=None, mask=None, mask_value=0 )
 		def wrap( d ):
 			return f( **d )
 
 		pool = multiprocessing.Pool( ncpus )
-		# out = pool.map( lambda x: f( **x ), args )
 		out = pool.map( wrap, args )
-		# pool.join()
 		pool.close()
 		return output_dir
