@@ -16,16 +16,23 @@ class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		metric='mean', ds_type='absolute', level=None, level_name=None ):
 		'''
-		this class appears to be working correctly for the CRU data as well
-		this is great and means it should be built as a generic downscale class
-		# a class for the AR5 would need to have
-		1. historical
-		2. future
-		3. BaselineArr
-		4. metric? --
-		5. delta downscaletype
-		6. 4th dimension -- plev?
-		7. climatology begin / end
+		simple delta downscaling
+
+		Arguments:
+		----------
+		baseline = []
+		clim_begin = []
+		clim_end = []
+		historical = []
+		future = []
+		metric = []
+		ds_type = []
+		level = []
+		level_name = []
+
+		Returns:
+		--------
+
 		'''
 		self.historical = historical
 		self.future = future
@@ -48,9 +55,10 @@ class DeltaDownscale( object ):
 		'''
 		import affine
 		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
+		lonmin,lonmax = self.historical.ds.lon.min(), self.historical.ds.lon.max()
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, 0.0, 0.0, -lat_res, 360.0 )
+		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
 	def _concat_nc( self ):
 		if self.historical and self.future:
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
@@ -111,7 +119,6 @@ class DeltaDownscale( object ):
 		import affine
 		import itertools
 		from functools import partial
-		# import multiprocessing
 		from pathos import multiprocessing
 		
 		# output_filenames 
@@ -129,7 +136,7 @@ class DeltaDownscale( object ):
 		# rotate
 		if ( self.anomalies.lon > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
-			a,b,c,d,e,f,g,h,i = self.affine 
+			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = affine.Affine( a, b, -180.0, d, e, 180.0 )
 		else:
