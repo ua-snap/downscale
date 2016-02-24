@@ -31,6 +31,7 @@ addons:
     - gfortran
 before_install:
   - pip install -U pip
+  # - pip install .
   - pip install wheel
   - . ./scripts/travis_gdal_install.sh
   - export PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH
