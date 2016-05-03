@@ -14,7 +14,10 @@ from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
-		metric='mean', ds_type='absolute', level=None, level_name=None ):
+		metric='mean', downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
+		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
+		post_downscale_function=None ):
+		
 		'''
 		simple delta downscaling
 
@@ -26,7 +29,6 @@ class DeltaDownscale( object ):
 		historical = []
 		future = []
 		metric = []
-		ds_type = []
 		level = []
 		level_name = []
 
@@ -40,10 +42,20 @@ class DeltaDownscale( object ):
 		self.clim_begin = clim_begin
 		self.clim_end = clim_end
 		self.metric = metric
-		self.ds_type = ds_type
+		self.downscaling_operation = downscaling_operation
 		self.level = level
 		self.level_name = level_name
+		self.mask = mask
+		self.mask_value = mask_value
+		self.ncpus = ncpus
 		self.affine = self._calc_ar5_affine()
+		# new args
+		self.src_crs = src_crs
+		self.src_nodata = src_nodata
+		self.dst_nodata = dst_nodata
+		self.post_downscale_function = post_downscale_function
+		
+		self.anomalies = None
 		self._concat_nc()
 		self._calc_climatolgy()
 		self._calc_anomalies()
@@ -78,49 +90,58 @@ class DeltaDownscale( object ):
 			raise AttributeError( 'non-overlapping climatology period and series' )
 	def _calc_anomalies( self ):
 		# anomalies
-		if self.ds_type == 'absolute':
+		if self.downscaling_operation == 'add':
 			anomalies = self.ds.groupby( 'time.month' ) - self.climatology
-		elif self.ds_type == 'relative':
+		elif self.downscaling_operation == 'mult':
 			anomalies = self.ds.groupby( 'time.month' ) / self.climatology
 		else:
-			NameError( '_calc_anomalies (ar5): value of ds_type must be "absolute" or "relative" ' )
+			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 		self.anomalies = anomalies
 	@staticmethod
-	def interp_ds( anom, base, output_filename, src_transform, downscaling_operation, post_downscale_function=None, mask=None, mask_value=0 ):
+	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
 		'''	
 		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
 		base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
-		output_filename = [str] path to the output file to be created following downscaling
+		# REMOVE output_filename = [str] path to the output file to be created following downscaling
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-		downscaling_operation = [str] one of 'add' or 'mult' depending on absolute or relative delta downscaling.
-		post_downscale_function = [function] function that takes as input a single 2-d array and returns a 2-d array in the same shape as the input.  
-		mask = [numpy.ndarray] 2-d array showing what values should be masked. Masked=0, unmasked=1. must be same shape as base.
-		mask_value = [int] what value to use as the masked values. default=0.
+		# REMOVE downscaling_operation = [str] one of 'add' or 'mult' depending on absolute or relative delta downscaling.
+		# REMOVE post_downscale_function = [function] function that takes as input a single 2-d array and returns a 2-d array in the same shape as the input.  
+		# REMOVE mask = [numpy.ndarray] 2-d array showing what values should be masked. Masked=0, unmasked=1. must be same shape as base.
+		# REMOVE mask_value = [int] what value to use as the masked values. default=0.
 
 		'''		
 		from rasterio.warp import reproject, RESAMPLING
 		# reproject / resample
-		src_crs = {'init':'epsg:4326'}
-		src_nodata = None # DangerTown™
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
 		baseline_meta.update( compress='lzw' )
 		output_arr = np.empty_like( baseline_arr )
 
-		# TODO: make this function available for manipulation if used for different needs
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=None, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
-		# downscale
-		return utils.downscale( output_arr, baseline_arr, output_filename, downscaling_operation, \
-				baseline_meta, post_downscale_function, mask, mask_value )
-	def downscale( self, output_dir, prefix=None, ncpus=32 ):
+				dst_nodata=dst_nodata, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
+		return output_arr
+	def downscale( self, output_dir, prefix=None ):
 		import affine
 		import itertools
 		from functools import partial
 		from pathos import multiprocessing
 		
+				# determine operation type
+		def add( base, anom ):
+			return base + anom
+		def mult( base, anom ):
+			return base * anom
+		def div( base, anom ):
+			# this one may not be useful, but the placeholder is here
+			# return base / anom
+			return NotImplementedError
+		try:
+			operation_switch = { 'add':add, 'mult':mult, 'div':div }
+		except:
+			AttributeError( 'downscale: incorrect downscaling_operation str' )
+
 		# output_filenames 
 		time = self.anomalies.time.to_pandas()
 		time_suffix = [ '_'.join([str(t.month), str(t.year)]) for t in time ]
@@ -142,23 +163,50 @@ class DeltaDownscale( object ):
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			src_transform = self.affine
+	
+		print( 'anomalies rotated!' )
+
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies.shape[0] / 12)
 		args = zip( self.anomalies, rstlist, output_filenames )
-		args = [{'anom':i.data, 'base':j, 'output_filename':k} for i,j,k in args ]
 
-		# determine operation type
-		downscaling_operation_switch = {'absolute':'add', 'relative':'mult'}
-		downscaling_operation = downscaling_operation_switch[ self.ds_type ]
+		args = [{'anom':i.data, 'base':j, 'output_filename':k,\
+				'downscaling_operation':self.downscaling_operation, \
+				'post_downscale_function':self.post_downscale_function,\
+				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
+
+		# downscaling_operation = operation_switch[ self.downscaling_operation ]
 		# partial and wrapper
-		f = partial( self.interp_ds, src_transform=src_transform, downscaling_operation=downscaling_operation, \
-						post_downscale_function=None, mask=None, mask_value=0 )
-		def wrap( d ):
-			return f( **d )
+		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
+					src_transform=src_transform )
 
-		pool = multiprocessing.Pool( ncpus )
-		# out = pool.map( lambda x: f( **x ), args )
+		def wrap( d ):
+			interped = f( **d )
+			base = rasterio.open( d['base'] )
+			base_arr = base.read( 1 )
+			tmp = base.read_masks( 1 )
+			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+
+			# mask that shit?
+			output_arr[ tmp == 0 ] = base.nodata
+
+			# output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ] # not sure about this one
+
+			# post downscale it if necessary:
+			if d['post_downscale_function'] != None:
+				output_arr = post_downscale_function( output_arr )
+
+			meta = base.meta
+			meta.update( compress='lzw' )
+			if 'transform' in meta.keys():
+				meta.pop( 'transform' )
+
+			with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
+				out.write( output_arr, 1 )
+			return d['output_filename']
+
+		pool = multiprocessing.Pool( self.ncpus )
 		out = pool.map( wrap, args )
-		# pool.join()
 		pool.close()
+		pool.join()
 		return output_dir

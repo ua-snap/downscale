@@ -1,5 +1,5 @@
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-import glob, os
+import glob, os, rasterio
 import downscale
 
 # SETUP BASELINE
@@ -18,10 +18,11 @@ historical = downscale.Dataset( historical_fn, variable, model, scenario, units=
 future = downscale.Dataset( future_fn, variable, model, scenario, units=None )
 
 # DOWNSCALE
+mask = rasterio.open(baseline.filelist[0]).read_masks(1)
 clim_begin = '1961'
 clim_end = '1990'
 ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
-		metric='mean', ds_type='absolute', level=1000, level_name='plev' )
+		metric='mean', ds_type='absolute', level=1000, level_name='plev' )# add in the mask!
 ar5.downscale( output_dir=output_dir )
 
 # CRU historical
@@ -34,3 +35,15 @@ cru = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, metr
 cru.downscale( output_dir=output_dir )
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+
+# # # # NEW ORDER OF OPERATIONS:
+# read in a baseline climatology:
+
+# read in a Dataset:
+
+# setup downscale with options
+
+# run downscale with the object made above
+
+

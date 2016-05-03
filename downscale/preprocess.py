@@ -12,7 +12,7 @@ class Preprocess( object ):
 
 	'''
 	EXT = '.nc' # hardwired, but unlikely to change given current standard
-	def __init__( self, path, variable, model, scenario, experiment, years, *args, **kwargs ):
+	def __init__( self, path, variable, model, scenario, experiment, years, ext=EXT, *args, **kwargs ):
 		'''
 		path = [str] path cotaining potentially multiple files for a single series to bwe
 		variable = [str] 
@@ -21,13 +21,14 @@ class Preprocess( object ):
 		experiment = [str] 
 		years = [tuple] integers of beginning and ending year to preprocess (1901,2100)
 		'''
+		self.ext = ext
 		self.path = path
 		self.variable = variable
 		self.model = model
 		self.scenario = scenario
 		self.experiment = experiment
 		self.years = years
-		self.filelist = self.list_files( ext=self.ext )
+		self.filelist = self.list_files( )
 		self._fileyears_dict = self._get_files_years( )
 		self.ds = self._concat_nc_list( )
 
@@ -84,7 +85,7 @@ class Preprocess( object ):
 		if desired_year_begin < year_min:
 			begin_idx = ( year_min - desired_year_begin )
 		else:
-			begin_idx = np.min( np.where(years == desired_year_begin ))
+			begin_idx = np.min( np.where(years == desired_year_begin) )
 
 		end_idx = np.max( np.where( years == desired_year_end ))
 		return xarray_dataset[ dict( time=range( begin_idx, end_idx + 1 ) ) ]
@@ -92,8 +93,10 @@ class Preprocess( object ):
 		import xarray
 		import pandas as pd
 		# NOTE: the below line is something that used to be needed for a misbehaving model. may need again. keep it.
-		# ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in files) )
-		ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
+		ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in self.filelist) )
+		# THIS should be used, but it is being a PITA
+		# ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
+
 		ds = self._year_greater_yearlimit_workaround( ds, self.years[0], self.years[1], int(self._fileyears_dict['minyear']), int(self._fileyears_dict['maxyear']) )
 		if ds.time.dtype =='O':
 			print( '\nWARNING: Preprocess: modified time -- bad type\n' )

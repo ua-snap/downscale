@@ -151,63 +151,63 @@ def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, 
 	zi = griddata( (x, y), z, grid, method=method )
 	zi = np.flipud( zi ).astype( output_dtype )
 	return zi
-def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \
-	meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
-	'''
-	downscale an anomaly array with a baseline array from the same period.
+# def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \
+# 	meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
+# 	'''
+# 	downscale an anomaly array with a baseline array from the same period.
 
-	Arguments:
-	----------
-	anom_arr = [ np.ndarray ] 2-D NumPy array representing a raster domain. 
-				anom/baseline arrays must be same shape.
-	baseline_arr = [ np.ndarray ] 2-D NumPy array representing a raster domain. 
-				anom/baseline arrays must be same shape.
-	output_filename = [ str ] full path and output filename to be created
-	downscaling_operation = [ ] 
-	meta = [ dict ] rasterio-style dictionary of raster metadata attributes. This 
-			must jive with the dimensions and the data type of the array generated 
-			through downscaling anom_arr with baseline_arr.  
-	post_downscale_function = [ function ] a function that takes a 2-D downscaled 
-			array as input and returns an array of the same shape / datatype.  This
-			is typically used as a post-mortem for clamping the values from an output
-			downscaled array that may be slightly outside the range due to the 
-			interpolation method. We currently use this to clamp the values of the hur
-			to 0-100.
+# 	Arguments:
+# 	----------
+# 	anom_arr = [ np.ndarray ] 2-D NumPy array representing a raster domain. 
+# 				anom/baseline arrays must be same shape.
+# 	baseline_arr = [ np.ndarray ] 2-D NumPy array representing a raster domain. 
+# 				anom/baseline arrays must be same shape.
+# 	output_filename = [ str ] full path and output filename to be created
+# 	downscaling_operation = [ ] 
+# 	meta = [ dict ] rasterio-style dictionary of raster metadata attributes. This 
+# 			must jive with the dimensions and the data type of the array generated 
+# 			through downscaling anom_arr with baseline_arr.  
+# 	post_downscale_function = [ function ] a function that takes a 2-D downscaled 
+# 			array as input and returns an array of the same shape / datatype.  This
+# 			is typically used as a post-mortem for clamping the values from an output
+# 			downscaled array that may be slightly outside the range due to the 
+# 			interpolation method. We currently use this to clamp the values of the hur
+# 			to 0-100.
 
-	Returns:
-	--------
-	output_filename of newly generated downscaled raster.
+# 	Returns:
+# 	--------
+# 	output_filename of newly generated downscaled raster.
 
-	'''
-	import rasterio
+# 	'''
+# 	import rasterio
 
-	def add( base, anom ):
-		return base + anom
-	def mult( base, anom ):
-		return base * anom
-	def div( base, anom ):
-		# this one may not be useful, but the placeholder is here
-		# return base / anom
-		return NotImplementedError
+# 	def add( base, anom ):
+# 		return base + anom
+# 	def mult( base, anom ):
+# 		return base * anom
+# 	def div( base, anom ):
+# 		# this one may not be useful, but the placeholder is here
+# 		# return base / anom
+# 		return NotImplementedError
 
-	try:
-		operation_switch = { 'add':add, 'mult':mult, 'div':div }
-	except:
-		AttributeError( 'downscale: incorrect downscaling_operation str' )
+# 	try:
+# 		operation_switch = { 'add':add, 'mult':mult, 'div':div }
+# 	except:
+# 		AttributeError( 'downscale: incorrect downscaling_operation str' )
 	
-	output_arr = operation_switch[ downscaling_operation ]( baseline_arr, anom_arr )
-	output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ]
+# 	output_arr = operation_switch[ downscaling_operation ]( baseline_arr, anom_arr )
+# 	output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ]
 
-	if isinstance(mask, np.ndarray):
-		output_arr[ mask == 1 ] = mask_value
+# 	if isinstance(mask, np.ndarray):
+# 		output_arr[ mask == 0 ] = mask_value
 
-	if post_downscale_function != None:
-		output_arr = post_downscale_function( output_arr )
+# 	if post_downscale_function != None:
+# 		output_arr = post_downscale_function( output_arr )
 
-	if 'transform' in meta.keys():
-		# avoid the gdal geotransform deprecation warning
-		meta.pop( 'transform' )
+# 	if 'transform' in meta.keys():
+# 		# avoid the gdal geotransform deprecation warning
+# 		meta.pop( 'transform' )
 
-	with rasterio.open( output_filename, 'w', **meta ) as out:
-		out.write( output_arr, 1 )
-	return output_filename
+# 	with rasterio.open( output_filename, 'w', **meta ) as out:
+# 		out.write( output_arr, 1 )
+# 	return output_filename
