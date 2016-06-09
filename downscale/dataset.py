@@ -25,8 +25,22 @@ class Baseline( object ):
 				* must be in chronological order jan-dec.
 		'''
 		self.filelist = filelist
+		self.filelist.sort()
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = [ rasterio.open( fn ).read( 1 ) for fn in self.filelist ]
+		
+		# make sure the data are sorted chronlogically
+		# arrlist = self.arrlist
+		# self.arrlist = self.sort_files()
+		# self.rasters = [ rasterio.open(i).read(1) for i in self.arrlist ]
+
+	# def sort_files( self ):
+	# 	'''
+	# 	ensure the files are in chronological order
+	# 	'''
+	# 	arrlist = self.arrlist
+	# 	arrlist.sort()
+	# 	self.arrlist = arrlist
 
 
 class Dataset( object ):

@@ -7,7 +7,7 @@
 if __name__ == '__main__':
 
 	# import modules
-	from downscale import DownscaleAR5
+	import downscale
 	
 	# minimum required arguments
 	ar5_modeled = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/data/prepped/clt_prepped/IPSL-CM5A-LR/clt/clt_Amon_IPSL-CM5A-LR_rcp26_r1i1p1_200601_210012.nc'
@@ -17,7 +17,9 @@ if __name__ == '__main__':
 	base_path = '/atlas_scratch/malindgren/CMIP5/TEST_AR5'
 
 	# run
-	down = DownscaleAR5.DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, template_raster_fn=template_raster_fn, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
+	# down = DownscaleAR5.DownscaleAR5( ar5_modeled, ar5_historical, base_path, clim_path, template_raster_fn=template_raster_fn, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
+	# output = down.downscale_ar5_ts()
+	down = downscale.Dataset( ar5_modeled, ar5_historical, base_path, clim_path, template_raster_fn=template_raster_fn, ncores=32 ) #, climatology_begin, climatology_end, plev, absolute, metric, ncores )
 	output = down.downscale_ar5_ts()
 
 # CRU

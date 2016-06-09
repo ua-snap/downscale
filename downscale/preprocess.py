@@ -29,8 +29,8 @@ class Preprocess( object ):
 		self.experiment = experiment
 		self.years = years
 		self.filelist = self.list_files( )
-		self._fileyears_dict = self._get_files_years( )
-		self.ds = self._concat_nc_list( )
+		# self._fileyears_dict = self._get_files_years( )
+		# self.ds = self._concat_nc_list( )
 
 	def list_files( self ):
 		import os, glob
@@ -46,7 +46,7 @@ class Preprocess( object ):
 		'''
 		import pandas as pd
 		yearblob = [ fn.split( '_' )[-1].split('.')[0] for fn in self.filelist ]
-		years = pd.DataFrame([ i.split('-') for i in yearblob ], columns=['begin', 'end'])
+		years = pd.DataFrame([ i.split('-') for i in yearblob ], columns=['begin', 'end'])	
 		minyear = years.begin.min()[:4]
 		minmonth = years.begin.min()[-2:]
 		maxyear = years.end.max()[:4]

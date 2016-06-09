@@ -89,7 +89,7 @@ def shiftgrid( lon0, datain, lonsin, start=True, cyclic=360.0 ):
 	if lon0 < lonsin[0] or lon0 > lonsin[-1]:
 		raise ValueError('lon0 outside of range of lonsin')
 	i0 = np.argmin(np.fabs(lonsin-lon0))
-	i0_shift = len(lonsin)-i0
+	i0_shift = len(lonsin)-i0 # [ML] THIS COULD BE THE LINE GETTING US!!!
 	if np.ma.isMA(datain):
 		dataout  = np.ma.zeros(datain.shape,datain.dtype)
 	else:
