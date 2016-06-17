@@ -5,22 +5,32 @@ import glob, os, rasterio, itertools
 import downscale
 from downscale import preprocess
 
-# SETUP BASELINE
-clim_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism/tmax'
-filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
-baseline = downscale.Baseline( filelist )
-
 # some setup args
 base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prepped_cmip5'
 output_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_cmip5'
-variables = [ 'tasmax', 'tasmin' ]
+variables = [ 'tasmin', 'tasmax' ]
 scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+
+if not os.path.exists( output_dir ):
+	os.makedirs( output_dir )
 
 # open a log file to find out where we are messing up
 log = open( os.path.join( output_dir, 'log_file_downscale.txt'), 'w' )
 
 for variable, model, scenario in itertools.product( variables, models, scenarios ):
+	# SETUP BASELINE
+	if variable == 'tasmin':
+		v = 'tmin'
+	elif variable == 'tasmax':
+		v = 'tmax'
+	else:
+		NotImplementedError( 'only tasmin and tasmax are currently supported' )
+
+	clim_path = os.path.join( '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism_v2', v )
+	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
+	baseline = downscale.Baseline( filelist )
+
 	input_path = os.path.join( base_dir, model, scenario, variable )
 	output_path = os.path.join( output_dir, model, scenario, variable )
 
