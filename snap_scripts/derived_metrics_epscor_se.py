@@ -81,7 +81,6 @@ if __name__ == '__main__':
 		arr = np.array( pool.map( lambda x: rasterio.open( x ).read( 1 ), files ) )
 		pool.close()
 		pool.join()
-		break
 
 		# create the dataset in xarray
 		ds = xr.Dataset( { variable:(['time','x','y'], arr) }, 
@@ -91,6 +90,26 @@ if __name__ == '__main__':
 					attrs={ 'units':'Celcius', 'time_interval':'monthly', 
 							'variable':variable, 'model':model, 'scenario':scenario } )
 
-		# now create a seasonal average...
-		ds_season = ds.groupby( 'time.season' ).mean( axis=0 )
-		
+		# seasonal average ? -- for the series
+		ds_season_mean = ds.groupby( 'time.season' ).mean( axis=0 )
+		# seasonal min ? -- for the series
+		ds_season_min = ds.groupby( 'time.season' ).min( axis=0 )
+
+		# seasonal max ? -- for the series
+		ds_season_min = ds.groupby( 'time.season' ).max( axis=0 )
+
+
+		for season in [ 'DJF', 'MAM', 'JJA', 'SON' ]:
+			# select the season / metric here for output to GTiff:
+			#
+
+			# write it out
+			output_filename = os.path.join( output_path, season+'_mean.tif' )
+			with rasterio.open( output_filename, 'w', **meta ) as out:
+				out.write( season_arr, 1 )
+
+
+
+# # # TEST ZONE
+# # seasonal averages by year? -- doesnt make sense
+# ds_test_season = ds.groupby( 'time.year' ).apply( lambda x: x.groupby( 'time.season' ).mean( axis=0 ) )

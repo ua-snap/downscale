@@ -71,7 +71,7 @@ class Dataset( object ):
 		self._lonpc = None
 		if interp:
 			print( 'running interpolation across NAs' )
-			self.interp_na( )
+			_ = self.interp_na( )
 
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
@@ -93,8 +93,13 @@ class Dataset( object ):
 		return a list of dicts to pass to the xyz_to_grid hopefully in parallel
 		'''
 		from copy import copy
-		from pathos.multiprocessing import Pool
+		# from pathos.multiprocessing import Pool
 		# from multiprocessing import Pool
+		from pathos.mp_map import mp_map
+		import pandas as pd
+		import numpy as np
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
 
 		print 'interp with %s' % self.ncpus
 		output_dtype = np.float32
@@ -117,12 +122,15 @@ class Dataset( object ):
 		# setup args for multiprocessing
 		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.flatten() }).dropna( axis=0, how='any' ) for d in dat ]
 
-		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
-				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
+		args = [ {'x':copy(np.array(df['x'])), 'y':copy(np.array(df['y'])), 'z':copy(np.array(df['z'])), \
+				'grid':(copy(xi),copy(yi)), 'method':copy(self.method), 'output_dtype':copy(output_dtype) } for df in df_list ]
 
-		pool = Pool( self.ncpus )
-		out = pool.map( self._interpna, args )
-		pool.close()
+		# pool = Pool( self.ncpus )
+		# out = pool.map( self._interpna, args[:50] )
+		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+		out = map( self._interpna, args )
+		# out = mp_map( self._interpna, args[:20], nproc=self.ncpus )
+		# pool.close()
 		lons = self._lonpc
 		# stack em and roll-its axis so time is dim0
 		dat = np.rollaxis( np.dstack( out ), -1 )
@@ -130,14 +138,13 @@ class Dataset( object ):
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		ds = self.ds
+		ds = self.ds[ self.variable ] = dat
 		var = ds[ self.variable ]
 		setattr( var, 'data', dat )
 		self.ds = ds
 		print( 'ds interpolated updated into self.ds' )
-		return dat
+		return 1
 	@staticmethod
 	def _interpna( args_dict ):
 		return utils.xyz_to_grid( **args_dict )
-
 

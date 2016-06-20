@@ -48,7 +48,9 @@ class DeltaDownscale( object ):
 		self.mask = mask
 		self.mask_value = mask_value
 		self.ncpus = ncpus
-		self.affine = self._calc_ar5_affine()
+
+		self.affine = self._calc_affine()
+
 		# new args
 		self.src_crs = src_crs
 		self.src_nodata = src_nodata
@@ -60,17 +62,29 @@ class DeltaDownscale( object ):
 		self._calc_climatolgy()
 		self._calc_anomalies()
 
-	def _calc_ar5_affine( self, *args, **kwargs ):
+	def _calc_affine( self, *args, **kwargs ):
 		'''
 		this assumes 0-360 longitude-ordering (pacific-centered)
 		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
 		'''
 		import affine
 		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
-		lonmin,lonmax = self.historical.ds.lon.min(), self.historical.ds.lon.max()
+		lonmin, lonmax = self.historical.ds.lon.min().data, self.historical.ds.lon.max().data
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
 		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
+
+	# def _calc_ar5_affine( self, *args, **kwargs ):
+	# 	'''
+	# 	this assumes 0-360 longitude-ordering (pacific-centered)
+	# 	and WGS84 LatLong (Decimal Degrees). EPSG:4326.
+	# 	'''
+	# 	import affine
+	# 	lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
+	# 	lonmin,lonmax = self.historical.ds.lon.min(), self.historical.ds.lon.max()
+	# 	lat_res = 180.0 / lat_shape
+	# 	lon_res = 360.0 / lon_shape
+	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
 	def _concat_nc( self ):
 		if self.historical and self.future:
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
@@ -155,17 +169,17 @@ class DeltaDownscale( object ):
 			output_filenames = [ os.path.join( output_dir, '_'.join([self.historical.variable, units, \
 							self.metric, self.historical.model, ts]) + '.tif')  for ts in time_suffix ]
 		# rotate
-		if ( self.anomalies.lon > 200.0 ).any() == True:
+		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = affine.Affine( a, b, -180.0, d, e, 180.0 )
+			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			src_transform = self.affine
+			print( 'anomalies NOT rotated!' )
 	
-		print( 'anomalies rotated!' )
-
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies.shape[0] / 12)
 		args = zip( self.anomalies, rstlist, output_filenames )
@@ -187,7 +201,7 @@ class DeltaDownscale( object ):
 			tmp = base.read_masks( 1 )
 			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
 
-			# mask that shit?
+			# mask
 			output_arr[ tmp == 0 ] = base.nodata
 
 			# output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ] # not sure about this one
