@@ -1,7 +1,7 @@
 # CRU TS3.1 Run -- January 2016
 
 import glob, os, itertools, rasterio
-from downscale import DeltaDownscale, Baseline, Dataset, utils #, interp_na
+from downscale import DeltaDownscale, Baseline, Dataset
 
 # static args setup
 cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS31/cru_ts_3_10.1901.2009.tmx.dat.nc.gz'
@@ -37,7 +37,7 @@ ar5.downscale( output_dir=output_path )
 
 # # # # TMN
 import glob, os, itertools, rasterio
-from downscale import DeltaDownscale, Baseline, Dataset, utils #, interp_na
+from downscale import DeltaDownscale, Baseline, Dataset
 
 # static args setup
 cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS31/cru_ts_3_10.1901.2009.tmn.dat.nc.gz'
