@@ -6,6 +6,7 @@
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
 import rasterio, os
+# from pathos import multiprocessing
 import numpy as np
 import pandas as pd
 from downscale import utils
@@ -72,7 +73,18 @@ class Dataset( object ):
 		if interp:
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
-
+	def _calc_affine( self, *args, **kwargs ):
+		'''
+		this assumes 0-360 longitude-ordering (pacific-centered)
+		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
+		'''
+		import affine
+		lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
+		lonmin = self.ds.lon.min().data
+		latmin = self.ds.lat.min().data
+		lat_res = 180.0 / lat_shape
+		lon_res = 360.0 / lon_shape
+		return affine.Affine( lon_res, 0.0, latmin, 0.0, -lat_res, lonmin )
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
@@ -95,18 +107,17 @@ class Dataset( object ):
 		from copy import copy
 		# from pathos.multiprocessing import Pool
 		# from multiprocessing import Pool
-		from pathos.mp_map import mp_map
+		# from pathos.mp_map import mp_map
 		import pandas as pd
 		import numpy as np
 		# remove the darn scientific notation
 		np.set_printoptions( suppress=True )
 
-		print 'interp with %s' % self.ncpus
+		# print 'interp with %s' % self.ncpus
 		output_dtype = np.float32
 		
 		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
-
 			dat, lons = self.ds[ self.variable ].data, self.ds.lon
 			self._lonpc = lons
 		else:
@@ -116,7 +127,7 @@ class Dataset( object ):
 			self._lonpc = lons
 
 		# mesh the lons and lats and unravel them to 1-D
-		xi,yi = np.meshgrid( lons, self.ds.lat.data )
+		xi, yi = np.meshgrid( lons, self.ds.lat.data )
 		lo, la = [ i.flatten() for i in (xi,yi) ]
 
 		# setup args for multiprocessing
@@ -125,26 +136,24 @@ class Dataset( object ):
 		args = [ {'x':copy(np.array(df['x'])), 'y':copy(np.array(df['y'])), 'z':copy(np.array(df['z'])), \
 				'grid':(copy(xi),copy(yi)), 'method':copy(self.method), 'output_dtype':copy(output_dtype) } for df in df_list ]
 
-		# pool = Pool( self.ncpus )
-		# out = pool.map( self._interpna, args[:50] )
+		def wrap( d ):
+			return utils.xyz_to_grid( **d )
+
 		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-		out = map( self._interpna, args )
-		# out = mp_map( self._interpna, args[:20], nproc=self.ncpus )
+		dat = np.array([ wrap( i ) for i in args ])
+		# pool = multiprocessing.Pool( self.ncpus )
+		# out = map( wrap, args )
 		# pool.close()
+		# pool.join()
+
 		lons = self._lonpc
-		# stack em and roll-its axis so time is dim0
-		dat = np.rollaxis( np.dstack( out ), -1 )
 		if self._rotated == True: # rotate it back
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		ds = self.ds[ self.variable ] = dat
-		var = ds[ self.variable ]
-		setattr( var, 'data', dat )
-		self.ds = ds
+		self.ds = self.ds.update( { 'tmn':( ['time','lat','lon'], dat ) } )
 		print( 'ds interpolated updated into self.ds' )
 		return 1
-	@staticmethod
-	def _interpna( args_dict ):
-		return utils.xyz_to_grid( **args_dict )
-
+	# @staticmethod
+	# def _interpna( args_dict, **kwargs ):
+	# 	return utils.xyz_to_grid( **args_dict )
