@@ -70,10 +70,10 @@ class DeltaDownscale( object ):
 		import affine
 		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
 		lonmin, lonmax = self.historical.ds.lon.min().data, self.historical.ds.lon.max().data
+		latmin, latmax = self.historical.ds.lat.min().data, self.historical.ds.lat.max().data
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
-
+		return affine.Affine( lon_res, 0.0, latmin, 0.0, -lat_res, lonmin )
 	# def _calc_ar5_affine( self, *args, **kwargs ):
 	# 	'''
 	# 	this assumes 0-360 longitude-ordering (pacific-centered)
@@ -173,7 +173,7 @@ class DeltaDownscale( object ):
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
-			src_transform = affine.Affine( a, b, -180.0, d, e, 180.0 )
+			src_transform = affine.Affine( a, b, 90.0, d, e, -180.0 )
 			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
