@@ -63,28 +63,18 @@ class DeltaDownscale( object ):
 		self._calc_anomalies()
 
 	def _calc_affine( self, *args, **kwargs ):
+		# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
 		'''
 		this assumes 0-360 longitude-ordering (pacific-centered)
 		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
 		'''
 		import affine
-		lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
-		lonmin, lonmax = self.historical.ds.lon.min().data, self.historical.ds.lon.max().data
-		latmin, latmax = self.historical.ds.lat.min().data, self.historical.ds.lat.max().data
+		lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
+		lonmin = self.ds.lon.min().data
+		latmin = self.ds.lat.min().data
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, latmin, 0.0, -lat_res, lonmin )
-	# def _calc_ar5_affine( self, *args, **kwargs ):
-	# 	'''
-	# 	this assumes 0-360 longitude-ordering (pacific-centered)
-	# 	and WGS84 LatLong (Decimal Degrees). EPSG:4326.
-	# 	'''
-	# 	import affine
-	# 	lat_shape, lon_shape = self.historical.ds.dims[ 'lat' ], self.historical.ds.dims[ 'lon' ]
-	# 	lonmin,lonmax = self.historical.ds.lon.min(), self.historical.ds.lon.max()
-	# 	lat_res = 180.0 / lat_shape
-	# 	lon_res = 360.0 / lon_shape
-	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, lonmax )
+		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmin )	# def _calc_ar5_affine( self, *args, **kwargs ):
 	def _concat_nc( self ):
 		if self.historical and self.future:
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
@@ -196,7 +186,7 @@ class DeltaDownscale( object ):
 
 		def wrap( d ):
 			interped = f( **d )
-			base = rasterio.open( d['base'] )
+			base = rasterio.open( d[ 'base' ] )
 			base_arr = base.read( 1 )
 			tmp = base.read_masks( 1 )
 			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )

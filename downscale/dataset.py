@@ -25,8 +25,7 @@ class Baseline( object ):
 		filelist = [list] of str paths to each of the 12 monthly climatology files.
 				* must be in chronological order jan-dec.
 		'''
-		self.filelist = filelist
-		self.filelist.sort()
+		self.filelist = sorted( filelist )
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = [ rasterio.open( fn ).read( 1 ) for fn in self.filelist ]
 		
@@ -46,7 +45,7 @@ class Baseline( object ):
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, units=None, interp=False, ncpus=32, \
-					method='cubic', *args, **kwargs):
+					method='linear', *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -74,6 +73,7 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	def _calc_affine( self, *args, **kwargs ):
+		# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
 		'''
 		this assumes 0-360 longitude-ordering (pacific-centered)
 		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
@@ -84,7 +84,7 @@ class Dataset( object ):
 		latmin = self.ds.lat.min().data
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, latmin, 0.0, -lat_res, lonmin )
+		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmin )
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
@@ -127,14 +127,14 @@ class Dataset( object ):
 			self._lonpc = lons
 
 		# mesh the lons and lats and unravel them to 1-D
-		xi, yi = np.meshgrid( lons, self.ds.lat.data )
-		lo, la = [ i.flatten() for i in (xi,yi) ]
+		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
 
 		# setup args for multiprocessing
-		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.flatten() }).dropna( axis=0, how='any' ) for d in dat ]
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
 
-		args = [ {'x':copy(np.array(df['x'])), 'y':copy(np.array(df['y'])), 'z':copy(np.array(df['z'])), \
-				'grid':(copy(xi),copy(yi)), 'method':copy(self.method), 'output_dtype':copy(output_dtype) } for df in df_list ]
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 
 		def wrap( d ):
 			return utils.xyz_to_grid( **d )
@@ -142,7 +142,7 @@ class Dataset( object ):
 		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
 		dat = np.array([ wrap( i ) for i in args ])
 		# pool = multiprocessing.Pool( self.ncpus )
-		# out = map( wrap, args )
+		# out = pool.map( wrap, args )
 		# pool.close()
 		# pool.join()
 
@@ -151,9 +151,6 @@ class Dataset( object ):
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		self.ds = self.ds.update( { 'tmn':( ['time','lat','lon'], dat ) } )
+		self.ds = self.ds.update( { self.variable:( ['time','lat','lon'], dat ) } )
 		print( 'ds interpolated updated into self.ds' )
 		return 1
-	# @staticmethod
-	# def _interpna( args_dict, **kwargs ):
-	# 	return utils.xyz_to_grid( **args_dict )

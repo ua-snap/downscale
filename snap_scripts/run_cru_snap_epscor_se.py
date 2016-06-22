@@ -1,7 +1,7 @@
 # CRU TS3.1 Run -- January 2016
 
 import glob, os, itertools, rasterio
-from downscale import DeltaDownscale, Baseline, Dataset
+from downscale import DeltaDownscale, Baseline, Dataset, utils
 
 # static args setup
 cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS31/cru_ts_3_10.1901.2009.tmx.dat.nc.gz'
@@ -24,21 +24,21 @@ clim_begin = '1961'
 clim_end = '1990'
 
 # FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
-historical = Dataset( cru_ts, variable, model, scenario, units=None, interp=True, ncpus=32 )
+historical = Dataset( cru_ts, variable, model, scenario, units='C', interp=True, method='linear', ncpus=32 )
 
 # new = interp_na( historical, 'cubic' )
 ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
 		metric='mean', downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
-		src_crs={'init':'epsg:4326'}, src_nodata=-9999, dst_nodata=None,
-		post_downscale_function=None )
+		src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
+		post_downscale_function=None ) # -9999
 
 ar5.downscale( output_dir=output_path )
 
 
 # # # # TMN
 import glob, os, itertools, rasterio
-from downscale import DeltaDownscale, Baseline, Dataset
-
+from downscale import DeltaDownscale, Baseline, Dataset, utils
+		
 # static args setup
 cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS31/cru_ts_3_10.1901.2009.tmn.dat.nc.gz'
 clim_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism_v2/tmin'
@@ -60,13 +60,13 @@ clim_begin = '1961'
 clim_end = '1990'
 
 # FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
-historical = Dataset( cru_ts, variable, model, scenario, units=None, interp=True, ncpus=32 )
+historical = Dataset( cru_ts, variable, model, scenario, units='C', interp=True, ncpus=32 )
 
 # new = interp_na( historical, 'cubic' )
 ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
 		metric='mean', downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
-		src_crs={'init':'epsg:4326'}, src_nodata=-9999, dst_nodata=None,
-		post_downscale_function=None )
+		src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
+		post_downscale_function=None ) #-9999
 
 ar5.downscale( output_dir=output_path )
 
