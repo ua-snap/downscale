@@ -1,5 +1,6 @@
 # CRU TS3.1 Run -- January 2016
 
+# # # # TMX # # # # # # # 
 import glob, os, itertools, rasterio
 from downscale import DeltaDownscale, Baseline, Dataset, utils
 
@@ -13,6 +14,9 @@ clim_end = '1990'
 variable = 'tmx'
 model = 'cru_ts31'
 scenario = 'historical'
+metric = 'max'
+out_varname = 'tasmax'
+project = 'cru'
 
 # RUN 2.0
 filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -28,14 +32,14 @@ historical = Dataset( cru_ts, variable, model, scenario, units='C', interp=True,
 
 # new = interp_na( historical, 'cubic' )
 ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
-		metric='mean', downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
+		metric=metric, downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
 		src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-		post_downscale_function=None ) # -9999
+		post_downscale_function=None, varname=out_varname ) # -9999
 
 ar5.downscale( output_dir=output_path )
 
 
-# # # # TMN
+# # # # TMN # # # # # # # 
 import glob, os, itertools, rasterio
 from downscale import DeltaDownscale, Baseline, Dataset, utils
 		
@@ -49,6 +53,9 @@ clim_end = '1990'
 variable = 'tmn'
 model = 'cru_ts31'
 scenario = 'historical'
+metric = 'min'
+out_varname = 'tasmin'
+project = 'cru'
 
 # RUN 2.0
 filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -60,13 +67,12 @@ clim_begin = '1961'
 clim_end = '1990'
 
 # FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
-historical = Dataset( cru_ts, variable, model, scenario, units='C', interp=True, ncpus=32 )
+historical = Dataset( cru_ts, variable, model, scenario, project=project, units='C', interp=True, ncpus=32 )
 
-# new = interp_na( historical, 'cubic' )
 ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
-		metric='mean', downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
+		metric=metric, downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
 		src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-		post_downscale_function=None ) #-9999
+		post_downscale_function=None, varname=out_varname ) #-9999
 
 ar5.downscale( output_dir=output_path )
 

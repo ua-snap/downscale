@@ -11,6 +11,9 @@ output_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/d
 variables = [ 'tasmin', 'tasmax' ]
 scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+project = 'ar5'
+units = 'C'
+metric = 'mean'
 
 if not os.path.exists( output_dir ):
 	os.makedirs( output_dir )
@@ -43,13 +46,13 @@ for variable, model, scenario in itertools.product( variables, models, scenarios
 	fn, = glob.glob( os.path.join( input_path, '*.nc' ) )
 
 	if 'historical' in scenario:
-		historical = downscale.Dataset( fn, variable, model, scenario, units=None )
+		historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=None )
 		future = None # no need for futures here....
 	else:
 		# get the historical data for anomalies
 		historical_fn, = glob.glob( os.path.join( os.path.dirname( fn ).replace( scenario, 'historical' ), '*.nc' ) )
-		historical = downscale.Dataset( historical_fn, variable, model, scenario, units=None )
-		future = downscale.Dataset( fn, variable, model, scenario, units=None )
+		historical = downscale.Dataset( historical_fn, variable, model, scenario, project=project, units=units )
+		future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units )
 
 	# DOWNSCALE
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
@@ -57,8 +60,9 @@ for variable, model, scenario in itertools.product( variables, models, scenarios
 	clim_end = '1990'
 
 	ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
-			metric='mean', downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
-			src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-			post_downscale_function=None )
+			metric=metric, downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
+			src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
+			post_downscale_function=None ) # -9999.0
 
 	ar5.downscale( output_dir=output_path )
+	break

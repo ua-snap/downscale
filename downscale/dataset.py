@@ -42,9 +42,8 @@ class Baseline( object ):
 	# 	arrlist.sort()
 	# 	self.arrlist = arrlist
 
-
 class Dataset( object ):
-	def __init__( self, fn, variable, model, scenario, units=None, interp=False, ncpus=32, \
+	def __init__( self, fn, variable, model, scenario, project=None, units=None, interp=False, ncpus=32, \
 					method='linear', *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
@@ -62,7 +61,13 @@ class Dataset( object ):
 		self.variable = variable
 		self.model = model
 		self.scenario = scenario
-		self.units = units
+		self.units = 'units'
+		if units:
+			self.units = units
+			
+		self.project = 'project'
+		if project:
+			self.project = project
 
 		self.interp = interp
 		self.ncpus = ncpus

@@ -16,7 +16,7 @@ class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		metric='mean', downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
 		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None ):
+		post_downscale_function=None, varname=None ):
 		
 		'''
 		simple delta downscaling
@@ -48,6 +48,7 @@ class DeltaDownscale( object ):
 		self.mask = mask
 		self.mask_value = mask_value
 		self.ncpus = ncpus
+		self.varname = varname
 
 		self.affine = self._calc_affine()
 
@@ -149,15 +150,18 @@ class DeltaDownscale( object ):
 		# output_filenames 
 		time = self.anomalies.time.to_pandas()
 		time_suffix = [ '_'.join([str(t.month), str(t.year)]) for t in time ]
+
+		variable = self.historical.variable
+		if self.varname:
+			variable = varname
+
 		if prefix:
 			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
 		else:
-			if not self.historical.units:
-				units = 'units'
-			else:
-				units = self.historical.units
-			output_filenames = [ os.path.join( output_dir, '_'.join([self.historical.variable, units, \
-							self.metric, self.historical.model, ts]) + '.tif')  for ts in time_suffix ]
+			# # # [ variable, metric, units, project, model, scenario, month, year, ext ]
+			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.metric, self.historical.units, \
+						self.historical.project, self.historical.model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+			
 		# rotate
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
