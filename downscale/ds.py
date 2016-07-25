@@ -14,13 +14,13 @@ from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
-		metric='mean', downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
+		downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
 		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None, varname=None ):
+		post_downscale_function=None, varname=None, modelname=None ):
 		
 		'''
 		simple delta downscaling
-
+		
 		Arguments:
 		----------
 		baseline = []
@@ -28,20 +28,18 @@ class DeltaDownscale( object ):
 		clim_end = []
 		historical = []
 		future = []
-		metric = []
 		level = []
 		level_name = []
-
+		
 		Returns:
 		--------
-
+		
 		'''
 		self.historical = historical
 		self.future = future
 		self.baseline = baseline
 		self.clim_begin = clim_begin
 		self.clim_end = clim_end
-		self.metric = metric
 		self.downscaling_operation = downscaling_operation
 		self.level = level
 		self.level_name = level_name
@@ -49,8 +47,8 @@ class DeltaDownscale( object ):
 		self.mask_value = mask_value
 		self.ncpus = ncpus
 		self.varname = varname
-
-		self.affine = self._calc_affine()
+		self.modelname = modelname
+		self.affine = self.historical._calc_affine()
 
 		# new args
 		self.src_crs = src_crs
@@ -63,19 +61,6 @@ class DeltaDownscale( object ):
 		self._calc_climatolgy()
 		self._calc_anomalies()
 
-	def _calc_affine( self, *args, **kwargs ):
-		# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
-		'''
-		this assumes 0-360 longitude-ordering (pacific-centered)
-		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
-		'''
-		import affine
-		lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
-		lonmin = self.ds.lon.min().data
-		latmin = self.ds.lat.min().data
-		lat_res = 180.0 / lat_shape
-		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmin )	# def _calc_ar5_affine( self, *args, **kwargs ):
 	def _concat_nc( self ):
 		if self.historical and self.future:
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
@@ -147,27 +132,46 @@ class DeltaDownscale( object ):
 		except:
 			AttributeError( 'downscale: incorrect downscaling_operation str' )
 
-		# output_filenames 
-		time = self.anomalies.time.to_pandas()
-		time_suffix = [ '_'.join([str(t.month), str(t.year)]) for t in time ]
+		time_arr = self.anomalies.time.to_pandas() # CHANGE THIS NAME!
 
-		variable = self.historical.variable
-		if self.varname:
-			variable = varname
-
-		if prefix:
-			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
+		# we need to be able to output ONLY the years we want if there is a future
+		if self.future:
+			time_arr = self.future.ds.time.to_pandas()
+		
+		# slice the anomalies
+		self.anomalies = self.anomalies.sel( time=slice( time_arr[0], time_arr[-1] ) )
+		
+		time_suffix = [ '_'.join([str(t.month), str(t.year)]) for t in time_arr ]
+		
+		# deal with missing variable names and/or model names
+		if self.historical.variable != None:
+			variable = self.historical.variable
 		else:
-			# # # [ variable, metric, units, project, model, scenario, month, year, ext ]
-			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.metric, self.historical.units, \
-						self.historical.project, self.historical.model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
-			
+			variable = 'variable'
+		
+		if self.historical.model != None:
+			model = self.historical.model
+		else:
+			model = 'model'
+
+		if self.modelname != None:
+			model = self.modelname
+
+		# set up some output filenames
+		# # # [ variable, metric, units, project, model, scenario, month, year, ext ]
+		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+
+		# if there is a specific name prefix, use it
+		if prefix != None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
+		
 		# rotate
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
-			src_transform = affine.Affine( a, b, 90.0, d, e, -180.0 )
+			src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )

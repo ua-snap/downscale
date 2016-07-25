@@ -43,7 +43,7 @@ class Baseline( object ):
 	# 	self.arrlist = arrlist
 
 class Dataset( object ):
-	def __init__( self, fn, variable, model, scenario, project=None, units=None, interp=False, ncpus=32, \
+	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
 					method='linear', *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
@@ -61,13 +61,21 @@ class Dataset( object ):
 		self.variable = variable
 		self.model = model
 		self.scenario = scenario
-		self.units = 'units'
-		if units:
+		
+		if units != None:
 			self.units = units
+		else:
+			self.units = 'units'
 			
-		self.project = 'project'
-		if project:
+		if project != None:
 			self.project = project
+		else:
+			self.project = 'project'
+
+		if metric != None:
+			self.metric = metric
+		else:
+			self.metric = 'metric'
 
 		self.interp = interp
 		self.ncpus = ncpus
@@ -77,19 +85,39 @@ class Dataset( object ):
 		if interp:
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
+
 	def _calc_affine( self, *args, **kwargs ):
-		# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
-		'''
-		this assumes 0-360 longitude-ordering (pacific-centered)
-		and WGS84 LatLong (Decimal Degrees). EPSG:4326.
-		'''
 		import affine
+		import numpy as np
 		lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
 		lonmin = self.ds.lon.min().data
-		latmin = self.ds.lat.min().data
+		latmax = self.ds.lat.max().data
+
+		# get the right upper left lon to the corner
+		lon_arr = np.array([-180.0, 0.0])
+		idx = (np.abs(lon_arr - lonmin)).argmin()
+		lonmin = lon_arr[ idx ]
+		
+		# HARDWIRED FOR GLOBAL DATA
+		latmax = 90.0
+
+		# get the resolution in both directions
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmin )
+		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
+	# def _calc_affine( self, *args, **kwargs ):
+	# 	# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
+	# 	'''
+	# 	this assumes 0-360 longitude-ordering (pacific-centered)
+	# 	and WGS84 LatLong (Decimal Degrees). EPSG:4326.
+	# 	'''
+	# 	import affine
+	# 	lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
+	# 	lonmin = self.ds.lon.min().data
+	# 	latmax = self.ds.lat.max().data
+	# 	lat_res = 180.0 / lat_shape
+	# 	lon_res = 360.0 / lon_shape
+	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
@@ -102,6 +130,9 @@ class Dataset( object ):
 		else:
 			raise AttributeError( 'to_pacific must be boolean True:False' )
 		return dat, lons
+	@staticmethod
+	def wrap( d ):
+		return utils.xyz_to_grid( **d )
 	def interp_na( self ):
 		'''
 		np.float32
@@ -110,15 +141,13 @@ class Dataset( object ):
 		return a list of dicts to pass to the xyz_to_grid hopefully in parallel
 		'''
 		from copy import copy
-		# from pathos.multiprocessing import Pool
+		# from pathos import multiprocessing
 		# from multiprocessing import Pool
 		# from pathos.mp_map import mp_map
 		import pandas as pd
 		import numpy as np
 		# remove the darn scientific notation
 		np.set_printoptions( suppress=True )
-
-		# print 'interp with %s' % self.ncpus
 		output_dtype = np.float32
 		
 		# if 0-360 leave it alone
@@ -127,7 +156,7 @@ class Dataset( object ):
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.ds[ self.variable ].data, self.ds.lon, to_pacific=True )
+			dat, lons = self.rotate( self.ds[ self.variable ].values, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -141,13 +170,13 @@ class Dataset( object ):
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 
-		def wrap( d ):
-			return utils.xyz_to_grid( **d )
+		# def wrap( d ):
+		# 	return 
 
 		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-		dat = np.array([ wrap( i ) for i in args ])
+		dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
 		# pool = multiprocessing.Pool( self.ncpus )
-		# out = pool.map( wrap, args )
+		# dat = np.array( pool.map( self.wrap, args ) )
 		# pool.close()
 		# pool.join()
 

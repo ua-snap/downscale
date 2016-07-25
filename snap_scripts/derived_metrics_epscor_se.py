@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
 		# get the lons and lats for the NetCDF
 		lons, lats = coordinates( files[0] )
-		lons, lats = [ np.unique( x ) for x in [lons, lats] ]
+		# lons, lats = [ np.unique( x ) for x in [lons, lats] ]
 
 		# make the huge data array
 		pool = multiprocessing.Pool( 32 )
@@ -89,24 +89,35 @@ if __name__ == '__main__':
 							'time': pd.date_range( begin, end, freq='M' ) },
 					attrs={ 'units':'Celcius', 'time_interval':'monthly', 
 							'variable':variable, 'model':model, 'scenario':scenario } )
+		
+		# group the data by season
+		grouped = ds.groupby( 'time.season' )
+		# get the season names
+		seasons = grouped.groups.keys()
+		# extract the indices representing these months from the larger xr.Dataset
+		season = 'DJF'
+		time_indices = grouped.groups[ season ]
+		# slice the data using that season
+		ds_season = ds[ variable ][ time_indices ]
+		# [ ds[ variable ][ grouped.groups[ season ] ] for season in seasons ]
 
-		# seasonal average ? -- for the series
-		ds_season_mean = ds.groupby( 'time.season' ).mean( axis=0 )
-		# seasonal min ? -- for the series
-		ds_season_min = ds.groupby( 'time.season' ).min( axis=0 )
+		# # seasonal average ? -- for the series
+		# ds_season_mean = ds.groupby( 'time.season' ).mean( axis=0 )
+		# # seasonal min ? -- for the series
+		# ds_season_min = ds.groupby( 'time.season' ).min( axis=0 )
 
-		# seasonal max ? -- for the series
-		ds_season_min = ds.groupby( 'time.season' ).max( axis=0 )
+		# # seasonal max ? -- for the series
+		# ds_season_min = ds.groupby( 'time.season' ).max( axis=0 )
 
 
-		for season in [ 'DJF', 'MAM', 'JJA', 'SON' ]:
-			# select the season / metric here for output to GTiff:
-			#
+		# for season in [ 'DJF', 'MAM', 'JJA', 'SON' ]:
+		# 	# select the season / metric here for output to GTiff:
+		# 	#
 
-			# write it out
-			output_filename = os.path.join( output_path, season+'_mean.tif' )
-			with rasterio.open( output_filename, 'w', **meta ) as out:
-				out.write( season_arr, 1 )
+		# 	# write it out
+		# 	output_filename = os.path.join( output_path, season+'_mean.tif' )
+		# 	with rasterio.open( output_filename, 'w', **meta ) as out:
+		# 		out.write( season_arr, 1 )
 
 
 

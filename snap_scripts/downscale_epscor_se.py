@@ -10,7 +10,17 @@ base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/pre
 output_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_cmip5'
 variables = [ 'tasmin', 'tasmax' ]
 scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+models = [ 'IPSL-CM5A-LR' ] # , 'MRI-CGCM3''GISS-E2-R', 'GFDL-CM3', 'CCSM4'
+# [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+
+# # # 
+# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
+# used in querying the file which is the models list variable
+all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ] # temp for distributed run
+modelnames = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
+modelnames = dict( zip( all_models, modelnames ) )
+# # #
+
 project = 'ar5'
 units = 'C'
 metric = 'mean'
@@ -22,6 +32,7 @@ if not os.path.exists( output_dir ):
 log = open( os.path.join( output_dir, 'log_file_downscale.txt'), 'w' )
 
 for variable, model, scenario in itertools.product( variables, models, scenarios ):
+	modelname = modelnames[ model ]
 	# SETUP BASELINE
 	if variable == 'tasmin':
 		v = 'tmin'
@@ -46,13 +57,23 @@ for variable, model, scenario in itertools.product( variables, models, scenarios
 	fn, = glob.glob( os.path.join( input_path, '*.nc' ) )
 
 	if 'historical' in scenario:
-		historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=None )
+		historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units )
 		future = None # no need for futures here....
 	else:
 		# get the historical data for anomalies
 		historical_fn, = glob.glob( os.path.join( os.path.dirname( fn ).replace( scenario, 'historical' ), '*.nc' ) )
 		historical = downscale.Dataset( historical_fn, variable, model, scenario, project=project, units=units )
 		future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units )
+
+	# convert from Kelvin to Celcius
+	if historical:
+		historical.ds[ variable ] = historical.ds[ variable ] - 273.15
+		historical.ds[ variable ][ 'units' ] = units
+
+	if future:
+		future.ds[ variable ] = future.ds[ variable ] - 273.15
+		future.ds[ variable ][ 'units' ] = units
+
 
 	# DOWNSCALE
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
@@ -62,7 +83,6 @@ for variable, model, scenario in itertools.product( variables, models, scenarios
 	ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
 			metric=metric, downscaling_operation='add', mask=mask, mask_value=0, ncpus=32, \
 			src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-			post_downscale_function=None ) # -9999.0
+			post_downscale_function=None, modelname=modelname ) # -9999.0
 
 	ar5.downscale( output_dir=output_path )
-	break
