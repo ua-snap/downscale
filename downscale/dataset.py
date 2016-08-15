@@ -79,6 +79,9 @@ class Dataset( object ):
 		else:
 			self.metric = 'metric'
 
+		# update the lats and data to be NorthUp if necessary
+		self.northup()
+
 		self.interp = interp
 		self.ncpus = ncpus
 		self.method = method
@@ -112,6 +115,14 @@ class Dataset( object ):
 		lat_res = 180.0 / lat_shape
 		lon_res = 360.0 / lon_shape
 		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
+	def northup( self, latitude='lat' ):
+		''' this works only for global grids to be downscaled flips it northup '''
+		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
+			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
+			# flip each slice of the array and make a new one
+			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
+			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
+
 	# def _calc_affine( self, *args, **kwargs ):
 	# 	# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
 	# 	'''

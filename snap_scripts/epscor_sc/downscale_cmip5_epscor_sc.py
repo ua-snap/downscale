@@ -4,30 +4,30 @@ if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
-	from downscale import preprocess
+	# from downscale import preprocess
 	import argparse
 	import numpy as np
 
 	# # parse the commandline arguments
-	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )	
-	args = parser.parse_args()
+	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )	
+	# args = parser.parse_args()
 
-	# unpack the args
-	variable = args.variable
-	scenario = args.scenario
-	model = args.model
+	# # unpack the args
+	# variable = args.variable
+	# scenario = args.scenario
+	# model = args.model
 
 	project = 'ar5'
 	units = 'C'
 	metric = 'mean'
 	
-	# # # # FOR TESTING # # # 
-	# variable = 'tas'
-	# scenario = 'rcp45'
-	# model = 'GFDL-CM3'
+	# # # FOR TESTING # # # 
+	variable = 'tas'
+	scenario = 'rcp45'
+	model = 'GFDL-CM3'
 
 	# some setup args
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prepped_cmip5'
@@ -52,6 +52,7 @@ if __name__ == '__main__':
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
+
 		# SETUP BASELINE
 		clim_path = os.path.join( '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism', variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -113,4 +114,4 @@ if __name__ == '__main__':
 				post_downscale_function=round_data, varname=variable, modelname=modelname )
 
 		ar5.downscale( output_dir=output_path )
-		
+		STOP!
