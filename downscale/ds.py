@@ -86,7 +86,13 @@ class DeltaDownscale( object ):
 			anomalies = self.ds.groupby( 'time.month' ) / self.climatology
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
-		self.anomalies = anomalies
+
+		# slice back to times we want
+		if self.historical and self.future:
+			self.anomalies = anomalies.sel( time=self.future.time )
+		else:
+			self.anomalies = anomalies.sel( time=self.historical.time )
+
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
 		'''	
@@ -127,14 +133,14 @@ class DeltaDownscale( object ):
 		except:
 			AttributeError( 'downscale: incorrect downscaling_operation str' )
 
-		time_arr = self.anomalies.time.to_pandas() # CHANGE THIS NAME!
+		# time_arr = self.anomalies.time.to_pandas() # CHANGE THIS NAME!
 
 		# we need to be able to output ONLY the years we want if there is a future
-		if self.future:
-			time_arr = self.future.ds.time.to_pandas()
+		# if self.future:
+		# 	time_arr = self.future.ds.time.to_pandas()
 		
-		# slice the anomalies
-		self.anomalies = self.anomalies.sel( time=slice( time_arr[0], time_arr[-1] ) )
+		# # slice the anomalies
+		# self.anomalies = self.anomalies.sel( time=slice( time_arr[0], time_arr[-1] ) )
 
 		def two_digit_month( x ):
 			''' make 1 digit month a standard 2-digit for output filenames '''
@@ -143,8 +149,9 @@ class DeltaDownscale( object ):
 				month = '0'+month
 			return month
 
-		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in time_arr ]
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time ]
 		
+		# # # # SOME STUFF TO DEAL WITH CUSTOM OUTPUT NAMING OTF # # # # # # # # # # # # # # #
 		# deal with missing variable names and/or model names
 		if self.varname != None:
 			variable = self.varname
@@ -159,7 +166,8 @@ class DeltaDownscale( object ):
 			model = self.historical.model
 		else:
 			model = 'model'
-
+		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+		
 		# set up some output filenames
 		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
@@ -168,7 +176,7 @@ class DeltaDownscale( object ):
 		if prefix != None:
 			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
 		
-		# rotate
+		# rotate to greenwich-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			a,b,c,d,e,f,g,h,i = self.affine

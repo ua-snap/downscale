@@ -6,7 +6,6 @@
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
 import rasterio, os
-# from pathos import multiprocessing
 import numpy as np
 import pandas as pd
 from downscale import utils
@@ -67,7 +66,7 @@ class Dataset( object ):
 			self.metric = 'metric'
 
 		# update the lats and data to be NorthUp if necessary
-		self.northup()
+		# self.northup()
 
 		self.interp = interp
 		self.ncpus = ncpus
@@ -83,8 +82,28 @@ class Dataset( object ):
 		''' simple way to make an affine transform from lats and lons coords '''
 		from affine import Affine
 		lat = np.asarray( lat )
-		lon = np.asarray(lon)
+		lon = np.asarray( lon )
+		if np.min( lat )
 		trans = Affine.translation(lon[0], lat[0])
+		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+		return trans * scale
+	@staticmethod
+	def transform_from_latlon( lat, lon ):
+		''' simple way to make an affine transform from lats and lons coords '''
+		from affine import Affine
+		lat = np.asarray( lat )
+		lon = np.asarray( lon )
+		if (np.max( lat ) - 90) < np.mean( np.diff( lat ) ):
+			lat_max = 90.0
+		else:
+			lat_max = np.max( lat )
+
+		# set the lonmax to the corner.
+		lon_arr = np.array([-180.0, 0.0 ])
+		idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
+		lon_max = lon_arr[ idx ]
+
+		trans = Affine.translation(lon_max, lat_max)
 		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
 		return trans * scale
 	def _calc_affine( self ):
@@ -96,7 +115,7 @@ class Dataset( object ):
 			# flip each slice of the array and make a new one
 			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
 			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
-
+		self.ds = self.ds
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
@@ -120,11 +139,9 @@ class Dataset( object ):
 		return a list of dicts to pass to the xyz_to_grid hopefully in parallel
 		'''
 		from copy import copy
-		# from pathos import multiprocessing
-		# from multiprocessing import Pool
-		# from pathos.mp_map import mp_map
 		import pandas as pd
 		import numpy as np
+
 		# remove the darn scientific notation
 		np.set_printoptions( suppress=True )
 		output_dtype = np.float32
@@ -149,15 +166,8 @@ class Dataset( object ):
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 
-		# def wrap( d ):
-		# 	return 
-
 		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
 		dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
-		# pool = multiprocessing.Pool( self.ncpus )
-		# dat = np.array( pool.map( self.wrap, args ) )
-		# pool.close()
-		# pool.join()
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
