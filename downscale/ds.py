@@ -89,9 +89,9 @@ class DeltaDownscale( object ):
 
 		# slice back to times we want
 		if self.historical and self.future:
-			self.anomalies = anomalies.sel( time=self.future.time )
+			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
-			self.anomalies = anomalies.sel( time=self.historical.time )
+			self.anomalies = anomalies.sel( time=self.historical.ds.time )
 
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
