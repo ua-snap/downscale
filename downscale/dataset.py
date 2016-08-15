@@ -44,7 +44,7 @@ class Baseline( object ):
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
-					method='linear', *args, **kwargs):
+					method='linear', begin=None, end=None, *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -57,10 +57,12 @@ class Dataset( object ):
 		'''
 		import xarray as xr
 		self.fn = fn
-		self.ds = xr.open_dataset( fn )
+		self.ds = xr.open_dataset( self.fn )
 		self.variable = variable
 		self.model = model
 		self.scenario = scenario
+		self.begin = begin # year begin for self._open_dataset()
+		self.end = end # year end
 		
 		if units != None:
 			self.units = units
@@ -85,7 +87,12 @@ class Dataset( object ):
 		if interp:
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
-
+	
+	# def _open_dataset( self ):
+	# 	ds = xr.open_dataset( self.fn )
+	# 	if self.begin and self.end:
+	# 		ds = ds.sel( time=slice( self.begin, self.end ) )
+	# 	return ds
 	def _calc_affine( self, *args, **kwargs ):
 		import affine
 		import numpy as np

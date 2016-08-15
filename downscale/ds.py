@@ -6,7 +6,7 @@
 # Author: Michael Lindgren (malindgren@alaska.edu)
 # # #
 
-import rasterio, os
+import rasterio, os, copy
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -16,7 +16,7 @@ class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
 		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None, varname=None, modelname=None ):
+		post_downscale_function=None, varname=None, modelname=None, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -92,12 +92,7 @@ class DeltaDownscale( object ):
 		'''	
 		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
 		base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
-		# REMOVE output_filename = [str] path to the output file to be created following downscaling
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-		# REMOVE downscaling_operation = [str] one of 'add' or 'mult' depending on absolute or relative delta downscaling.
-		# REMOVE post_downscale_function = [function] function that takes as input a single 2-d array and returns a 2-d array in the same shape as the input.  
-		# REMOVE mask = [numpy.ndarray] 2-d array showing what values should be masked. Masked=0, unmasked=1. must be same shape as base.
-		# REMOVE mask_value = [int] what value to use as the masked values. default=0.
 
 		'''		
 		from rasterio.warp import reproject, RESAMPLING
@@ -110,7 +105,7 @@ class DeltaDownscale( object ):
 
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=1000 )
+				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
 	def downscale( self, output_dir, prefix=None ):
 		import affine
@@ -118,7 +113,7 @@ class DeltaDownscale( object ):
 		from functools import partial
 		from pathos import multiprocessing
 		
-				# determine operation type
+		# determine operation type
 		def add( base, anom ):
 			return base + anom
 		def mult( base, anom ):
@@ -140,25 +135,33 @@ class DeltaDownscale( object ):
 		
 		# slice the anomalies
 		self.anomalies = self.anomalies.sel( time=slice( time_arr[0], time_arr[-1] ) )
-		
-		time_suffix = [ '_'.join([str(t.month), str(t.year)]) for t in time_arr ]
+
+		def two_digit_month( x ):
+			''' make 1 digit month a standard 2-digit for output filenames '''
+			month = str( x )
+			if len(month) == 1:
+				month = '0'+month
+			return month
+
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in time_arr ]
 		
 		# deal with missing variable names and/or model names
-		if self.historical.variable != None:
+		# # # THIS NEEDS MODIFYING WITH THE out_varname so that or variable or 'variable' is used
+		if self.varname != None:
+			variable = self.varname
+		elif self.historical.variable != None:
 			variable = self.historical.variable
 		else:
 			variable = 'variable'
 		
-		if self.historical.model != None:
+		if self.modelname != None:
+			model = self.modelname
+		elif self.historical.model != None:
 			model = self.historical.model
 		else:
 			model = 'model'
 
-		if self.modelname != None:
-			model = self.modelname
-
 		# set up some output filenames
-		# # # [ variable, metric, units, project, model, scenario, month, year, ext ]
 		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
 
@@ -187,32 +190,60 @@ class DeltaDownscale( object ):
 				'post_downscale_function':self.post_downscale_function,\
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
 
-		# downscaling_operation = operation_switch[ self.downscaling_operation ]
 		# partial and wrapper
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
 					src_transform=src_transform )
 
 		def wrap( d ):
+			post_downscale_function = d[ 'post_downscale_function' ]
 			interped = f( **d )
 			base = rasterio.open( d[ 'base' ] )
 			base_arr = base.read( 1 )
-			tmp = base.read_masks( 1 )
-			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+			mask = base.read_masks( 1 )
 
-			# mask
-			output_arr[ tmp == 0 ] = base.nodata
-
-			# output_arr[ np.isinf( output_arr ) ] = meta[ 'nodata' ] # not sure about this one
-
-			# post downscale it if necessary:
-			if d['post_downscale_function'] != None:
-				output_arr = post_downscale_function( output_arr )
-
+			# set up output file metadata.
 			meta = base.meta
 			meta.update( compress='lzw' )
 			if 'transform' in meta.keys():
 				meta.pop( 'transform' )
 
+			# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
+			# # write out the interpped as a test:
+			# anom_filename = copy.copy( d[ 'output_filename' ] )
+			# dirname, basename = os.path.split( anom_filename )
+			# dirname = os.path.join( dirname, 'anom' )
+			# basename = basename.replace( '.tif', '_anom.tif' )
+			# try:
+			# 	if not os.path.exists( dirname ):
+			# 		os.makedirs( dirname )
+			# except:
+			# 	pass
+			# anom_filename = os.path.join( dirname, basename )
+			# with rasterio.open( anom_filename, 'w', **meta ) as anom:
+			# 	anom.write( interped, 1 )
+			# # # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
+
+			# yay dictionaries -- uggo, but effective...
+			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+
+			# # mask
+			# output_arr[ mask == 0 ] = base.nodata
+
+			# post downscale it if necessary:
+			if post_downscale_function != None:
+				output_arr = post_downscale_function( output_arr ).data
+
+			# make sure its masked!
+			output_arr[ mask == 0 ] = meta[ 'nodata' ]
+			# # # #  THE BELOW IS A HACK!
+			# THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
+			# THIS WILL GET US IN TROUBLE
+			nodata = -3.39999995e+38
+			if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
+				# fill no data with the baseline data values
+				output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
+			# # # #  THE ABOVE IS A HACK!
+			# write it to disk.
 			with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
 				out.write( output_arr, 1 )
 			return d['output_filename']

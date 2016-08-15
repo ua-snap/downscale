@@ -45,7 +45,7 @@ class Files( object ):
 
 
 # PREP THE INPUT NETCDF FILES FROM AR5
-import itertools, glob
+import itertools, glob, os
 from downscale import preprocess
 
 # some setup args
@@ -55,6 +55,9 @@ variables = [ 'tasmax', 'tasmin' ]
 scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
 
+if not os.path.exists( prepped_dir ):
+	os.makedirs( prepped_dir )
+
 # lets get the darn data returned that we want:
 files_df = Files( base_dir )._to_dataframe( )
 log = open( os.path.join( prepped_dir, 'log_file_prep.txt'), 'w' )
@@ -62,7 +65,7 @@ for variable, model, scenario in itertools.product( variables, models, scenarios
 	# get the files we want to work with for this run
 	cur_files = files_df[ (files_df.variable == variable) & (files_df.model == model) & (files_df.scenario == scenario) ]['fn'].tolist()
 	if 'historical' in scenario:
-		years = (1850,2005)
+		years = (1900,2005)
 	else:
 		years = (2006,2100)
 
