@@ -91,30 +91,36 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	
-	# def _open_dataset( self ):
-	# 	ds = xr.open_dataset( self.fn )
-	# 	if self.begin and self.end:
-	# 		ds = ds.sel( time=slice( self.begin, self.end ) )
-	# 	return ds
-	def _calc_affine( self, *args, **kwargs ):
-		import affine
-		import numpy as np
-		lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
-		lonmin = self.ds.lon.min().data
-		latmax = self.ds.lat.max().data
+	# def _calc_affine( self, *args, **kwargs ):
+	# 	import affine
+	# 	import numpy as np
+	# 	lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
+	# 	lonmin = self.ds.lon.min().data
+	# 	latmax = self.ds.lat.max().data
 
-		# get the right upper left lon to the corner
-		lon_arr = np.array([-180.0, 0.0])
-		idx = (np.abs(lon_arr - lonmin)).argmin()
-		lonmin = lon_arr[ idx ]
+	# 	# get the right upper left lon to the corner
+	# 	lon_arr = np.array([-180.0, 0.0])
+	# 	idx = (np.abs(lon_arr - lonmin)).argmin()
+	# 	lonmin = lon_arr[ idx ]
 		
-		# HARDWIRED FOR GLOBAL DATA
-		latmax = 90.0
+	# 	# HARDWIRED FOR GLOBAL DATA
+	# 	latmax = 90.0
 
-		# get the resolution in both directions
-		lat_res = 180.0 / lat_shape
-		lon_res = 360.0 / lon_shape
-		return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
+	# 	# get the resolution in both directions
+	# 	lat_res = 180.0 / lat_shape
+	# 	lon_res = 360.0 / lon_shape
+	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
+	@staticmethod
+	def transform_from_latlon( lat, lon ):
+		''' simple way to make an affine transform from lats and lons coords '''
+		from affine import Affine
+		lat = np.asarray( lat )
+		lon = np.asarray(lon)
+		trans = Affine.translation(lon[0], lat[0])
+		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+		return trans * scale
+	def _calc_affine( self ):
+		return self.transform_from_latlon( self.ds.lat, self.ds.lon )
 	def northup( self, latitude='lat' ):
 		''' this works only for global grids to be downscaled flips it northup '''
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
@@ -123,19 +129,6 @@ class Dataset( object ):
 			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
 			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
 
-	# def _calc_affine( self, *args, **kwargs ):
-	# 	# POTENTIALLY REMOVE THIS FROM HERE?  IDK WHERE THIS IS BEST FIT
-	# 	'''
-	# 	this assumes 0-360 longitude-ordering (pacific-centered)
-	# 	and WGS84 LatLong (Decimal Degrees). EPSG:4326.
-	# 	'''
-	# 	import affine
-	# 	lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
-	# 	lonmin = self.ds.lon.min().data
-	# 	latmax = self.ds.lat.max().data
-	# 	lat_res = 180.0 / lat_shape
-	# 	lon_res = 360.0 / lon_shape
-	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
