@@ -28,19 +28,6 @@ class Baseline( object ):
 		self.filelist = sorted( filelist )
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = [ rasterio.open( fn ).read( 1 ) for fn in self.filelist ]
-		
-		# make sure the data are sorted chronlogically
-		# arrlist = self.arrlist
-		# self.arrlist = self.sort_files()
-		# self.rasters = [ rasterio.open(i).read(1) for i in self.arrlist ]
-
-	# def sort_files( self ):
-	# 	'''
-	# 	ensure the files are in chronological order
-	# 	'''
-	# 	arrlist = self.arrlist
-	# 	arrlist.sort()
-	# 	self.arrlist = arrlist
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
@@ -91,25 +78,6 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	
-	# def _calc_affine( self, *args, **kwargs ):
-	# 	import affine
-	# 	import numpy as np
-	# 	lat_shape, lon_shape = self.ds.dims[ 'lat' ], self.ds.dims[ 'lon' ]
-	# 	lonmin = self.ds.lon.min().data
-	# 	latmax = self.ds.lat.max().data
-
-	# 	# get the right upper left lon to the corner
-	# 	lon_arr = np.array([-180.0, 0.0])
-	# 	idx = (np.abs(lon_arr - lonmin)).argmin()
-	# 	lonmin = lon_arr[ idx ]
-		
-	# 	# HARDWIRED FOR GLOBAL DATA
-	# 	latmax = 90.0
-
-	# 	# get the resolution in both directions
-	# 	lat_res = 180.0 / lat_shape
-	# 	lon_res = 360.0 / lon_shape
-	# 	return affine.Affine( lon_res, 0.0, lonmin, 0.0, -lat_res, latmax )
 	@staticmethod
 	def transform_from_latlon( lat, lon ):
 		''' simple way to make an affine transform from lats and lons coords '''

@@ -146,7 +146,6 @@ class DeltaDownscale( object ):
 		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in time_arr ]
 		
 		# deal with missing variable names and/or model names
-		# # # THIS NEEDS MODIFYING WITH THE out_varname so that or variable or 'variable' is used
 		if self.varname != None:
 			variable = self.varname
 		elif self.historical.variable != None:
@@ -226,23 +225,22 @@ class DeltaDownscale( object ):
 			# yay dictionaries -- uggo, but effective...
 			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
 
-			# # mask
-			# output_arr[ mask == 0 ] = base.nodata
-
 			# post downscale it if necessary:
 			if post_downscale_function != None:
 				output_arr = post_downscale_function( output_arr ).data
 
 			# make sure its masked!
 			output_arr[ mask == 0 ] = meta[ 'nodata' ]
-			# # # #  THE BELOW IS A HACK!
-			# THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
-			# THIS WILL GET US IN TROUBLE
-			nodata = -3.39999995e+38
-			if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
-				# fill no data with the baseline data values
-				output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
-			# # # #  THE ABOVE IS A HACK!
+			
+			# # # # #  THE BELOW IS A HACK!
+			# # THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
+			# # THIS WILL GET US IN TROUBLE
+			# nodata = -3.39999995e+38
+			# if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
+			# 	# fill no data with the baseline data values
+			# 	output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
+			# # # # #  THE ABOVE IS A HACK!
+			
 			# write it to disk.
 			with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
 				out.write( output_arr, 1 )
