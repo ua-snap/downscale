@@ -206,21 +206,21 @@ class DeltaDownscale( object ):
 			if 'transform' in meta.keys():
 				meta.pop( 'transform' )
 
-			# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
-			# # write out the interpped as a test:
-			# anom_filename = copy.copy( d[ 'output_filename' ] )
-			# dirname, basename = os.path.split( anom_filename )
-			# dirname = os.path.join( dirname, 'anom' )
-			# basename = basename.replace( '.tif', '_anom.tif' )
-			# try:
-			# 	if not os.path.exists( dirname ):
-			# 		os.makedirs( dirname )
-			# except:
-			# 	pass
-			# anom_filename = os.path.join( dirname, basename )
-			# with rasterio.open( anom_filename, 'w', **meta ) as anom:
-			# 	anom.write( interped, 1 )
-			# # # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
+			# # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
+			# write out the interpped as a test:
+			anom_filename = copy.copy( d[ 'output_filename' ] )
+			dirname, basename = os.path.split( anom_filename )
+			dirname = os.path.join( dirname, 'anom' )
+			basename = basename.replace( '.tif', '_anom.tif' )
+			try:
+				if not os.path.exists( dirname ):
+					os.makedirs( dirname )
+			except:
+				pass
+			anom_filename = os.path.join( dirname, basename )
+			with rasterio.open( anom_filename, 'w', **meta ) as anom:
+				anom.write( interped, 1 )
+			# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
 
 			# yay dictionaries -- uggo, but effective...
 			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
