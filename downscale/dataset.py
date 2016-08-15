@@ -77,16 +77,15 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	
-	@staticmethod
-	def transform_from_latlon( lat, lon ):
-		''' simple way to make an affine transform from lats and lons coords '''
-		from affine import Affine
-		lat = np.asarray( lat )
-		lon = np.asarray( lon )
-		if np.min( lat )
-		trans = Affine.translation(lon[0], lat[0])
-		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
-		return trans * scale
+	# @staticmethod
+	# def transform_from_latlon( lat, lon ):
+	# 	''' simple way to make an affine transform from lats and lons coords '''
+	# 	from affine import Affine
+	# 	lat = np.asarray( lat )
+	# 	lon = np.asarray( lon )
+	# 	trans = Affine.translation(lon[0], lat[0])
+	# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+	# 	return trans * scale
 	@staticmethod
 	def transform_from_latlon( lat, lon ):
 		''' simple way to make an affine transform from lats and lons coords '''
