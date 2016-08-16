@@ -16,7 +16,7 @@ class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
 		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None, varname=None, modelname=None, *args, **kwargs ):
+		post_downscale_function=None, varname=None, modelname=None, anom=False, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -48,6 +48,7 @@ class DeltaDownscale( object ):
 		self.ncpus = ncpus
 		self.varname = varname
 		self.modelname = modelname
+		self.anom = anom
 		self.affine = self.historical._calc_affine()
 		self.src_crs = src_crs
 		self.src_nodata = src_nodata
@@ -252,7 +253,7 @@ class DeltaDownscale( object ):
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
 					dst_nodata=self.dst_nodata, src_transform=src_transform )
 
-		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=True, mask_value=self.mask_value )
+		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 
 		# run it
 		out = mp_map( wrapped, args, nproc=self.ncpus )

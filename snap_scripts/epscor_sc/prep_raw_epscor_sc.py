@@ -61,6 +61,7 @@ if __name__ == '__main__':
 	files_df = Files( base_dir )._to_dataframe( )
 	log = open( os.path.join( prepped_dir, 'log_file_prep.txt'), 'w' )
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
+		print( 'running {}-{}-{}'.format( variable, model, scenario ) )
 		# get the files we want to work with for this run
 		cur_files = files_df[ (files_df.variable == variable) & (files_df.model == model) & (files_df.scenario == scenario) ]['fn'].tolist()
 		if 'historical' in scenario:
