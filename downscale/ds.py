@@ -74,7 +74,7 @@ class DeltaDownscale( object ):
 	def _calc_climatolgy( self ):
 		'''slice / aggregate to climatology using mean'''
 		try:
-			climatology = self.ds.loc[ { 'time' : slice( self.clim_begin, self.clim_end ) } ]
+			climatology = self.ds.sel( time=slice( self.clim_begin, self.clim_end ) )
 			self.climatology = climatology.groupby( 'time.month' ).mean( 'time' )
 		except Exception:
 			raise AttributeError( 'non-overlapping climatology period and series' )
@@ -179,18 +179,20 @@ class DeltaDownscale( object ):
 		# rotate to greenwich-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
+			self.anomalies_rot = dat #HACKY SHIT!
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
+			self.anomalies_rot = dat #HACKY SHIT!
 			src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
 	
 		# run and output
-		rstlist = self.baseline.filelist * (self.anomalies.shape[0] / 12)
-		args = zip( self.anomalies, rstlist, output_filenames )
+		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
+		args = zip( self.anomalies_rot, rstlist, output_filenames )
 
 		args = [{'anom':i.data, 'base':j, 'output_filename':k,\
 				'downscaling_operation':self.downscaling_operation, \

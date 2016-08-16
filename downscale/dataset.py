@@ -92,7 +92,7 @@ class Dataset( object ):
 		from affine import Affine
 		lat = np.asarray( lat )
 		lon = np.asarray( lon )
-		if (np.max( lat ) - 90) < np.mean( np.diff( lat ) ):
+		if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
 			lat_max = 90.0
 		else:
 			lat_max = np.max( lat )
