@@ -66,7 +66,7 @@ class Dataset( object ):
 			self.metric = 'metric'
 
 		# update the lats and data to be NorthUp if necessary
-		# self.northup()
+		self.northup()
 
 		self.interp = interp
 		self.ncpus = ncpus
