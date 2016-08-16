@@ -63,10 +63,20 @@ if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	import numpy as np
 	from pathos.mp_map import mp_map
+	import argparse
+
+	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
+	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	args = parser.parse_args()
+	
+	# unpack
+	variable = args.variable
+	base_dir = args.base_dir
 
 	# some setup args
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
-	variables = ['tasmin']# ['pr','tas','tasmax', 'tasmin' ]
+	base_dir = os.path.join( base_dir, 'downscaled' )
+	variables = [ variable ] # ['pr','tas','tasmax', 'tasmin' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
