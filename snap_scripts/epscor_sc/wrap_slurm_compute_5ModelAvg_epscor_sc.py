@@ -23,13 +23,14 @@ def run_model( fn, base_dir, variable ):
 if __name__ == '__main__':
 	import os, subprocess
 	
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	variables = [ 'tas','pr','tasmin','tasmax' ]
 
-	slurm_path = os.path.join( base_dir,'slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled', 'slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
 	for variable in variables:
 		fn = os.path.join( slurm_path, 'slurm_run_compute_5ModelAvg_'+variable+'.slurm' )
 		_ = run_model( fn, base_dir, variable )
+

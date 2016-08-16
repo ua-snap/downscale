@@ -74,6 +74,11 @@ if __name__ == '__main__':
 	variable = args.variable
 	base_dir = args.base_dir
 
+	# # # # #TESTING
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# variable = 'tas'
+	# # # # # # # # 
+
 	# some setup args
 	base_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ] # ['pr','tas','tasmax', 'tasmin' ]
