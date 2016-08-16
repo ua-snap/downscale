@@ -114,7 +114,7 @@ class DeltaDownscale( object ):
 				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
 	@staticmethod
-	def wrap( d ):
+	def wrap( d, f ):
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
 		base = rasterio.open( d[ 'base' ] )
@@ -256,6 +256,8 @@ class DeltaDownscale( object ):
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
 					src_transform=src_transform )
 		
+		wrapped = partial( self.wrap, f=f )
+		
 		# run it
-		out = mp_map( self.wrap, args, nproc=self.ncpus )
+		out = mp_map( wrapped, args, nproc=self.ncpus )
 		return output_dir
