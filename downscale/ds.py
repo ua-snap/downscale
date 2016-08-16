@@ -92,7 +92,6 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
-
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
 		'''	
@@ -111,8 +110,35 @@ class DeltaDownscale( object ):
 
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
+				dst_nodata=dst_nodata, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=5000 )
 		return output_arr
+	# @staticmethod
+	# def interp_ds( xyz ): #anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
+	# 	'''	
+	# 	NEW
+	# 	xyz = [pandas.DataFrame] with columns in order x,y,z OR lon, lat, data
+
+	# 	# END
+
+	# 	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
+	# 	base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
+	# 	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
+
+	# 	'''		
+	# 	from rasterio.warp import reproject, RESAMPLING
+	# 	# reproject / resample
+	# 	base = rasterio.open( base )
+	# 	baseline_arr = base.read( 1 )
+	# 	baseline_meta = base.meta
+	# 	baseline_meta.update( compress='lzw' )
+	# 	output_arr = np.empty_like( baseline_arr )
+
+	# 	RectBivariateSpline(x,y,vals)([2.2,3.2,3.8],[2.4,3.3,4.3], grid=True)
+		
+	# 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+	# 			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+	# 			dst_nodata=dst_nodata, resampling=RESAMPLING., SOURCE_EXTRA=5000 )
+	# 	return output_arr
 	@staticmethod
 	def wrap( d, f, operation_switch, anom=False ):
 		post_downscale_function = d[ 'post_downscale_function' ]
