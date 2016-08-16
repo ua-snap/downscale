@@ -19,13 +19,14 @@ if __name__ == '__main__':
 	import os, subprocess
 
 	# # args setup
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
 	variables = ['tmx','tmn','tmp','pre']
 	out_varnames = ['tasmax','tasmin','tas','pr']
 	
-	slurm_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_cru/slurm_files'
+	slurm_path = os.path.join( base_dir, 'downscaled','slurm_files' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
@@ -39,9 +40,8 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism', out_varname )
-		
-		output_path = os.path.join( '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled', model, scenario, out_varname )
+		clim_path = os.path.join( base_dir, 'prism', out_varname )
+		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.' + variable + '.dat.nc'
 		
 		# # make a command to pass to slurm
-		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_se/downscale_cru_epscor_se.py'
+		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/downscale_cru_epscor_sc.py'
 		command = ' '.join([ 'ipython', script_path, '--',
 							'-ts', cru_ts,
 							'-cl', clim_path,

@@ -1,37 +1,43 @@
-# downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SE project
+# downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
 # author: Michael Lindgren -- June 09, 2016
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
-	# from downscale import preprocess
+	from downscale import preprocess
 	import argparse
 	import numpy as np
 
-	# # parse the commandline arguments
-	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )	
-	# args = parser.parse_args()
+	# parse the commandline arguments
+	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
+	parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
+	args = parser.parse_args()
 
-	# # unpack the args
-	# variable = args.variable
-	# scenario = args.scenario
-	# model = args.model
+	# unpack the args
+	variable = args.variable
+	scenario = args.scenario
+	model = args.model
+	units = args.units
+	metric = args.metric
+	base_dir = args.base_dir
 
 	project = 'ar5'
-	units = 'C'
-	metric = 'mean'
 	
-	# # # FOR TESTING # # # 
-	variable = 'tas'
-	scenario = 'rcp45'
-	model = 'GFDL-CM3'
+	# # # # FOR TESTING # # # 
+	# variable = 'tasmax'
+	# scenario = 'rcp45'
+	# model = 'CCSM4'
+	# units = 'C'
+	# metric = 'mean'
 
 	# some setup args
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prepped_cmip5'
-	output_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
+	base_dir = os.path.join( base_dir,'cmip5','prepped' )
+	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -52,9 +58,8 @@ if __name__ == '__main__':
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
-
 		# SETUP BASELINE
-		clim_path = os.path.join( '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/prism', variable )
+		clim_path = os.path.join( base_dir, 'prism', variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
@@ -80,13 +85,14 @@ if __name__ == '__main__':
 			future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric )
 
 		# convert from Kelvin to Celcius
-		if historical:
-			historical.ds[ variable ] = historical.ds[ variable ] - 273.15
-			historical.ds[ variable ][ 'units' ] = units
-		
-		if future:
-			future.ds[ variable ] = future.ds[ variable ] - 273.15
-			future.ds[ variable ][ 'units' ] = units
+		if variable != 'pr':
+			if historical:
+				historical.ds[ variable ] = historical.ds[ variable ] - 273.15
+				historical.ds[ variable ][ 'units' ] = units
+			
+			if future:
+				future.ds[ variable ] = future.ds[ variable ] - 273.15
+				future.ds[ variable ][ 'units' ] = units
 
 		# DOWNSCALE
 		mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
@@ -114,4 +120,5 @@ if __name__ == '__main__':
 				post_downscale_function=round_data, varname=variable, modelname=modelname )
 
 		ar5.downscale( output_dir=output_path )
-		STOP!
+		
+	log.close()

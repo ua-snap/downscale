@@ -45,22 +45,16 @@ if __name__ ==	'__main__':
 	# DOWNSCALE
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
 
-	# make a rounding function to pass to post_downscale_function
+	# make round/trunc function for post_downscale_function
 	if variable == 'pr' or variable == 'pre':
-		# truncate to whole number
 		rounder = np.rint
-		# rounder = partial( np.round, decimals=0 )
 		downscaling_operation = 'mult'
 	else:
-		# round to 2 decimals
-		rounder = partial( np.round, decimals=1 )
+		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
 
-	def round_it( x, mask ):
-		arr = np.ma.masked_array( data=x, mask=mask )
+	def round_it( arr ):
 		return rounder( arr )
-
-	round_data = partial( round_it, mask=(mask==0) )
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, interp=True, method='linear', ncpus=32 )
@@ -69,7 +63,7 @@ if __name__ ==	'__main__':
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
 			downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
 			src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-			post_downscale_function=round_data, varname=out_varname, modelname=None )
+			post_downscale_function=round_it, varname=out_varname, modelname=None )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )

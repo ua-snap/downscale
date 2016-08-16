@@ -49,13 +49,12 @@ class DeltaDownscale( object ):
 		self.varname = varname
 		self.modelname = modelname
 		self.affine = self.historical._calc_affine()
-
-		# new args
 		self.src_crs = src_crs
 		self.src_nodata = src_nodata
 		self.dst_nodata = dst_nodata
 		self.post_downscale_function = post_downscale_function
 		
+		# calculate args
 		self.anomalies = None
 		self._concat_nc()
 		self._calc_climatolgy()
@@ -79,7 +78,7 @@ class DeltaDownscale( object ):
 		except Exception:
 			raise AttributeError( 'non-overlapping climatology period and series' )
 	def _calc_anomalies( self ):
-		# anomalies
+		''' calculate simple absolute or relative anomalies depending on variable '''
 		if self.downscaling_operation == 'add':
 			anomalies = self.ds.groupby( 'time.month' ) - self.climatology
 		elif self.downscaling_operation == 'mult':
@@ -95,13 +94,15 @@ class DeltaDownscale( object ):
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
 		'''	
-		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
-		base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
+		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
+								Must also be representative of anomalies.
+		base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
+								baseline for combining with anomalies.
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
 
 		'''		
 		from rasterio.warp import reproject, RESAMPLING
-		# reproject / resample
+		
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
@@ -110,37 +111,10 @@ class DeltaDownscale( object ):
 
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=RESAMPLING.cubic_spline, SOURCE_EXTRA=5000 )
+				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
-	# @staticmethod
-	# def interp_ds( xyz ): #anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
-	# 	'''	
-	# 	NEW
-	# 	xyz = [pandas.DataFrame] with columns in order x,y,z OR lon, lat, data
-
-	# 	# END
-
-	# 	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. Must also be representative of anomalies.
-	# 	base = [str] filename of the corresponding baseline monthly file to use as template and downscale baseline for combining with anomalies.
-	# 	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-
-	# 	'''		
-	# 	from rasterio.warp import reproject, RESAMPLING
-	# 	# reproject / resample
-	# 	base = rasterio.open( base )
-	# 	baseline_arr = base.read( 1 )
-	# 	baseline_meta = base.meta
-	# 	baseline_meta.update( compress='lzw' )
-	# 	output_arr = np.empty_like( baseline_arr )
-
-	# 	RectBivariateSpline(x,y,vals)([2.2,3.2,3.8],[2.4,3.3,4.3], grid=True)
-		
-	# 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-	# 			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-	# 			dst_nodata=dst_nodata, resampling=RESAMPLING., SOURCE_EXTRA=5000 )
-	# 	return output_arr
 	@staticmethod
-	def wrap( d, f, operation_switch, anom=False ):
+	def wrap( d, f, operation_switch, anom=False, mask_value=0 ):
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
 		base = rasterio.open( d[ 'base' ] )
@@ -153,7 +127,7 @@ class DeltaDownscale( object ):
 		if 'transform' in meta.keys():
 			meta.pop( 'transform' )
 
-		# # # # ANOMALIES OUTPUT (BELOW
+		# # # ANOMALIES TO DISK
 		if anom == True:
 			# write out the anomalies for testing:
 			anom_filename = copy.copy( d[ 'output_filename' ] )
@@ -168,35 +142,29 @@ class DeltaDownscale( object ):
 			anom_filename = os.path.join( dirname, basename )
 			with rasterio.open( anom_filename, 'w', **meta ) as anom:
 				anom.write( interped, 1 )
-		# # # # # ANOMALIES OUTPUT (ABOVE)
+		# # # ANOMALIES END
 
 		dirname = os.path.dirname( d['output_filename'] )
 		if not os.path.exists( dirname ):
 			os.makedirs( dirname )
 
-		# yay dictionaries -- uggo, but effective...
+		# nested dict switch here, not attractive, but effective.
 		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
-
+		
 		# post downscale it if necessary:
 		if post_downscale_function != None:
-			output_arr = post_downscale_function( output_arr ).data
+			output_arr = post_downscale_function( output_arr )
+			# drop the mask if there is one -- this could become smarter
+			if hasattr( output_arr, 'mask'):
+				output_arr = output_arr.data
 
-		# make sure its masked!
-		output_arr[ mask == 0 ] = meta[ 'nodata' ]
-		
-		# # # # #  THE BELOW IS A HACK!
-		# # THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
-		# # THIS WILL GET US IN TROUBLE
-		# nodata = -3.39999995e+38
-		# if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
-		# 	# fill no data with the baseline data values
-		# 	output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
-		# # # # #  THE ABOVE IS A HACK!
+		# make sure data is masked
+		output_arr[ mask == mask_value ] = meta[ 'nodata' ]
+
 		# write it to disk.
 		with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
 			out.write( output_arr, 1 )
 		return d['output_filename']
-
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		import itertools
@@ -214,15 +182,6 @@ class DeltaDownscale( object ):
 			return NotImplementedError
 
 		operation_switch = { 'add':add, 'mult':mult, 'div':div }
-		
-		# time_arr = self.anomalies.time.to_pandas() # CHANGE THIS NAME!
-
-		# we need to be able to output ONLY the years we want if there is a future
-		# if self.future:
-		# 	time_arr = self.future.ds.time.to_pandas()
-		
-		# # slice the anomalies
-		# self.anomalies = self.anomalies.sel( time=slice( time_arr[0], time_arr[-1] ) )
 
 		def two_digit_month( x ):
 			''' make 1 digit month a standard 2-digit for output filenames '''
@@ -233,7 +192,7 @@ class DeltaDownscale( object ):
 
 		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
 		
-		# # # # SOME STUFF TO DEAL WITH CUSTOM OUTPUT NAMING OTF # # # # # # # # # # # # # # #
+		# # # # SOME STUFF TO DEAL WITH CUSTOM OUTPUT NAMING OTF # # # # 
 		# deal with missing variable names and/or model names
 		if self.varname != None:
 			variable = self.varname
@@ -248,8 +207,8 @@ class DeltaDownscale( object ):
 			model = self.historical.model
 		else:
 			model = 'model'
-		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-		
+
+		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 		# set up some output filenames
 		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
@@ -261,14 +220,14 @@ class DeltaDownscale( object ):
 		# rotate to greenwich-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
-			self.anomalies_rot = dat #HACKY SHIT!
+			self.anomalies_rot = dat
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
-			self.anomalies_rot = dat #HACKY SHIT!
+			self.anomalies_rot = dat 
 			src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
 	
@@ -282,10 +241,10 @@ class DeltaDownscale( object ):
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
 
 		# partial and wrapper
-		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
-					src_transform=src_transform )
+		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
+					dst_nodata=self.dst_nodata, src_transform=src_transform )
 		
-		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=True )
+		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=True, mask_value=self.masked_value )
 		
 		# run it
 		out = mp_map( wrapped, args, nproc=self.ncpus )
