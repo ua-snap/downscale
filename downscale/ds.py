@@ -144,6 +144,10 @@ class DeltaDownscale( object ):
 				anom.write( interped, 1 )
 		# # # # # ANOMALIES OUTPUT (ABOVE)
 
+		dirname = os.path.dirname( d['output_filename'] )
+		if not os.path.exists( dirname ):
+			os.makedirs( dirname )
+
 		# yay dictionaries -- uggo, but effective...
 		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
 
