@@ -170,7 +170,7 @@ class DeltaDownscale( object ):
 		import itertools
 		from functools import partial
 		from pathos.mp_map import mp_map
-		
+
 		# determine operation type
 		def add( base, anom ):
 			return base + anom
@@ -230,9 +230,17 @@ class DeltaDownscale( object ):
 			self.anomalies_rot = dat 
 			src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
-	
+
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
+		
+		if isinstance( self.anomalies_rot, xr.Dataset ):
+			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
+		elif isinstance( self.anomalies_rot, xr.DataArray ):
+			self.anomalies_rot = self.anomalies_rot.data
+		else:
+			self.anomalies_rot = self.anomalies_rot
+
 		args = zip( self.anomalies_rot, rstlist, output_filenames )
 
 		args = [{'anom':i, 'base':j, 'output_filename':k,\
@@ -243,9 +251,9 @@ class DeltaDownscale( object ):
 		# partial and wrapper
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
 					dst_nodata=self.dst_nodata, src_transform=src_transform )
-		
+
 		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=True, mask_value=self.mask_value )
-		
+
 		# run it
 		out = mp_map( wrapped, args, nproc=self.ncpus )
 		return output_dir
