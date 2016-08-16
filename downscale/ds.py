@@ -257,5 +257,5 @@ class DeltaDownscale( object ):
 					src_transform=src_transform )
 		
 		# run it
-		out = mp_map( wrap, args, nproc=self.ncpus )
+		out = mp_map( self.wrap, args, nproc=self.ncpus )
 		return output_dir
