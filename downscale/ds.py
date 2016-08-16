@@ -149,7 +149,7 @@ class DeltaDownscale( object ):
 				month = '0'+month
 			return month
 
-		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time ]
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
 		
 		# # # # SOME STUFF TO DEAL WITH CUSTOM OUTPUT NAMING OTF # # # # # # # # # # # # # # #
 		# deal with missing variable names and/or model names
