@@ -8,7 +8,7 @@ if __name__ == '__main__':
 	import argparse
 	import numpy as np
 
-	# parse the commandline arguments
+	# # parse the commandline arguments
 	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
 	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
 	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
@@ -29,6 +29,7 @@ if __name__ == '__main__':
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	# variable = 'tasmax'
 	# scenario = 'rcp45'
 	# model = 'CCSM4'
@@ -36,7 +37,7 @@ if __name__ == '__main__':
 	# metric = 'mean'
 
 	# some setup args
-	base_dir = os.path.join( base_dir,'cmip5','prepped' )
+	base_path = os.path.join( base_dir,'cmip5','prepped' )
 	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
@@ -48,8 +49,8 @@ if __name__ == '__main__':
 	modelnames = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
 	modelnames = dict( zip( all_models, modelnames ) )
- 	
- 	# # #
+	
+	# # #
 	if not os.path.exists( output_dir ):
 		os.makedirs( output_dir )
 
@@ -64,7 +65,7 @@ if __name__ == '__main__':
 		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
 		
-		input_path = os.path.join( base_dir, model, scenario, variable )
+		input_path = os.path.join( base_path, model, scenario, variable )
 		output_path = os.path.join( output_dir, model, scenario, variable )
 
 		if not os.path.exists( output_path ):
