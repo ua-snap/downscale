@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
-	os.chdir( path )
+	# os.chdir( path )
 	for variable in variables:
 
 		fn = os.path.join( slurm_path, 'slurm_run_compute_5ModelAvg_'+variable+'.slurm' )
