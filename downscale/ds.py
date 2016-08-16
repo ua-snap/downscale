@@ -114,7 +114,7 @@ class DeltaDownscale( object ):
 				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
 	@staticmethod
-	def wrap( d, f, operation_switch ):
+	def wrap( d, f, operation_switch, anom=False ):
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
 		base = rasterio.open( d[ 'base' ] )
@@ -127,21 +127,22 @@ class DeltaDownscale( object ):
 		if 'transform' in meta.keys():
 			meta.pop( 'transform' )
 
-		# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
-		# # write out the interpped as a test:
-		# anom_filename = copy.copy( d[ 'output_filename' ] )
-		# dirname, basename = os.path.split( anom_filename )
-		# dirname = os.path.join( dirname, 'anom' )
-		# basename = basename.replace( '.tif', '_anom.tif' )
-		# try:
-		# 	if not os.path.exists( dirname ):
-		# 		os.makedirs( dirname )
-		# except:
-		# 	pass
-		# anom_filename = os.path.join( dirname, basename )
-		# with rasterio.open( anom_filename, 'w', **meta ) as anom:
-		# 	anom.write( interped, 1 )
-		# # # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
+		# # # # ANOMALIES OUTPUT (BELOW
+		if anom == True:
+			# write out the anomalies for testing:
+			anom_filename = copy.copy( d[ 'output_filename' ] )
+			dirname, basename = os.path.split( anom_filename )
+			dirname = os.path.join( dirname, 'anom' )
+			basename = basename.replace( '.tif', '_anom.tif' )
+			try:
+				if not os.path.exists( dirname ):
+					os.makedirs( dirname )
+			except:
+				pass
+			anom_filename = os.path.join( dirname, basename )
+			with rasterio.open( anom_filename, 'w', **meta ) as anom:
+				anom.write( interped, 1 )
+		# # # # # ANOMALIES OUTPUT (ABOVE)
 
 		# yay dictionaries -- uggo, but effective...
 		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
@@ -254,7 +255,7 @@ class DeltaDownscale( object ):
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
 					src_transform=src_transform )
 		
-		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch )
+		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=True )
 		
 		# run it
 		out = mp_map( wrapped, args, nproc=self.ncpus )
