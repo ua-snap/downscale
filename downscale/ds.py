@@ -114,7 +114,7 @@ class DeltaDownscale( object ):
 				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
 	@staticmethod
-	def wrap( d, f ):
+	def wrap( d, f, operation_switch ):
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
 		base = rasterio.open( d[ 'base' ] )
@@ -181,11 +181,9 @@ class DeltaDownscale( object ):
 			# this one may not be useful, but the placeholder is here
 			# return base / anom
 			return NotImplementedError
-		try:
-			operation_switch = { 'add':add, 'mult':mult, 'div':div }
-		except:
-			AttributeError( 'downscale: incorrect downscaling_operation str' )
 
+		operation_switch = { 'add':add, 'mult':mult, 'div':div }
+		
 		# time_arr = self.anomalies.time.to_pandas() # CHANGE THIS NAME!
 
 		# we need to be able to output ONLY the years we want if there is a future
@@ -256,7 +254,7 @@ class DeltaDownscale( object ):
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
 					src_transform=src_transform )
 		
-		wrapped = partial( self.wrap, f=f )
+		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch )
 		
 		# run it
 		out = mp_map( wrapped, args, nproc=self.ncpus )
