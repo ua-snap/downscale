@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	variables = ['tmx','tmn','tmp','pre']
 	out_varnames = ['tasmax','tasmin','tas','pr']
 	
-	slurm_path = os.path.join( base_dir, 'downscaled','slurm_files' )
+	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
