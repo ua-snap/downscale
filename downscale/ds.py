@@ -113,11 +113,62 @@ class DeltaDownscale( object ):
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
 				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
 		return output_arr
+	def wrap( d ):
+		post_downscale_function = d[ 'post_downscale_function' ]
+		interped = f( **d )
+		base = rasterio.open( d[ 'base' ] )
+		base_arr = base.read( 1 )
+		mask = base.read_masks( 1 )
+
+		# set up output file metadata.
+		meta = base.meta
+		meta.update( compress='lzw' )
+		if 'transform' in meta.keys():
+			meta.pop( 'transform' )
+
+		# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
+		# # write out the interpped as a test:
+		# anom_filename = copy.copy( d[ 'output_filename' ] )
+		# dirname, basename = os.path.split( anom_filename )
+		# dirname = os.path.join( dirname, 'anom' )
+		# basename = basename.replace( '.tif', '_anom.tif' )
+		# try:
+		# 	if not os.path.exists( dirname ):
+		# 		os.makedirs( dirname )
+		# except:
+		# 	pass
+		# anom_filename = os.path.join( dirname, basename )
+		# with rasterio.open( anom_filename, 'w', **meta ) as anom:
+		# 	anom.write( interped, 1 )
+		# # # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
+
+		# yay dictionaries -- uggo, but effective...
+		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+
+		# post downscale it if necessary:
+		if post_downscale_function != None:
+			output_arr = post_downscale_function( output_arr ).data
+
+		# make sure its masked!
+		output_arr[ mask == 0 ] = meta[ 'nodata' ]
+		
+		# # # # #  THE BELOW IS A HACK!
+		# # THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
+		# # THIS WILL GET US IN TROUBLE
+		# nodata = -3.39999995e+38
+		# if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
+		# 	# fill no data with the baseline data values
+		# 	output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
+		# # # # #  THE ABOVE IS A HACK!
+		# write it to disk.
+		with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
+			out.write( output_arr, 1 )
+		return d['output_filename']
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		import itertools
 		from functools import partial
-		from pathos import multiprocessing
+		from pathos.mp_map import mp_map
 		
 		# determine operation type
 		def add( base, anom ):
@@ -194,7 +245,7 @@ class DeltaDownscale( object ):
 		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
 		args = zip( self.anomalies_rot, rstlist, output_filenames )
 
-		args = [{'anom':i.data, 'base':j, 'output_filename':k,\
+		args = [{'anom':i, 'base':j, 'output_filename':k,\
 				'downscaling_operation':self.downscaling_operation, \
 				'post_downscale_function':self.post_downscale_function,\
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
@@ -202,62 +253,7 @@ class DeltaDownscale( object ):
 		# partial and wrapper
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, dst_nodata=self.dst_nodata, \
 					src_transform=src_transform )
-
-		def wrap( d ):
-			post_downscale_function = d[ 'post_downscale_function' ]
-			interped = f( **d )
-			base = rasterio.open( d[ 'base' ] )
-			base_arr = base.read( 1 )
-			mask = base.read_masks( 1 )
-
-			# set up output file metadata.
-			meta = base.meta
-			meta.update( compress='lzw' )
-			if 'transform' in meta.keys():
-				meta.pop( 'transform' )
-
-			# # # # THIS IS A TEST FOR ANOMALIES OUTPUT (BELOW
-			# write out the interpped as a test:
-			anom_filename = copy.copy( d[ 'output_filename' ] )
-			dirname, basename = os.path.split( anom_filename )
-			dirname = os.path.join( dirname, 'anom' )
-			basename = basename.replace( '.tif', '_anom.tif' )
-			try:
-				if not os.path.exists( dirname ):
-					os.makedirs( dirname )
-			except:
-				pass
-			anom_filename = os.path.join( dirname, basename )
-			with rasterio.open( anom_filename, 'w', **meta ) as anom:
-				anom.write( interped, 1 )
-			# # # # # THIS IS A TEST FOR ANOMALIES OUTPUT (ABOVE)
-
-			# yay dictionaries -- uggo, but effective...
-			output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
-
-			# post downscale it if necessary:
-			if post_downscale_function != None:
-				output_arr = post_downscale_function( output_arr ).data
-
-			# make sure its masked!
-			output_arr[ mask == 0 ] = meta[ 'nodata' ]
-			
-			# # # # #  THE BELOW IS A HACK!
-			# # THIS IS SPECIFIC TO NODATA IN THE DOMAIN WHICH HAPPENS WITH CRU PR DATA
-			# # THIS WILL GET US IN TROUBLE
-			# nodata = -3.39999995e+38
-			# if len(output_arr[ (mask != 0) & (output_arr == nodata) ]) > 0:
-			# 	# fill no data with the baseline data values
-			# 	output_arr[ (mask != 0) & (output_arr == nodata) ] = base_arr[ (mask != 0) & (output_arr == nodata) ]
-			# # # # #  THE ABOVE IS A HACK!
-			
-			# write it to disk.
-			with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
-				out.write( output_arr, 1 )
-			return d['output_filename']
-
-		pool = multiprocessing.Pool( self.ncpus )
-		out = pool.map( wrap, args )
-		pool.close()
-		pool.join()
+		
+		# run it
+		out = mp_map( lambda x: wrap( x ), args, nproc=self.ncpus )
 		return output_dir
