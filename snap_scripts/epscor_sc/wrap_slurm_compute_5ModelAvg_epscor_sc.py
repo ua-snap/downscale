@@ -2,7 +2,7 @@
 # wrap compute_5ModelAvg_epscor_sc.py for running on slurm
 # # # # # 
 
-def run_model( fn, base_dir, variable, model, scenario, units, metric ):
+def run_model( fn, base_dir, variable ):
 	head = '#!/bin/sh\n' + \
 			'#SBATCH --ntasks=32\n' + \
 			'#SBATCH --nodes=1\n' + \
