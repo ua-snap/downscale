@@ -68,8 +68,9 @@ class Dataset( object ):
 		# update the lats and data to be NorthUp if necessary
 		self.northup()
 
-		# slice to the years we want
-		self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+		# slice to the years we want -if given
+		if self.begin != None and self.end != None:
+			self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 
 		self.interp = interp
 		self.ncpus = ncpus
