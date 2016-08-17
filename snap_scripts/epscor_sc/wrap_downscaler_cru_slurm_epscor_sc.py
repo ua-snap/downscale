@@ -62,5 +62,5 @@ if __name__ == '__main__':
 							'-ov', out_varname ])
 		
 		fn = os.path.join( slurm_path, '_'.join(['downscale', model, variable]) + '.slurm' )
-		stop
+		
 		_ = run_model( fn, command )
