@@ -69,7 +69,7 @@ class Dataset( object ):
 		self.northup()
 
 		# slice to the years we want
-		self.ds = self.ds.sel( time=slice( str( begin ), str( end ) ) )
+		self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 
 		self.interp = interp
 		self.ncpus = ncpus
