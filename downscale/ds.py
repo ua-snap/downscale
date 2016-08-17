@@ -16,7 +16,7 @@ class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
 		downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
 		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None, varname=None, modelname=None, anom=False, *args, **kwargs ):
+		post_downscale_function=None, varname=None, modelname=None, anom=False, resample_type='bilinear',*args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -49,6 +49,7 @@ class DeltaDownscale( object ):
 		self.varname = varname
 		self.modelname = modelname
 		self.anom = anom
+		self.resample_type = resample_type
 		self.affine = self.historical._calc_affine()
 		self.src_crs = src_crs
 		self.src_nodata = src_nodata
@@ -93,17 +94,27 @@ class DeltaDownscale( object ):
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
 	@staticmethod
-	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, *args, **kwargs ):
+	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
 		'''	
 		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
 								Must also be representative of anomalies.
 		base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
 								baseline for combining with anomalies.
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-
+		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
 		'''		
 		from rasterio.warp import reproject, RESAMPLING
-		
+
+		resampling = {'average':RESAMPLING.average,
+					'cubic':RESAMPLING.cubic,
+					'lanczos':RESAMPLING.lanczos,
+					'bilinear':RESAMPLING.bilinear,
+					'cubic_spline':RESAMPLING.cubic_spline,
+					'mode':RESAMPLING.mode,
+					'count':RESAMPLING.count,
+					'index':RESAMPLING.index,
+					'nearest':RESAMPLING.nearest }
+			
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
@@ -112,7 +123,7 @@ class DeltaDownscale( object ):
 
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=RESAMPLING.bilinear, SOURCE_EXTRA=5000 )
+				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=5000 )
 		return output_arr
 	@staticmethod
 	def wrap( d, f, operation_switch, anom=False, mask_value=0 ):
@@ -251,7 +262,7 @@ class DeltaDownscale( object ):
 
 		# partial and wrapper
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
-					dst_nodata=self.dst_nodata, src_transform=src_transform )
+					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
 
 		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 
