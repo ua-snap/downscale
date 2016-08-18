@@ -22,9 +22,9 @@ if __name__ == '__main__':
 
 	script_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc'
 
-	script_names = [ 'model_diffs_metrics_epscor_se.py',
-					'model_variability_metrics_epscor_se_DECADAL_multidomain.py',
-					'model_variability_metrics_epscor_se_DECADAL_multidomain_cru.py' ]
+	script_names = [ 'model_diffs_metrics_epscor_sc.py',
+					'model_variability_metrics_epscor_sc_DECADAL_multidomain.py',
+					'model_variability_metrics_epscor_sc_DECADAL_multidomain_cru.py' ]
 	
 	slurm_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/slurm_files'
 	if not os.path.exists( slurm_path ):
