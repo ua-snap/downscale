@@ -20,7 +20,7 @@ def run_model( fn, command ):
 if __name__ == '__main__':
 	import os, subprocess
 
-	script_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_se'
+	script_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc'
 
 	script_names = [ 'model_diffs_metrics_epscor_se.py',
 					'model_variability_metrics_epscor_se_DECADAL_multidomain.py',

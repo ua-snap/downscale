@@ -13,10 +13,11 @@ import xarray as xr
 from downscale import utils
 
 class DeltaDownscale( object ):
-	def __init__( self, baseline, clim_begin, clim_end, historical, future=None, \
-		downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0, \
-		ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-		post_downscale_function=None, varname=None, modelname=None, anom=False, resample_type='bilinear',*args, **kwargs ):
+	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
+				downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0,
+				ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
+				post_downscale_function=None, varname=None, modelname=None, anom=False, 
+				resample_type='bilinear', *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -123,7 +124,7 @@ class DeltaDownscale( object ):
 
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=5000 )
+				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		return output_arr
 	@staticmethod
 	def wrap( d, f, operation_switch, anom=False, mask_value=0 ):
