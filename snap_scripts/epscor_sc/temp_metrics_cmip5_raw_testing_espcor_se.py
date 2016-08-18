@@ -105,8 +105,8 @@ if __name__ == '__main__':
 	scenario = 'rcp45'
 	variables = ['tasmax', 'tasmin']
 	shp_fn = './Kenai_StudyArea.shp'
-	begin = 2010
-	end = 2020
+	begin = 2006
+	end = 2100
 
 	# # shapefile work:
 	# # warp to wgs84 greenwich, then to wgs84 pacific 
