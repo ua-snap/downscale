@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	import xarray as xr
 	import numpy as np
 	import pandas as pd
-	from pathos import multiprocessing as mp
+	from pathos.mp_map import mp_map
 
 	# setup args
 	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
@@ -43,8 +43,4 @@ if __name__ == '__main__':
 		if len( tif_files ) > 0:
 			args_list = args_list + [ ( subdomain_fn, os.path.join( root, fn ), os.path.join( root, fn ).replace( base_path, output_path ) ) for fn in tif_files ]
 	
-	pool = mp.Pool( ncpus )
-	out = pool.map( wrap, args_list )
-	pool.close()
-	pool.join()
-	pool.terminate()
+	out = mp_map( wrap, args_list, nproc=ncpus )
