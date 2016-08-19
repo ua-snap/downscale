@@ -236,11 +236,14 @@ class DeltaDownscale( object ):
 			self.anomalies_rot = dat
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
-			src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
+			# # # [ ML NEW ] this should be a call to self.historical.transform_from_latlon
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
-			self.anomalies_rot = dat 
+			self.anomalies_rot = dat
+			# src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
 
