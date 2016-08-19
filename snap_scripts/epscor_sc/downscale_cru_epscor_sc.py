@@ -32,12 +32,12 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 
 	# standard args
-	clim_begin = '1961'
-	clim_end = '1990'
+	clim_begin = '01-1961'
+	clim_end = '12-1990'
 	scenario = 'historical'
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
-	northup = False
+	# northup = False
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -59,15 +59,17 @@ if __name__ ==	'__main__':
 		return rounder( arr )
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
-	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, interp=False, 
-							method='linear', ncpus=32, northup=northup, cru=True )
+	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
+							interp=True, method='linear', ncpus=32 ) #, northup=northup, cru=False
 
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
 			downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
 			src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-			post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom )
+			post_downscale_function=round_it, varname=out_varname, modelname=None, anom=True )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
 
 	ar5.downscale( output_dir=output_path )
+
+# anomalies NOT rotated!

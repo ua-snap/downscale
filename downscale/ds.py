@@ -180,6 +180,7 @@ class DeltaDownscale( object ):
 		return d['output_filename']
 	def downscale( self, output_dir, prefix=None ):
 		import affine
+		from affine import Affine
 		import itertools
 		from functools import partial
 		from pathos.mp_map import mp_map
@@ -244,7 +245,8 @@ class DeltaDownscale( object ):
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			# src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			src_transform = self.affine
+			src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+			# src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
 
 		# run and output
