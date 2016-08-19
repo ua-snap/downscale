@@ -30,7 +30,8 @@ class Baseline( object ):
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
-					method='linear', begin=None, end=None, northup=False, cru=False, *args, **kwargs):
+					method='linear', begin=None, end=None, *args, **kwargs):
+		#, northup=False, cru=False
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -48,10 +49,10 @@ class Dataset( object ):
 		self.variable = variable
 		self.model = model
 		self.scenario = scenario
-		self.begin = begin # year begin for self._open_dataset()
+		self.begin = begin # year begin
 		self.end = end # year end
-		self.northup = northup
-		self.cru = cru
+		# self.northup = northup
+		# self.cru = cru
 		
 		if units != None:
 			self.units = units
@@ -68,11 +69,11 @@ class Dataset( object ):
 		else:
 			self.metric = 'metric'
 
-		# update the lats and data to be NorthUp if necessary
-		if self.northup == True:
-			self._northup()
+		# # update the lats and data to be NorthUp if necessary
+		# if self.northup == True:
+		# 	self._northup()
 
-		# slice to the years we want -if given
+		# slice to the years we want if given
 		if self.begin != None and self.end != None:
 			self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 
@@ -85,42 +86,36 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	
-	# @staticmethod
-	# def transform_from_latlon( lat, lon ):
-	# 	''' simple way to make an affine transform from lats and lons coords '''
-	# 	from affine import Affine
-	# 	lat = np.asarray( lat )
-	# 	lon = np.asarray( lon )
-	# 	trans = Affine.translation(lon[0], lat[0])
-	# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
-	# 	return trans * scale
 	@staticmethod
 	def transform_from_latlon( lat, lon ):
 		''' simple way to make an affine transform from lats and lons coords '''
 		from affine import Affine
 		lat = np.asarray( lat )
 		lon = np.asarray( lon )
-		if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
-			lat_max = 90.0
-		else:
-			lat_max = np.max( lat )
-
-		# set the lonmax to the corner.
-		lon_arr = np.array([-180.0, 0.0 ])
-		idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
-		lon_max = lon_arr[ idx ]
-
-		trans = Affine.translation(lon_max, lat_max)
+		trans = Affine.translation(lon[0], lat[0])
 		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
 		return trans * scale
+	# @staticmethod
+	# def transform_from_latlon( lat, lon ):
+	# 	''' simple way to make an affine transform from lats and lons coords '''
+	# 	from affine import Affine
+	# 	lat = np.asarray( lat )
+	# 	lon = np.asarray( lon )
+	# 	if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
+	# 		lat_max = 90.0
+	# 	else:
+	# 		lat_max = np.max( lat )
+
+	# 	# set the lonmax to the corner.
+	# 	lon_arr = np.array([-180.0, 0.0 ])
+	# 	idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
+	# 	lon_max = lon_arr[ idx ]
+
+	# 	trans = Affine.translation(lon_max, lat_max)
+	# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+	# 	return trans * scale
 	def _calc_affine( self ):
-		from affine import Affine
-		if self.cru == True:
-			# [HACK] this is a blatant hack to get around CRU being annoying
-			out_af = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
-		else:
-			out_af = self.transform_from_latlon( self.ds.lat, self.ds.lon )
-		return out_af
+		return self.transform_from_latlon( self.ds.lat, self.ds.lon )
 	def _northup( self, latitude='lat' ):
 		''' this works only for global grids to be downscaled flips it northup '''
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
@@ -180,6 +175,13 @@ class Dataset( object ):
 
 		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
 		dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
+
+		# multicore way, but OpenBLAS is not parallelizable in its current install.
+		# def interpolate_convex_hull( x ):
+		# 	return self.wrap( x )
+
+		# dat_list = mp_map( interpolate_convex_hull, args, nproc=32)
+		# dat = np.array( dat_list )
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
