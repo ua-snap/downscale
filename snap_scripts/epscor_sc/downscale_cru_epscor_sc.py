@@ -37,6 +37,7 @@ if __name__ ==	'__main__':
 	scenario = 'historical'
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
+	northup = False
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -58,7 +59,8 @@ if __name__ ==	'__main__':
 		return rounder( arr )
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
-	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, interp=True, method='linear', ncpus=32 )
+	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, interp=False, 
+							method='linear', ncpus=32, northup=northup, cru=True )
 
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None, \
 			downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \

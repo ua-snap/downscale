@@ -30,7 +30,7 @@ class Baseline( object ):
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
-					method='linear', begin=None, end=None, *args, **kwargs):
+					method='linear', begin=None, end=None, northup=False, cru=False, *args, **kwargs):
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -40,6 +40,7 @@ class Dataset( object ):
 		interp = [bool] if True interpolate across NA's using a spline. 
 					if False (default) do nothing.interp=False, ncpus=32,
 		ncpus = [ int ] number of cores to use if interp=True. default:2.
+		northup = [bool] if True, flip the earth using np.flipud if False leave it alone
 		'''
 		import xarray as xr
 		self.fn = fn
@@ -49,6 +50,8 @@ class Dataset( object ):
 		self.scenario = scenario
 		self.begin = begin # year begin for self._open_dataset()
 		self.end = end # year end
+		self.northup = northup
+		self.cru = cru
 		
 		if units != None:
 			self.units = units
@@ -66,7 +69,8 @@ class Dataset( object ):
 			self.metric = 'metric'
 
 		# update the lats and data to be NorthUp if necessary
-		self.northup()
+		if self.northup == True:
+			self._northup()
 
 		# slice to the years we want -if given
 		if self.begin != None and self.end != None:
@@ -110,15 +114,20 @@ class Dataset( object ):
 		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
 		return trans * scale
 	def _calc_affine( self ):
-		return self.transform_from_latlon( self.ds.lat, self.ds.lon )
-	def northup( self, latitude='lat' ):
+		from affine import Affine
+		if self.cru == True:
+			# [HACK] this is a blatant hack to get around CRU being annoying
+			out_af = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+		else:
+			out_af = self.transform_from_latlon( self.ds.lat, self.ds.lon )
+		return out_af
+	def _northup( self, latitude='lat' ):
 		''' this works only for global grids to be downscaled flips it northup '''
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
 			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
 			# flip each slice of the array and make a new one
 			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
 			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
-		self.ds = self.ds
 	@staticmethod
 	def rotate( dat, lons, to_pacific=False ):
 		'''rotate longitudes in WGS84 Global Extent'''
