@@ -135,7 +135,23 @@ def padded_bounds( rst, npixels, crs ):
 	resolution = rst.res[0]
 	new_bounds = [ bound+(expand*resolution) for bound, expand in zip( rst.bounds, npixels ) ]
 	return new_bounds
-def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, **kwargs ):
+# def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, **kwargs ):
+# 	'''
+# 	interpolate points to a grid. simple wrapper around
+# 	scipy.interpolate.griddata. Points and grid must be
+# 	in the same coordinate system
+# 	x = 1-D np.array of x coordinates / x,y,z must be same length
+# 	y = 1-D np.array of y coordinates / x,y,z must be same length
+# 	z = 1-D np.array of z coordinates / x,y,z must be same length
+# 	grid = tuple of meshgrid as made using numpy.meshgrid()
+# 			order (xi, yi)
+# 	method = one of 'cubic', 'near', 'linear'
+# 	'''
+# 	from scipy.interpolate import griddata
+# 	zi = griddata( (x, y), z, grid, method=method )
+# 	zi = np.flipud( zi ).astype( output_dtype )
+# 	return zi
+def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args, **kwargs ):
 	'''
 	interpolate points to a grid. simple wrapper around
 	scipy.interpolate.griddata. Points and grid must be
@@ -147,10 +163,11 @@ def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, 
 			order (xi, yi)
 	method = one of 'cubic', 'near', 'linear'
 	'''
-	from scipy.interpolate import griddata
-	zi = griddata( (x, y), z, grid, method=method )
-	zi = np.flipud( zi ).astype( output_dtype )
-	return zi
+	from matplotlib.mlab import griddata
+	# from scipy.interpolate import griddata
+	zi = griddata( x, y, z, grid, method=method )
+	# zi = np.flipud( zi ).astype( output_dtype )
+	return zi.astype( output_dtype )
 # def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \
 # 	meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
 # 	'''

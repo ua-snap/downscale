@@ -105,67 +105,86 @@ if __name__ == '__main__':
 	
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models'
 	os.chdir( base_dir )
-	model = '5ModelAvg'
-	scenario = 'rcp45'
-	begin = 2050
-	end = 2100
+	scenario = 'historical'
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
-	variables = ['tasmax', 'tas', 'tasmin']
-	# variables = ['pr']
-	figsize = (25,13)
-	out = {}
-	for v in variables:
-		path = os.path.join( base_dir,'downscaled', model, scenario, v )		
-		files = glob.glob( os.path.join( path, '*.tif' ) )
-		files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
-		out[ v ] = mp_map( masked_mean, files, nproc=4 )
-		if v == 'tas' or v == 'pr':
-			path = os.path.join( old_dir, scenario, model, v )
-			files = glob.glob( os.path.join( path, '*.tif' ) )
-			files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
-			out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4 )
+	models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	variables_list = [['tasmax', 'tas', 'tasmin'],['pr']]
 
-	plot_df = pd.DataFrame( out )
-	plot_df.index = pd.date_range( start=str(begin), end=str(end+1), freq='M' )
-	
-	# sort the columns for output plotting cleanliness:
-	if 'tas' in variables:
-		col_list = ['tasmax', 'tas_old', 'tas', 'tasmin']
-	elif 'pr' in variables:
-		col_list = ['pr', 'pr_old']
-	
-	plot_df = plot_df[ col_list ] # get em in the order for plotting
+	for variables in variables_list:
+		for m in models:
+			if m == 'CRU_TS323':
+				old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/CRU/CRU_TS32'
+				begin = 2000
+				end = 2010
+			else:
+				if scenario == 'historical':
+					old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/AR5_CMIP5_models'
+					begin = 2000
+					end = 2005
+				else:
+					old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models'
+					begin = 2010
+					end = 2015
 
-	# now plot the dataframe
-	if begin == end:
-		title = 'EPSCoR SC AOI Temp Metrics {} {} {}'.format( model, scenario, begin )
-	else:
-		title = 'EPSCoR SC AOI Temp Metrics {} {} {} - {}'.format( model, scenario, begin, end )
+			figsize = (16,9)
+			out = {}
+			for v in variables:
+				path = os.path.join( base_dir,'downscaled', m, scenario, v )
+				files = glob.glob( os.path.join( path, '*.tif' ) )
+				files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
+				out[ v ] = mp_map( masked_mean, files, nproc=4 )
+				if v == 'tas' or v == 'pr':
+					if m == 'CRU_TS323':
+						path = os.path.join( old_dir, v )
+					else:	
+						path = os.path.join( old_dir, scenario, m, v )
+					files = glob.glob( os.path.join( path, '*.tif' ) )
+					files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
+					out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4 )
 
-	colors = ['red', 'black', 'blue' ]
+			plot_df = pd.DataFrame( out )
+			plot_df.index = pd.date_range( start=str(begin), end=str(end+1), freq='M' )
+			
+			# sort the columns for output plotting cleanliness:
+			if 'tas' in variables:
+				col_list = ['tasmax', 'tas_old', 'tas', 'tasmin']
+			elif 'pr' in variables:
+				col_list = ['pr', 'pr_old']
+			
+			plot_df = plot_df[ col_list ] # get em in the order for plotting
 
-	ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
+			# now plot the dataframe
+			if begin == end:
+				title = 'EPSCoR SC AOI Temp Metrics {} {} {}'.format( m, scenario, begin )
+			else:
+				title = 'EPSCoR SC AOI Temp Metrics {} {} {} - {}'.format( m, scenario, begin, end )
 
-	output_dir = os.path.join( base_dir, 'testing' )
-	if not os.path.exists( output_dir ):
-		os.makedirs( output_dir )
+			if v == 'tas':
+				colors = ['darkred', 'black', 'blue', 'lightred' ]
+			else:
+				colors = [ 'blue', 'black' ]
 
-	# now plot the dataframe
-	out_metric_fn = 'temps'
-	if 'pr' in variables:
-		out_metric_fn = 'prec'
+			ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-	if begin == end:
-		output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}.png'.format( out_metric_fn, model, scenario, begin ) )
-	else:
-		output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_{}.png'.format( out_metric_fn, model, scenario, begin, end ) )
-	plt.savefig( output_filename, dpi=800 )
-	plt.close()
+			output_dir = os.path.join( base_dir, 'compare_downscaling_vars' )
+			if not os.path.exists( output_dir ):
+				os.makedirs( output_dir )
+
+			# now plot the dataframe
+			out_metric_fn = 'temps'
+			if 'pr' in variables:
+				out_metric_fn = 'prec'
+
+			if begin == end:
+				output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}.png'.format( out_metric_fn, m, scenario, begin ) )
+			else:
+				output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_{}.png'.format( out_metric_fn, m, scenario, begin, end ) )
+			plt.savefig( output_filename, dpi=700 )
+			plt.close()
 
 
 
