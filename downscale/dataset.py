@@ -148,6 +148,7 @@ class Dataset( object ):
 		from copy import copy
 		import pandas as pd
 		import numpy as np
+		from pathos.mp_map import mp_map
 
 		# remove the darn scientific notation
 		np.set_printoptions( suppress=True )
@@ -189,7 +190,7 @@ class Dataset( object ):
 		def interpolate_convex_hull( x ):
 			return self.wrap( x )
 
-		dat_list = mp_map( interpolate_convex_hull, args, nproc=32)
+		dat_list = mp_map( interpolate_convex_hull, args, nproc=32 )
 		dat = np.array( dat_list )
 
 		lons = self._lonpc
