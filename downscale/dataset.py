@@ -183,15 +183,15 @@ class Dataset( object ):
 		# 	return f( x=x, y=y, z=z )
 		# # # # 
 
-		# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-		# dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
+		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+		dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
 
 		# multicore way, but OpenBLAS is not parallelizable in its current install.
-		def interpolate_convex_hull( x ):
-			return self.wrap( x )
+		# def interpolate_convex_hull( x ):
+		# 	return self.wrap( x )
 
-		dat_list = mp_map( interpolate_convex_hull, args, nproc=32 )
-		dat = np.array( dat_list )
+		# dat_list = mp_map( interpolate_convex_hull, args, nproc=32 )
+		# dat = np.array( dat_list )
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
