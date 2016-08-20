@@ -174,8 +174,9 @@ class Dataset( object ):
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 		
-		# # # # USE MLAB's griddata which we can parallelize
+		# # # # USE MLAB's griddata which we _can_ parallelize
 		def wrap( d ):
+			''' simple wrapper around utils.xyz_to_grid for mp_map'''
 			x = np.array( d['x'] )
 			y = np.array( d['y'] )
 			z = np.array( d['z'] )
@@ -183,12 +184,14 @@ class Dataset( object ):
 			return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
 		# # # # 
 
-		# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-		# dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
-		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
-		dat_list = mp_map( wrap, args, nproc=self.ncpus )
-		dat_list = [ i.data for i in dat_list ]
-		dat = np.array( dat_list )
+		try:
+			print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+			dat_list = mp_map( wrap, args, nproc=self.ncpus )
+			dat_list = [ i.data for i in dat_list ] # drop the output mask
+			dat = np.array( dat_list )
+		except:
+			print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+			dat = np.array([ wrap( **i ) for i in args ])
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back

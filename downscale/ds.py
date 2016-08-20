@@ -91,7 +91,7 @@ class DeltaDownscale( object ):
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 
 		# slice back to times we want
-		if self.historical != None and self.functoolsture != None:
+		if self.historical != None and self.future != None:
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
@@ -129,6 +129,7 @@ class DeltaDownscale( object ):
 		return output_arr
 	@staticmethod
 	def wrap( d, f, operation_switch, anom=False, mask_value=0 ):
+		import copy
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
 		base = rasterio.open( d[ 'base' ] )
