@@ -166,7 +166,7 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 	from matplotlib.mlab import griddata
 	# from scipy.interpolate import griddata
 	xi, yi = grid
-	zi = griddata( x, y, z, xi, yi, interp=method )
+	zi = griddata( x, y, z, xi, yi, method=method )
 	# zi = np.flipud( zi ).astype( output_dtype )
 	return zi.astype( output_dtype )
 # def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \

@@ -174,24 +174,21 @@ class Dataset( object ):
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
 		
-		# # # # HOW TO USE MLAB's griddata 
-		# f = partial( mlab.griddata,xi=xi, yi=yi, interp='linear' )
-		# def wrap( df ):
-		# 	x = np.array( df.x )
-		# 	y = np.array( df.y )
-		# 	z = np.array( df.z )
-		# 	return f( x=x, y=y, z=z )
+		# # # # USE MLAB's griddata which we can parallelize
+		def wrap( d ):
+			x = np.array( d['x'] )
+			y = np.array( d['y'] )
+			z = np.array( d['z'] )
+			xi, yi = d['grid']
+			return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
 		# # # # 
 
-		print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-		dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
-
-		# multicore way, but OpenBLAS is not parallelizable in its current install.
-		# def interpolate_convex_hull( x ):
-		# 	return self.wrap( x )
-
-		# dat_list = mp_map( interpolate_convex_hull, args, nproc=32 )
-		# dat = np.array( dat_list )
+		# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+		# dat = np.array([ utils.xyz_to_grid( **i ) for i in args ])
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( wrap, args, nproc=self.ncpus )
+		dat_list = [ i.data for i in dat_list ]
+		dat = np.array( dat_list )
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
