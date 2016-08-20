@@ -59,6 +59,7 @@ class DeltaDownscale( object ):
 		
 		# calculate args
 		self.anomalies = None
+		self.ds = None
 		self._concat_nc()
 		self._calc_climatolgy()
 		self._calc_anomalies()
@@ -90,7 +91,7 @@ class DeltaDownscale( object ):
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 
 		# slice back to times we want
-		if self.historical and self.future:
+		if self.historical != None and self.functoolsture != None:
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
@@ -244,8 +245,8 @@ class DeltaDownscale( object ):
 		else:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
-			# src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			# src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 			# src_transform = self.affine
 			print( 'anomalies NOT rotated!' )
 
