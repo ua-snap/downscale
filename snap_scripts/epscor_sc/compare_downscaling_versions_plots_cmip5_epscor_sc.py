@@ -106,29 +106,32 @@ if __name__ == '__main__':
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	os.chdir( base_dir )
-	scenario = 'historical'
+	scenario = 'rcp45'
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
-	models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	# models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
 	variables_list = [['tasmax', 'tas', 'tasmin'],['pr']]
-
+	models = ['CRU_TS323']
+	
 	for variables in variables_list:
 		for m in models:
 			if m == 'CRU_TS323':
 				old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/CRU/CRU_TS32'
-				begin = 2000
-				end = 2010
+				begin = 1950
+				end = 1965
+
 			else:
 				if scenario == 'historical':
 					old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/AR5_CMIP5_models'
-					begin = 2000
-					end = 2005
+					begin = 1950
+					end = 1965
 				else:
 					old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models'
-					begin = 2010
-					end = 2015
+					begin = 2060
+					end = 2070
 
 			figsize = (16,9)
 			out = {}
@@ -163,14 +166,14 @@ if __name__ == '__main__':
 			else:
 				title = 'EPSCoR SC AOI Temp Metrics {} {} {} - {}'.format( m, scenario, begin, end )
 
-			if v == 'tas':
-				colors = ['darkred', 'black', 'blue', 'lightred' ]
+			if 'tas' in variables:
+				colors = ['red', 'black', 'blue', 'red' ]
 			else:
 				colors = [ 'blue', 'black' ]
 
 			ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-			output_dir = os.path.join( base_dir, 'compare_downscaling_vars' )
+			output_dir = os.path.join( base_dir, 'compare_downscaling_vars_v2_pkg' )
 			if not os.path.exists( output_dir ):
 				os.makedirs( output_dir )
 

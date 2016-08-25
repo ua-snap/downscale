@@ -128,7 +128,19 @@ class DeltaDownscale( object ):
 				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		return output_arr
 	@staticmethod
-	def wrap( d, f, operation_switch, anom=False, mask_value=0 ):
+	def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
+		'''
+		run the meat of downscaling with this runner function for parallel processing
+
+		ARGUMENTS:
+		----------
+		d = [dict] kwargs dict of args to pass to interpolation function
+		f = [ ]
+
+		RETURNS:
+		--------
+
+		'''
 		import copy
 		post_downscale_function = d[ 'post_downscale_function' ]
 		interped = f( **d )
@@ -142,9 +154,8 @@ class DeltaDownscale( object ):
 		if 'transform' in meta.keys():
 			meta.pop( 'transform' )
 
-		# # # ANOMALIES TO DISK
 		if anom == True:
-			# write out the anomalies for testing:
+			# write out the anomalies
 			anom_filename = copy.copy( d[ 'output_filename' ] )
 			dirname, basename = os.path.split( anom_filename )
 			dirname = os.path.join( dirname, 'anom' )
@@ -157,19 +168,19 @@ class DeltaDownscale( object ):
 			anom_filename = os.path.join( dirname, basename )
 			with rasterio.open( anom_filename, 'w', **meta ) as anom:
 				anom.write( interped, 1 )
-		# # # ANOMALIES END
-
+		
+		# make sure the output dir exists and if not, create it
 		dirname = os.path.dirname( d['output_filename'] )
 		if not os.path.exists( dirname ):
 			os.makedirs( dirname )
 
-		# nested dict switch here, not attractive, but effective.
+		# operation switch
 		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
 		
-		# post downscale it if necessary:
+		# post downscale it if func given
 		if post_downscale_function != None:
 			output_arr = post_downscale_function( output_arr )
-			# drop the mask if there is one -- this could become smarter
+			# drop the mask if there is one
 			if hasattr( output_arr, 'mask'):
 				output_arr = output_arr.data
 
@@ -180,6 +191,14 @@ class DeltaDownscale( object ):
 		with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
 			out.write( output_arr, 1 )
 		return d['output_filename']
+	@staticmethod
+	def add( base, anom ):
+		''' add anomalies to baseline '''
+		return base + anom
+	@staticmethod
+	def mult( base, anom ):
+		''' multiply anomalies to baseline '''
+		return base * anom
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
@@ -187,17 +206,7 @@ class DeltaDownscale( object ):
 		from functools import partial
 		from pathos.mp_map import mp_map
 
-		# determine operation type
-		def add( base, anom ):
-			return base + anom
-		def mult( base, anom ):
-			return base * anom
-		def div( base, anom ):
-			# this one may not be useful, but the placeholder is here
-			# return base / anom
-			return NotImplementedError
-
-		operation_switch = { 'add':add, 'mult':mult, 'div':div }
+		operation_switch = { 'add':self.add, 'mult':self.mult }
 
 		def two_digit_month( x ):
 			''' make 1 digit month a standard 2-digit for output filenames '''
@@ -208,8 +217,7 @@ class DeltaDownscale( object ):
 
 		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
 		
-		# # # # SOME STUFF TO DEAL WITH CUSTOM OUTPUT NAMING OTF # # # # 
-		# deal with missing variable names and/or model names
+		# handle missing variable / model names
 		if self.varname != None:
 			variable = self.varname
 		elif self.historical.variable != None:
@@ -224,8 +232,6 @@ class DeltaDownscale( object ):
 		else:
 			model = 'model'
 
-		# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-		# set up some output filenames
 		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
 
@@ -239,7 +245,6 @@ class DeltaDownscale( object ):
 			self.anomalies_rot = dat
 			a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
-			# # # [ ML NEW ] this should be a call to self.historical.transform_from_latlon
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
@@ -272,8 +277,8 @@ class DeltaDownscale( object ):
 		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
 					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
 
-		wrapped = partial( self.wrap, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
+		run = partial( self._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 
 		# run it
-		out = mp_map( wrapped, args, nproc=self.ncpus )
+		out = mp_map( run, args, nproc=self.ncpus )
 		return output_dir

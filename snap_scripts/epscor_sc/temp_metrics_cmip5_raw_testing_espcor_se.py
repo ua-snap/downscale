@@ -31,7 +31,7 @@ def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
 	from the filename.  This is useful with SNAP data since the standard
 	is to name files like '<prefix>_MM_YYYY.tif'.  If sorted using base
 	Pythons sort/sorted functions, things will be sorted by the first char
-	of the month, which makes thing go 1, 11, ... which sucks for timeseries
+	of the month, which makes thing go 1, 11, ... which stinks for timeseries
 	this sorts it properly following SNAP standards as the default settings.
 
 	ARGUMENTS:
@@ -99,14 +99,15 @@ if __name__ == '__main__':
 	import pandas as pd
 	
 	# args / set working dir
-	base_dir = '/Users/malindgren/Documents/downscale_epscor/august_fix'
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped'
+	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/testing_compare_raw'
 	os.chdir( base_dir )
-	model = 'GFDL-CM3'
+	model = 'MRI-CGCM3' #'IPSL-CM5A-LR' # 
 	scenario = 'rcp45'
-	variables = ['tasmax', 'tasmin']
-	shp_fn = './Kenai_StudyArea.shp'
-	begin = 2006
-	end = 2100
+	variables = ['tasmax', 'tasmin', 'tas']
+	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
+	begin = 2030
+	end = 2040
 
 	# # shapefile work:
 	# # warp to wgs84 greenwich, then to wgs84 pacific 
@@ -128,7 +129,7 @@ if __name__ == '__main__':
 		out = out + [ df ]
 		
 	plot_df = pd.concat( out, axis=1 )
-	plot_df = plot_df[['tasmax', 'tasmin']]
+	plot_df = plot_df[['tasmax', 'tas', 'tasmin']]
 
 	# now plot the dataframe
 	if begin == end:
@@ -137,14 +138,15 @@ if __name__ == '__main__':
 		title = 'EPSCoR SC AOI Temp Metrics raw {} {} {} - {}'.format( model, scenario, begin, end )
 
 	figsize = (13,9)
-	colors = ['red', 'blue' ]
+	colors = ['red', 'black', 'blue']
 
 	ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
+	
 	# now plot the dataframe
 	if begin == end:
-		plt.savefig( 'mean_temps_epscor_sc_raw_{}_{}_{}.png'.format( model, scenario, begin ), dpi=600 )
+		plt.savefig( os.path.join( output_path,'mean_temps_epscor_sc_raw_{}_{}_{}.png'.format( model, scenario, begin ) ), dpi=600 )
 	else:
-		plt.savefig( 'mean_temps_epscor_sc_raw_{}_{}_{}_{}.png'.format( model, scenario, begin, end ), dpi=600 )
+		plt.savefig( os.path.join( output_path,'mean_temps_epscor_sc_raw_{}_{}_{}_{}.png'.format( model, scenario, begin, end ) ), dpi=600 )
 	
 	plt.close()
 

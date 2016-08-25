@@ -169,21 +169,15 @@ def make_decadal_seasonal( base_path, output_path, variable, model, scenario, de
 
 	seasons = [ get_season( fn ) for fn in files ]
 
-	# drop data for start_year JF and end_year D
+	# drop data for start_year JF and end_year this is useful for annuals, but not really decadals
 	# files = [ fn for fn in files if not '_'.join([ '01',start_year ]) in fn if not '_'.join([ '02',start_year ]) in fn if not '_'.join([ '12',end_year ]) in fn ]
 	files = pd.Series( files )
 
 	grouped_seasons = files.groupby( seasons )
 
 	args = [ ( season_name, file_group.tolist(), output_path, agg_metric ) for season_name, file_group in grouped_seasons ]
-	# _ = [ wrap(x) for x in args ]
+
 	_ = mp_map( wrap, args, nproc=ncpus )
-	# pool = mp.Pool( ncpus )
-	# out = pool.map( lambda x: wrap( x ), args )
-	# pool.close()
-	# pool.join()
-	# pool.terminate()
-	# pool = None
 	return args
 
 def wrap( x ):
@@ -244,8 +238,6 @@ if __name__ == '__main__':
 	for decade in decades:
 		print( 'running: {} {} {} {}'.format( model, variable, scenario, decade ) )
 		done = make_decadal_seasonal( base_path, output_path, variable, model, scenario, decade, ncpus, agg_metric )
-		# run the args made above through a parallel processor
-		# 
 
 
 

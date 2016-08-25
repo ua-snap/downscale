@@ -1,7 +1,7 @@
 # # # run the 2 wrapper scripts that fire off jobs on ATLAS -- run this script from atlas head node.
 import subprocess
 
-# RUN CRU first since it takes longer
+# RUN CRU first since it takes slightly longer with spatial interpolation
 done = subprocess.call([ 'ipython', '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/wrap_downscaler_cru_slurm_epscor_sc.py' ])
 
 # RUN CMIP5

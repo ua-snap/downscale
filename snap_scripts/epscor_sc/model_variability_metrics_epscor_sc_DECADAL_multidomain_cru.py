@@ -177,7 +177,7 @@ if __name__ == '__main__':
 	ncpus = 32
 	project = 'cru'
 	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
-	models = [ 'ts323' ]
+	models = [ 'CRU_TS323' ]
 	scenarios = [ 'historical' ]
 	begin_out = 1901
 	end_out = 2014
