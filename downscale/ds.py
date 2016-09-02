@@ -170,7 +170,7 @@ class DeltaDownscale( object ):
 				anom.write( interped, 1 )
 		
 		# make sure the output dir exists and if not, create it
-		dirname = os.path.dirname( d['output_filename'] )
+		dirname = os.path.dirname( d[ 'output_filename' ] )
 		if not os.path.exists( dirname ):
 			os.makedirs( dirname )
 
