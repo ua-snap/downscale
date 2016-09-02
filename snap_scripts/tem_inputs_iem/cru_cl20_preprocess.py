@@ -145,7 +145,7 @@ if __name__ == '__main__':
 		mask[ mask == 255 ] = -3.4e+38
 
 		with rasterio.open( final_fn, 'w', **template_meta ) as out:
-			out.write( np.empty_like( template_raster.read(1) ), 1 )
+			out.write( mask, 1 )
 
 		os.system( 'gdalwarp -wo SOURCE_EXTRA=100 -multi {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
