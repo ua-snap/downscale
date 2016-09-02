@@ -140,7 +140,7 @@ if __name__ == '__main__':
 		if os.path.exists( final_fn ):
 			os.remove( final_fn )
 
-		mask = template_raster.read_masks( 1 )
+		mask = template_raster.read_masks( 1 ).astype( np.float32 )
 		mask[ mask != 255 ] = 0
 		mask[ mask == 255 ] = -3.4e+38
 
