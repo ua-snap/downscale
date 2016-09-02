@@ -135,7 +135,7 @@ if __name__ == '__main__':
 	for fn in out_paths:
 		os.system( 'gdalwarp -overwrite -dstnodata -3.4e+38 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
-		final_fn = fn.replace( 'PCLL', '' )
+		final_fn = fn.replace( '_PCLL', '' )
 		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
 		if os.path.exists( final_fn ):
 			os.remove( final_fn )
