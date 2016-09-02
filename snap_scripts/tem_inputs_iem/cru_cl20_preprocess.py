@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
 	out_paths = []
 	for i in range( arr.shape[0] ):
-		output_filename = os.path.join( cru_path, 'intermediates', variable+'_'+str(i+1)+ '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format(  ) )
+		output_filename = os.path.join( cru_path, 'intermediates', '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, i+1 ) )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
 			out.write( arr[ i, ... ], 1 )
 		out_paths = out_paths + [ output_filename ]
@@ -152,13 +152,15 @@ if __name__ == '__main__':
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # # # # EXAMPLE RUN OF THE ABOVE FOR TEM DATA CREATION
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# import subprocess
+# import subprocess, os
 
+# script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem'
+# os.chdir( script_path )
 # base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru'
 # cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
 # variable = 'sunp'
 # template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
 
-# done = subprocess.call([ 'ipython','--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
+# done = subprocess.call([ 'ipython', 'cru_cl20_preprocess.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
 
 
