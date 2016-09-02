@@ -111,9 +111,14 @@ if __name__ == '__main__':
 			'width': cols,
 			'compress':'lzw'}
 
+	# set up a dir to toss the intermediate files into -- since we are using gdalwarp...
+	intermediate_path = os.path.join( cru_path, 'intermediates' )
+	if not os.path.exists( intermediate_path ):
+		os.makedirs( intermediate_path )
+
 	out_paths = []
 	for i in range( arr.shape[0] ):
-		output_filename = os.path.join( cru_path, 'intermediates', '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, i+1 ) )
+		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, i+1 ) )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
 			out.write( arr[ i, ... ], 1 )
 		out_paths = out_paths + [ output_filename ]
