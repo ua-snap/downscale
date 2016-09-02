@@ -141,14 +141,16 @@ if __name__ == '__main__':
 			os.remove( final_fn )
 
 		mask = template_raster.read_masks( 1 ).astype( np.float32 )
-		mask[ mask != 255 ] = 0
-		mask[ mask == 255 ] = -3.4e+38
-
 		with rasterio.open( final_fn, 'w', **template_meta ) as out:
-			out.write( mask, 1 )
+			out.write( np.empty_like( mask ), 1 )
 
 		os.system( 'gdalwarp -wo SOURCE_EXTRA=100 -multi -srcnodata -3.4e+38 -dstnodata -3.4e+38 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
+		with rasterio.open( final_fn, 'r+' ) as rst:
+			arr = rst.read( 1 )
+			arr[ mask == 255 ] = -3.4e+38
+			rst.write( arr, 1 )
+
 		new_paths = new_paths + [ final_fn ]
 	print( 'completed run of {}'.format( variable ) )
 
