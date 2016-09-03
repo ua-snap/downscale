@@ -33,12 +33,11 @@ def regrid( x ):
 	return xyz_to_grid( **x )
 
 if __name__ == '__main__':
-	import os, rasterio, glob, fiona
+	import os, rasterio
 	import numpy as np
 	import pandas as pd
 	import geopandas as gpd
 	from shapely.geometry import Point
-	from rasterio import Affine as A
 	from pathos.mp_map import mp_map
 	import argparse
 
@@ -69,7 +68,9 @@ if __name__ == '__main__':
 	if not os.path.exists( cru_path ):
 		os.makedirs( cru_path )
 
-	colnames = [ 'lat', 'lon', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+	colnames = [ 'lat', 'lon' ] + months
+	months_lookup = { count+1:month for count, month in enumerate( months ) }
 	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames )
 	
 	# manually flip to PCLL for interpolation
@@ -90,7 +91,6 @@ if __name__ == '__main__':
 	x = np.linspace( xmin, xmax, cols )
 	y = np.linspace( ymin, ymax, rows )
 	xi, yi = np.meshgrid( x, y )
-	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
 	args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
 
 	# run interpolation in parallel
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
 	out_paths = []
 	for i in range( arr.shape[0] ):
-		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, i+1 ) )
+		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, months_lookup[ i+1 ] ) )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
 			out.write( arr[ i, ... ], 1 )
 		out_paths = out_paths + [ output_filename ]
@@ -159,7 +159,7 @@ if __name__ == '__main__':
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # REGRID CRU-CL20 to SNAP AKCAN 2KM
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# import subprocess, os
+# import subprocess, os, glob
 
 # script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem'
 # os.chdir( script_path )
@@ -167,9 +167,9 @@ if __name__ == '__main__':
 # cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
 # template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
 # for cru_filename in cru_filenames:
-# 	print( 'working on: {}'.format( os.path.basename( cru_filename ) )
-# 	variable = os.path.basename( cru_filename ).split( '_' )[0]
+# 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
+# 	variable = os.path.basename( cru_filename ).split( '_' )[-1].split('.')[0]
 # 	done = subprocess.call([ 'ipython', 'cru_cl20_preprocess.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
-#
+
 
 
