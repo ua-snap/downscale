@@ -92,18 +92,23 @@ class Preprocess( object ):
 	def _concat_nc_list( self ):
 		import xarray
 		import pandas as pd
-		# NOTE: the below line is something that used to be needed for a misbehaving model. may need again. keep it.
-		# THIS should be used, but it is being a PITA
-		try:
-			ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
-			ds = ds.sel( time=slice( str(pp.years[0]), str(pp.years[1]) ) )
-		except:	
-			ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in self.filelist) )
+		import warnings
+		
+		with warnings.catch_warnings():
+			warnings.filterwarnings( 'error' )
 
-			ds = self._year_greater_yearlimit_workaround( ds, self.years[0], self.years[1], int(self._fileyears_dict['minyear']), int(self._fileyears_dict['maxyear']) )
-			if ds.time.dtype =='O':
-				print( '\nWARNING: Preprocess: modified time -- bad type\n' )
-				ds['time'] = pd.date_range(str(self.years[0]), str(self.years[1]+1), freq='M') # MONTHLY so leap doesnt matter and neither do days
+			# NOTE: the below line is something that used to be needed for a misbehaving model. may need again. keep it.
+			# THIS should be used, but it is being a PITA
+			try:
+				ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
+				ds = ds.sel( time=slice( str(pp.years[0]), str(pp.years[1]) ) )
+			except RuntimeWarning:	
+				ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in self.filelist) )
+
+				ds = self._year_greater_yearlimit_workaround( ds, self.years[0], self.years[1], int(self._fileyears_dict['minyear']), int(self._fileyears_dict['maxyear']) )
+				if ds.time.dtype =='O':
+					print( '\nWARNING: Preprocess: modified time -- bad type\n' )
+					ds['time'] = pd.date_range(str(self.years[0]), str(self.years[1]+1), freq='M') # MONTHLY so leap doesnt matter and neither do days
 		return ds
 	def write_nc( self, output_path=None, overwrite=True, nc_format='NETCDF4' ):
 		'''
