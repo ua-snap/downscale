@@ -101,7 +101,7 @@ class Preprocess( object ):
 			# THIS should be used, but it is being a PITA
 			try:
 				ds = xarray.concat([ xarray.open_dataset( i ).load() for i in self.filelist ], 'time' )
-				ds = ds.sel( time=slice( str(pp.years[0]), str(pp.years[1]) ) )
+				ds = ds.sel( time=slice( str(self.years[0]), str(self.years[1]) ) )
 			except RuntimeWarning:	
 				ds = reduce( lambda x,y: xarray.concat( [x,y], 'time'), (xarray.open_dataset( i ) for i in self.filelist) )
 
