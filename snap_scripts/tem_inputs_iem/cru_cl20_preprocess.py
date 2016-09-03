@@ -131,7 +131,6 @@ if __name__ == '__main__':
 	a,b,c,d = template_raster.bounds
 	
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
-	new_paths = []
 	for fn in out_paths:
 		os.system( 'gdalwarp -overwrite -dstnodata -3.4e+38 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
@@ -151,7 +150,6 @@ if __name__ == '__main__':
 			arr[ mask == 0 ] = -3.4e+38
 			rst.write( arr, 1 )
 
-		new_paths = new_paths + [ final_fn ]
 	print( 'completed run of {}'.format( variable ) )
 
 
@@ -159,15 +157,19 @@ if __name__ == '__main__':
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # # # # EXAMPLE RUN OF THE ABOVE FOR TEM DATA CREATION
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # REGRID CRU-CL20 to SNAP AKCAN 2KM
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # import subprocess, os
 
 # script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem'
 # os.chdir( script_path )
 # base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru'
-# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
-# variable = 'sunp'
+# cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
 # template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
-
-# done = subprocess.call([ 'ipython', 'cru_cl20_preprocess.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
+# for cru_filename in cru_filenames:
+# 	print( 'working on: {}'.format( os.path.basename( cru_filename ) )
+# 	variable = os.path.basename( cru_filename ).split( '_' )[0]
+# 	done = subprocess.call([ 'ipython', 'cru_cl20_preprocess.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
+#
 
 
