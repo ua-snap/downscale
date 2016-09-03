@@ -37,8 +37,11 @@ if __name__ == '__main__':
 		if variable == 'pr':
 			units = 'mm'
 			metric = 'total'
-		else:
+		elif variable == 'tas':
 			units = 'C'
+			metric = 'mean'
+		elif variable == 'hur':
+			units = 'pct'
 			metric = 'mean'
 
 		fn = os.path.join( path, 'slurm_run_downscaler_'+'_'.join([variable, model, scenario])+'.slurm' )

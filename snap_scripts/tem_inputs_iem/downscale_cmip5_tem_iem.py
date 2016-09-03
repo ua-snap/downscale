@@ -28,12 +28,12 @@ if __name__ == '__main__':
 
 	project = 'ar5'
 	
-	# # # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tasmin'
+	# # # # FOR TESTING # # # 
+	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	# variable = 'hur'
 	# scenario = 'rcp85'
 	# model = 'MRI-CGCM3'
-	# units = 'C'
+	# units = 'pct'
 	# metric = 'mean'
 
 	# some setup args
