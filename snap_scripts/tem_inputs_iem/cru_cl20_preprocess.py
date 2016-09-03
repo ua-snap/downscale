@@ -148,7 +148,7 @@ if __name__ == '__main__':
 		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		with rasterio.open( final_fn, 'r+' ) as rst:
 			arr = rst.read( 1 )
-			arr[ mask == 255 ] = -3.4e+38
+			arr[ mask == 0 ] = -3.4e+38
 			rst.write( arr, 1 )
 
 		new_paths = new_paths + [ final_fn ]
