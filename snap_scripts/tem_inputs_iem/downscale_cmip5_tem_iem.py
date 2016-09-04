@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
 		def round_data_clamp( x ):
 			x[ x < 0 ] = 0
-			x[ x < 100 ] = 100
+			x[ x > 100 ] = 100
 			return round_data( x )
 
 		if variable == 'hur' or variable == 'clt':

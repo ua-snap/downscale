@@ -3,7 +3,7 @@ def name_splitter( fn ):
 	import os
 	dirname, basename = os.path.split( fn )
 	basename, ext = os.path.splitext( basename )
-	elems = ['variable', 'cmor_table', 'model', 'scenario', 'experiment', 'time']
+	elems = ['variable', 'model', 'scenario', 'experiment', 'time']
 	d = dict( zip( elems, basename.split( '_' ) ) )
 	d[ 'fn' ] = fn
 	return d
@@ -26,13 +26,14 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 	from functools import partial
 
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/raw/cmip5' # /output1/NASA-GISS/GISS-E2-R/historical/mon/atmos/Amon/r1i1p1/v20121015/hur
-	output_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/raw_clean'
+	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/raw/cmip5' # /output1/NASA-GISS/GISS-E2-R/historical/mon/atmos/Amon/r1i1p1/v20121015/hur
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped'
+	output_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cmip5/prepped'
 
 	filelist = []
 	for root, subs, files in os.walk( base_dir ):
 		if len( files ) > 0:
-			filelist = filelist + [ os.path.join( root, fn ) for fn in files if fn.endswith( '.nc' ) ]
+			filelist = filelist + [ os.path.join( root, fn ) for fn in files if fn.endswith( '.nc' ) and 'tas_' or 'pr_' in fn ]
 	f = partial( copy_fn, output_dir=output_dir )
 	done = mp_map( f, filelist, nproc=32 )
 
