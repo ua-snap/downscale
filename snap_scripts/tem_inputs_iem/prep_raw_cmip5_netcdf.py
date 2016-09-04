@@ -49,11 +49,17 @@ if __name__ == '__main__':
 	from downscale import preprocess
 
 	# some setup args
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/raw_clean'
-	prepped_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/raw_prepped'
+	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cmip5/raw/clean'
+	prepped_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cmip5/prepped'
 	variables = [ 'clt','hur','rsds' ]
+	variables = [ 'rsds' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+	
+	# # # # # # # TESTING
+	# model = 'CCSM4'
+	# scenario = 'rcp26'
+	# variable = 'rsds'
 
 	if not os.path.exists( prepped_dir ):
 		os.makedirs( prepped_dir )
@@ -66,7 +72,7 @@ if __name__ == '__main__':
 		# get the files we want to work with for this run
 		cur_files = files_df[ (files_df.variable == variable) & (files_df.model == model) & (files_df.scenario == scenario) ]['fn'].tolist()
 		if 'historical' in scenario:
-			years = (1900,2005)
+			years = (1860,2005)
 		else:
 			years = (2006,2100)
 
@@ -81,6 +87,7 @@ if __name__ == '__main__':
 			pp = preprocess.Preprocess( raw_path, variable, model, scenario, experiment, years )
 			pp.write_nc( output_path, True )
 		except:
+			print( 'ERROR!' )
 			log.write( 'error : %s - %s - %s - %s - %s - %s \n\n' % (raw_path, variable, model, scenario, experiment, years)  )
 			pass
 
