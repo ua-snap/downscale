@@ -71,8 +71,9 @@ class DeltaDownscale( object ):
 			ds = self.historical.ds
 		ds = ds[ self.historical.variable ]
 		if self.level:
-			levidx, = np.where( ds[ self.level_name ] == self.level )
-			ds = ds[ :, levidx[0], ... ]
+			# levidx, = np.where( ds[ self.level_name ] == self.level )
+			# ds = ds[ :, levidx[0], ... ]
+			ds = ds[ :, self.level, ... ]
 		self.ds = ds
 	def _calc_climatolgy( self ):
 		'''slice / aggregate to climatology using mean'''
