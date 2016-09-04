@@ -109,7 +109,7 @@ if __name__ == '__main__':
 		clim_begin = '1961'
 		clim_end = '1990'
 
-		if variable == 'pr':
+		if variable == 'pr' or variable == 'hur':
 			# truncate to whole number
 			rounder = np.rint
 			downscaling_operation = 'mult'
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 			x[ x < 100 ] = 100
 			return round_data( x )
 
-		if variable == 'hur':
+		if variable == 'hur' or variable == 'clt':
 			post_downscale_function = round_data_clamp
 		else:
 			post_downscale_function = round_data
