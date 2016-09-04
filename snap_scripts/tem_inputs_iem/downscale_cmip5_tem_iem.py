@@ -40,7 +40,7 @@ if __name__ == '__main__':
 	# model = 'MRI-CGCM3'
 	# units = 'pct'
 	# metric = 'mean'
-	# level = 1000
+	# level = 16
 	# level_name = 'plev'
 
 	# some setup args
@@ -130,7 +130,6 @@ if __name__ == '__main__':
 			return round_data( x )
 
 		if variable == 'hur':
-			level = 17
 			post_downscale_function = round_data_clamp
 		else:
 			post_downscale_function = round_data

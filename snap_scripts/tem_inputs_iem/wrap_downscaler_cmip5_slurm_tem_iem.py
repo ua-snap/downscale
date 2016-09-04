@@ -16,7 +16,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, level=Non
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path,\
 							 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, 
-							 '-u', units, '-met', metric ,'-lev', level, '-levn', level_name ])
+							 '-u', units, '-met', metric ,'-lev', str(level), '-levn', level_name ])
 		f.writelines( head + "\n" + command + '\n' )
 	subprocess.call([ 'sbatch', fn ])
 	return 1
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
 	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
-	variables = [ 'hur' ]
+	variables = [ 'hur','tas','pr' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
 	path = os.path.join( base_dir,'downscaled','slurm_log' )
@@ -48,8 +48,8 @@ if __name__ == '__main__':
 		elif variable == 'hur':
 			units = 'pct'
 			metric = 'mean'
-			level = 17 # 1000mb
-			level_name = level_name
+			level = 16 # 1000mb
+			level_name = 'plev'
 
 		fn = os.path.join( path, 'slurm_run_downscaler_'+'_'.join([variable, model, scenario])+'.slurm' )
 		_ = run_model( fn, base_dir, variable, model, scenario, units, metric, level, level_name )
