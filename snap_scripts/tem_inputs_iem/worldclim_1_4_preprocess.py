@@ -155,118 +155,119 @@ if __name__ == '__main__':
 			arr[ mask == 0 ] = template_raster.nodata
 			out.write( arr, 1 )
 
-# # # # # END FOR THE EASY SOLUTION...
+# # # # # # END FOR THE EASY SOLUTION...
+# OLDER BELOW, BUT GOOD STUFF
 
-	# get centroid coordinates as a meshgrid
-	# bounds = (160, 0, 300, 90)
-	bounds = (-180, 0, 180, 90)
-	rst = rasterio.open( files[0] )
-	window = rst.window( *bounds )
-	window_affine = rst.window_transform( window )
+# 	# get centroid coordinates as a meshgrid
+# 	# bounds = (160, 0, 300, 90)
+# 	bounds = (-180, 0, 180, 90)
+# 	rst = rasterio.open( files[0] )
+# 	window = rst.window( *bounds )
+# 	window_affine = rst.window_transform( window )
 
 	
-	# 2. Rotate to PCLL and clip to a decent extent for processing.
-	# # # NOTE ROTATE TO PCLL USING GDALWARP FIRST, THEN DO THE OTHER STUFF.
-	arr = np.array( [ rasterio.open( fn ).read( 1, window=window ) for fn in files ] )
-	# # # # WHAT IF INSTEAD OF DOING THIS PROPER COORDINATE CREATION FOR THE INTERPOLATION WHICH IS ESSENTIALLY MEANINGLESS
-	# WHY NOT CREATE A NEW SIMPLE COORDINATES WITH np.linspace and the nrows and ncols.  Then we just put it back in the right way. 
-	# THE CRS IS NOT REALLY BEING TAKEN INTO ACCOUNT IN THE INTERPOLATION ANYWAY.
-	lons, lats = coordinates( meta={'affine':window_affine}, numpy_array=rst.read(1, window=window), input_crs={'init':'epsg:4326'} )
-	arr_pcll, lons = utils.shiftgrid( 0., arr, lons )
+# 	# 2. Rotate to PCLL and clip to a decent extent for processing.
+# 	# # # NOTE ROTATE TO PCLL USING GDALWARP FIRST, THEN DO THE OTHER STUFF.
+# 	arr = np.array( [ rasterio.open( fn ).read( 1, window=window ) for fn in files ] )
+# 	# # # # WHAT IF INSTEAD OF DOING THIS PROPER COORDINATE CREATION FOR THE INTERPOLATION WHICH IS ESSENTIALLY MEANINGLESS
+# 	# WHY NOT CREATE A NEW SIMPLE COORDINATES WITH np.linspace and the nrows and ncols.  Then we just put it back in the right way. 
+# 	# THE CRS IS NOT REALLY BEING TAKEN INTO ACCOUNT IN THE INTERPOLATION ANYWAY.
+# 	lons, lats = coordinates( meta={'affine':window_affine}, numpy_array=rst.read(1, window=window), input_crs={'init':'epsg:4326'} )
+# 	arr_pcll, lons = utils.shiftgrid( 0., arr, lons )
 
-	# 	- maybe convert to points here and flip the coords manually in a DataFrame?
-	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
-	# d.update( lat=lat, lon=lon )
-	# wc_df = pd.DataFrame( d )
-	# # 	- drop the rows with nodata values:
-	# wc_df. # << - this is the most important peice to make this run.
+# 	# 	- maybe convert to points here and flip the coords manually in a DataFrame?
+# 	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+# 	# d.update( lat=lat, lon=lon )
+# 	# wc_df = pd.DataFrame( d )
+# 	# # 	- drop the rows with nodata values:
+# 	# wc_df. # << - this is the most important peice to make this run.
 
-	# # 	- rotate that grid to pcll
-	# wc_df['lon'][ wc_df['lon'] < 0 ] = wc_df['lon'][ wc_df['lon'] < 0 ] + 360
+# 	# # 	- rotate that grid to pcll
+# 	# wc_df['lon'][ wc_df['lon'] < 0 ] = wc_df['lon'][ wc_df['lon'] < 0 ] + 360
 
-	# THESE ARE POTENTIALLY DONE BELOW
-	# 3. interpolate across space (xyz_to_grid)
-	# 4. Rotate back to Greenwich
-	# 5. regrid to AKCAN 2km
-	# 6. mask and write out to GTiff.
+# 	# THESE ARE POTENTIALLY DONE BELOW
+# 	# 3. interpolate across space (xyz_to_grid)
+# 	# 4. Rotate back to Greenwich
+# 	# 5. regrid to AKCAN 2km
+# 	# 6. mask and write out to GTiff.
 	
-	months_lookup = { count+1:month for count, month in enumerate( months ) }
+# 	months_lookup = { count+1:month for count, month in enumerate( months ) }
 
-	# cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
-	# cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
+# 	# cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
+# 	# cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
 
-	# set bounds to interpolate over
-	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
-	xmin, ymin, xmax, ymax = bounds
+# 	# set bounds to interpolate over
+# 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
+# 	xmin, ymin, xmax, ymax = bounds
 
-	# multiply arcminutes in degree by 360(180) for 10' resolution
-	rows = 60 * ( ymax - ymin )
-	cols = 60 * ( xmax - xmin )
+# 	# multiply arcminutes in degree by 360(180) for 10' resolution
+# 	rows = 60 * ( ymax - ymin )
+# 	cols = 60 * ( xmax - xmin )
 
-	# build the output grid
-	x = np.linspace( xmin, xmax, cols )
-	y = np.linspace( ymin, ymax, rows )
-	xi, yi = np.meshgrid( x, y )
-	args_list = [ {'x':np.array(wc_df['lon']),'y':np.array(wc_df['lat']),'z':np.array(wc_df[month]),'xi':xi,'yi':yi} for month in months ]
+# 	# build the output grid
+# 	x = np.linspace( xmin, xmax, cols )
+# 	y = np.linspace( ymin, ymax, rows )
+# 	xi, yi = np.meshgrid( x, y )
+# 	args_list = [ {'x':np.array(wc_df['lon']),'y':np.array(wc_df['lat']),'z':np.array(wc_df[month]),'xi':xi,'yi':yi} for month in months ]
 
-	# run interpolation in parallel
-	interped_grids = mp_map( regrid, args_list, nproc=12 )
+# 	# run interpolation in parallel
+# 	interped_grids = mp_map( regrid, args_list, nproc=12 )
 
-	# stack and give a proper nodata value
-	arr = np.array([ i.data for i in interped_grids ])
-	arr[ np.isnan(arr) ] = -3.4e+38
-	pcll_affine = transform_from_latlon( y, x )
+# 	# stack and give a proper nodata value
+# 	arr = np.array([ i.data for i in interped_grids ])
+# 	arr[ np.isnan(arr) ] = -3.4e+38
+# 	pcll_affine = transform_from_latlon( y, x )
 
-	meta = {'affine': pcll_affine,
-			'count': 1,
-			'crs': {'init':'epsg:4326'},
-			'driver': u'GTiff',
-			'dtype': 'float32',
-			'height': rows,
-			'nodata': -3.4e+38,
-			'width': cols,
-			'compress':'lzw'}
+# 	meta = {'affine': pcll_affine,
+# 			'count': 1,
+# 			'crs': {'init':'epsg:4326'},
+# 			'driver': u'GTiff',
+# 			'dtype': 'float32',
+# 			'height': rows,
+# 			'nodata': -3.4e+38,
+# 			'width': cols,
+# 			'compress':'lzw'}
 
-	# set up a dir to toss the intermediate files into -- since we are using gdalwarp...
-	intermediate_path = os.path.join( cru_path, 'intermediates' )
-	if not os.path.exists( intermediate_path ):
-		os.makedirs( intermediate_path )
+# 	# set up a dir to toss the intermediate files into -- since we are using gdalwarp...
+# 	intermediate_path = os.path.join( cru_path, 'intermediates' )
+# 	if not os.path.exists( intermediate_path ):
+# 		os.makedirs( intermediate_path )
 
-	out_paths = []
-	for i in range( arr.shape[0] ):
-		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, months_lookup[ i+1 ] ) )
-		with rasterio.open( output_filename, 'w', **meta ) as out:
-			out.write( arr[ i, ... ], 1 )
-		out_paths = out_paths + [ output_filename ]
+# 	out_paths = []
+# 	for i in range( arr.shape[0] ):
+# 		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, months_lookup[ i+1 ] ) )
+# 		with rasterio.open( output_filename, 'w', **meta ) as out:
+# 			out.write( arr[ i, ... ], 1 )
+# 		out_paths = out_paths + [ output_filename ]
 
-	# # template dataset
-	template_raster = rasterio.open( template_raster_fn )
-	resolution = template_raster.res
-	template_meta = template_raster.meta
-	template_meta.update( compress='lzw' )
-	a,b,c,d = template_raster.bounds
+# 	# # template dataset
+# 	template_raster = rasterio.open( template_raster_fn )
+# 	resolution = template_raster.res
+# 	template_meta = template_raster.meta
+# 	template_meta.update( compress='lzw' )
+# 	a,b,c,d = template_raster.bounds
 	
-	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
-	for fn in out_paths:
-		os.system( 'gdalwarp -overwrite -dstnodata -3.4e+38 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
+# 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
+# 	for fn in out_paths:
+# 		os.system( 'gdalwarp -overwrite -dstnodata -3.4e+38 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
-		final_fn = fn.replace( '_PCLL', '' )
-		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
-		if os.path.exists( final_fn ):
-			os.remove( final_fn )
+# 		final_fn = fn.replace( '_PCLL', '' )
+# 		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
+# 		if os.path.exists( final_fn ):
+# 			os.remove( final_fn )
 
-		mask = template_raster.read_masks( 1 ).astype( np.float32 )
-		with rasterio.open( final_fn, 'w', **template_meta ) as out:
-			out.write( np.empty_like( mask ), 1 )
+# 		mask = template_raster.read_masks( 1 ).astype( np.float32 )
+# 		with rasterio.open( final_fn, 'w', **template_meta ) as out:
+# 			out.write( np.empty_like( mask ), 1 )
 
-		os.system( 'gdalwarp -wo SOURCE_EXTRA=100 -multi -srcnodata -3.4e+38 -dstnodata -3.4e+38 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
-		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
-		with rasterio.open( final_fn, 'r+' ) as rst:
-			arr = rst.read( 1 )
-			arr[ mask == 0 ] = -3.4e+38
-			rst.write( arr, 1 )
+# 		os.system( 'gdalwarp -wo SOURCE_EXTRA=100 -multi -srcnodata -3.4e+38 -dstnodata -3.4e+38 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
+# 		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
+# 		with rasterio.open( final_fn, 'r+' ) as rst:
+# 			arr = rst.read( 1 )
+# 			arr[ mask == 0 ] = -3.4e+38
+# 			rst.write( arr, 1 )
 
-	print( 'completed run of {}'.format( variable ) )
+# 	print( 'completed run of {}'.format( variable ) )
 
 
 
