@@ -84,6 +84,7 @@ if __name__ == '__main__':
 	import geopandas as gpd
 	from shapely.geometry import Point
 	from pathos.mp_map import mp_map
+	from downscale import utils
 	import argparse
 
 	# # parse the commandline arguments
@@ -115,20 +116,73 @@ if __name__ == '__main__':
 	if not os.path.exists( wc_path ):
 		os.makedirs( wc_path )
 
+	# DO THE RIDICULOUSLY SIMPLY THING OF REGRIDDING THE DATA FROM GLOBAL LL GREENWICH TO 3338 2KM MASKED
+	template_raster = rasterio.open( template_raster_fn )
+	meta = template_raster.meta
+	meta.update( compress='lzw' )
+	if 'transform' in meta.keys():
+		_ = meta.pop( 'transform' )
 
+	for fn in files:
+		print( fn )
+		with rasterio.open( fn ) as rst:
+			rst_meta = rst.meta
+			rst_meta.update( compress='lzw', dtype='float32' )
+
+			arr = rst.read( 1 ).astype( np.float32 )
+			arr[ arr != -9999 ] = arr[ arr != -9999 ] * .10
+			# new name for scaled values raster
+			variable, month = os.path.basename( fn ).split( '.' )[0].split( '_' )
+
+			intermediate_path = os.path.join( wc_path, 'intermediates' )
+			if not os.path.exists( intermediate_path ):
+				os.makedirs( intermediate_path )
+
+			new_fn = os.path.join( intermediate_path, '{}_{}_worldclim_1_4_{}_1961-1990.tif'.format( variable, 'mean', month ) )
+			with rasterio.open( new_fn, 'w', **rst_meta ) as out:
+				out.write( arr, 1 )
+
+		output_filename = os.path.join( wc_path, os.path.basename( new_fn ).replace( '.tif', '_akcan.tif' ) )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( np.empty_like( template_raster.read( 1 ) ), 1 )
+
+		command = 'gdalwarp -multi -r bilinear -s_srs EPSG:4326 -wo SOURCE_EXTRA=100 {} {}'.format( new_fn, output_filename )
+		os.system( command )
+
+		with rasterio.open( output_filename, mode='r+') as out:
+			arr = out.read( 1 )
+			mask = template_raster.read_masks(1)
+			arr[ mask == 0 ] = template_raster.nodata
+			out.write( arr, 1 )
+
+# # # # # END FOR THE EASY SOLUTION...
+
+	# get centroid coordinates as a meshgrid
+	# bounds = (160, 0, 300, 90)
+	bounds = (-180, 0, 180, 90)
+	rst = rasterio.open( files[0] )
+	window = rst.window( *bounds )
+	window_affine = rst.window_transform( window )
+
+	
 	# 2. Rotate to PCLL and clip to a decent extent for processing.
 	# # # NOTE ROTATE TO PCLL USING GDALWARP FIRST, THEN DO THE OTHER STUFF.
+	arr = np.array( [ rasterio.open( fn ).read( 1, window=window ) for fn in files ] )
+	# # # # WHAT IF INSTEAD OF DOING THIS PROPER COORDINATE CREATION FOR THE INTERPOLATION WHICH IS ESSENTIALLY MEANINGLESS
+	# WHY NOT CREATE A NEW SIMPLE COORDINATES WITH np.linspace and the nrows and ncols.  Then we just put it back in the right way. 
+	# THE CRS IS NOT REALLY BEING TAKEN INTO ACCOUNT IN THE INTERPOLATION ANYWAY.
+	lons, lats = coordinates( meta={'affine':window_affine}, numpy_array=rst.read(1, window=window), input_crs={'init':'epsg:4326'} )
+	arr_pcll, lons = utils.shiftgrid( 0., arr, lons )
+
 	# 	- maybe convert to points here and flip the coords manually in a DataFrame?
 	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
-	lon, lat = coordinates( fn=files[0] ) #, meta=None, numpy_array=None, input_crs=None, to_latlong=False )
-	d = { month:rasterio.open( fn ).read( 1 ).ravel() for month, fn in zip( months, files ) }
-	d.update( lat=lat, lon=lon )
-	wc_df = pd.DataFrame( d )
-	# 	- drop the rows with nodata values:
-	wc_df. # << - this is the most important peice to make this run.
+	# d.update( lat=lat, lon=lon )
+	# wc_df = pd.DataFrame( d )
+	# # 	- drop the rows with nodata values:
+	# wc_df. # << - this is the most important peice to make this run.
 
-	# 	- rotate that grid to pcll
-	wc_df['lon'][ wc_df['lon'] < 0 ] = wc_df['lon'][ wc_df['lon'] < 0 ] + 360
+	# # 	- rotate that grid to pcll
+	# wc_df['lon'][ wc_df['lon'] < 0 ] = wc_df['lon'][ wc_df['lon'] < 0 ] + 360
 
 	# THESE ARE POTENTIALLY DONE BELOW
 	# 3. interpolate across space (xyz_to_grid)
@@ -138,12 +192,12 @@ if __name__ == '__main__':
 	
 	months_lookup = { count+1:month for count, month in enumerate( months ) }
 
-	cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
+	# cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
 	# cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
 
 	# set bounds to interpolate over
 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
-	xmin, ymin, xmax, ymax = (160, 0, 300, 90)
+	xmin, ymin, xmax, ymax = bounds
 
 	# multiply arcminutes in degree by 360(180) for 10' resolution
 	rows = 60 * ( ymax - ymin )
