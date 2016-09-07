@@ -58,13 +58,10 @@ if __name__ == '__main__':
 
 	modelnames = dict( zip( all_models, modelnames ) )
 	
-	# # #
 	if not os.path.exists( output_dir ):
 		os.makedirs( output_dir )
 
 	os.chdir( output_dir )
-	# # open a log file to find out where we are messing up
-	# log = open( os.path.join( output_dir, 'log_file_downscale.txt' ), 'w' )
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
@@ -87,7 +84,7 @@ if __name__ == '__main__':
 
 		if 'historical' in scenario:
 			historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=1900, end=2005 )
-			future = None # no need for futures here....
+			future = None
 		else:
 			# get the historical data for anomalies
 			historical_fn, = glob.glob( os.path.join( os.path.dirname( fn ).replace( scenario, 'historical' ), '*.nc' ) )
@@ -109,12 +106,13 @@ if __name__ == '__main__':
 		clim_begin = '1961'
 		clim_end = '1990'
 
-		if variable == 'pr' or variable == 'hur':
-			# truncate to whole number
+		if variable == 'pr':
 			rounder = np.rint
 			downscaling_operation = 'mult'
+		elif variable in ['hur','cld','clt']:
+			rounder = partial( np.round, decimals=1 )
+			downscaling_operation = 'mult'
 		else:
-			# round to 2 decimals
 			rounder = partial( np.round, decimals=1 )
 			downscaling_operation = 'add'
 
@@ -125,8 +123,8 @@ if __name__ == '__main__':
 		round_data = partial( round_it, mask=( mask==0 ) )
 
 		def round_data_clamp( x ):
-			x[ x < 0 ] = 0
-			x[ x > 100 ] = 100
+			x[ x < 0.0 ] = 0.0
+			x[ x > 100.0 ] = 100.0
 			return round_data( x )
 
 		if variable == 'hur' or variable == 'clt':
@@ -142,4 +140,3 @@ if __name__ == '__main__':
 
 		ar5.downscale( output_dir=output_path )
 		
-	# log.close()
