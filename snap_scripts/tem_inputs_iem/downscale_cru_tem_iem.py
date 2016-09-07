@@ -59,10 +59,13 @@ if __name__ ==	'__main__':
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
 
 	# make round/trunc function for post_downscale_function
-	if variable in [ 'pr','pre','hur','reh','cld','clt' ]:
+	if variable in [ 'pr','pre' ]:
 		rounder = np.rint
 		downscaling_operation = 'mult'
-	else:
+	elif variable in ['hur','reh','cld','clt']:
+		rounder = partial( np.around, decimals=1 )
+		downscaling_operation = 'mult'
+	elif variable in ['tas', 'tasmin', 'tasmax']:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
 
