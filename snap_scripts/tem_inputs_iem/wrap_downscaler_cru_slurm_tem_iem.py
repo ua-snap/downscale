@@ -23,8 +23,8 @@ if __name__ == '__main__':
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
-	variables = ['tmp','hur','pre']
-	out_varnames = ['tas','hur','pr']
+	variables = ['tmp','hur','pre','cld']
+	out_varnames = ['tas','hur','pr','clt']
 	
 	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
 	if not os.path.exists( slurm_path ):
@@ -36,9 +36,12 @@ if __name__ == '__main__':
 		if variable == 'pre':
 			metric = 'total'
 			units = 'mm'
-		else:
+		elif variable == 'tmp':
 			metric = 'mean'
 			units = 'C'
+		elif variable in ['hur','cld','clt']:
+			metric = 'mean'
+			units = 'pct'
 
 		clim_path = os.path.join( base_dir, 'cru', 'cru_cl20', out_varname )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
@@ -47,9 +50,8 @@ if __name__ == '__main__':
 			os.makedirs( output_path )
 
 		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.' + variable + '.dat.nc'
-		if variable == 'hur':
+		if variable == 'hur': # since we made this variable and it lives with the raw files with a slightly diff name
 			cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.' + variable + '.SNAP_derived.dat.nc'
-
 		
 		# # make a command to pass to slurm
 		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem/downscale_cru_tem_iem.py'

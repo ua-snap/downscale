@@ -51,16 +51,15 @@ if __name__ ==	'__main__':
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
 
-	# RUN 2.0
+	# RUN
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
-	# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 	baseline = Baseline( filelist )
 
 	# DOWNSCALE
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
 
 	# make round/trunc function for post_downscale_function
-	if variable in [ 'pr','pre','hur','reh','cld' ]:
+	if variable in [ 'pr','pre','hur','reh','cld','clt' ]:
 		rounder = np.rint
 		downscaling_operation = 'mult'
 	else:
