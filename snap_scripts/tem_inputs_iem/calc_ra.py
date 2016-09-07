@@ -74,46 +74,64 @@ def calc_ra( day, lat ):
 
 
 if __name__ == '__main__':
-	import rasterio, datetime
+	import rasterio, datetime, os
 	import numpy as np
 	import pandas as pd
 	import geopandas as gpd
 	from functools import partial
 	from pathos.mp_map import mp_map
 	from shapely.geometry import Point
+	from pyproj import Proj, transform
 
 	fn = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled/CCSM4/rcp26/tas/tas_mean_C_ar5_NCAR-CCSM4_rcp26_01_2006.tif'
+	output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/girr'
 	lons, lats = coordinates( fn )
 
 	rst = rasterio.open( fn )
 
 	# mask those lats so we dont compute where we dont need to:
-	# lons[ rst.read_masks( 1 ) == 0  ] = -9999
-	lats[ rst.read_masks( 1 ) == 0  ] = -9999
-	data_ind = np.where( lats != -9999 )
+	data_ind = np.where( rst.read_masks( 1 ) != 0 )
+	pts = zip( lons[ data_ind ].ravel().tolist(), lats[ data_ind ].ravel().tolist() )
 
-	# not yet working below:
-	pts = pd.DataFrame( { 'lat':lats.ravel(), 'lon':lons.ravel() } )
-	pts[ 'geometry' ] = gpd.GeoSeries( pts.apply( lambda x: Point(x.lon, x.lat), axis=1 ) )
-	pts = gpd.GeoDataFrame( pts, crs={'init':'epsg:3338'}, geometry='geometry' )
-	pts_ll = pts.to_crs( epsg=4326 )
-	lat_rad = np.radians( pts_ll['lat'].reshape( *lons.shape ) )
+	# radians from pts
+	p1 = Proj( init='epsg:3338' )
+	p2 = Proj( init='epsg:4326' )
+	transform_p = partial( transform, p1=p1, p2=p2 )
+	pts_radians = [ transform_p( x=lon, y=lat, radians=True ) for lon,lat in pts ]
+	lat_rad = pd.DataFrame( pts_radians, columns=['lon','lat']).lat
 
+	# # # # TESTING STUFF # # # # # # #
 	# forget the above for testing, lets use Stephs radians
 	# latr = rasterio.open('/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/radiance/radians.txt')
 	# latr = latr.read( 1 )
+	# # # # # # # # # # # # # # # # # #
 
 	# calc ordinal days to compute
 	ordinal_days = range( 1, 365+1, 1 )
-	ordinal_to_months = [ datetime.date.fromordinal( i ).month for i in ordinal_days ]
+	# make a monthly grouper of ordinal days
+	ordinal_to_months = [ str(datetime.date.fromordinal( i ).month) for i in ordinal_days ]
+	# convert those months to strings
+	ordinal_to_months = [ ('0'+month if len( month ) < 2 else month) for month in ordinal_to_months  ]
 
+	# calc girr
 	f = partial( calc_ra, lat=lat_rad )
 	Ra = mp_map( f, ordinal_days, nproc=32 )
 	Ra_monthlies = pd.Series( Ra ).groupby( ordinal_to_months ).apply( lambda x: np.array(x.tolist()).mean( axis=0 ) )
 
+	# iteratively put them back in the indexed locations we took them from
+	meta = rst.meta
+	meta.pop( 'transform' )
+	meta.update( compress='lzw', count=1, dtype='float32' )
+	for month in Ra_monthlies.index:
+		arr = rst.read( 1 )
+		arr[ data_ind ] = Ra_monthlies.loc[ month ].tolist()
+		output_filename = os.path.join( output_path, 'girr_w-m2_{}_.tif'.format(str( month ) ) )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( arr.astype( np.float32 ), 1 )
 
 
 
+# # # # #UNNEEDED OLD STUFF
 # JUNK FOR NOW
 # SOME SETUP
 # # this little bit just makes some sample grids to use in calculations
