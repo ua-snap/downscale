@@ -31,7 +31,6 @@ class Baseline( object ):
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
 					method='linear', begin=None, end=None, *args, **kwargs):
-		#, northup=False, cru=False
 		'''
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
@@ -51,8 +50,6 @@ class Dataset( object ):
 		self.scenario = scenario
 		self.begin = begin # year begin
 		self.end = end # year end
-		# self.northup = northup
-		# self.cru = cru
 		
 		if units != None:
 			self.units = units
@@ -68,10 +65,6 @@ class Dataset( object ):
 			self.metric = metric
 		else:
 			self.metric = 'metric'
-
-		# # update the lats and data to be NorthUp if necessary
-		# if self.northup == True:
-		# 	self._northup()
 
 		# slice to the years we want if given
 		if self.begin != None and self.end != None:
