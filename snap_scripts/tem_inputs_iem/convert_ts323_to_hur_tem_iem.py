@@ -4,9 +4,10 @@ def convert_to_hur( tas_arr, vap_arr ):
 	# esa_arr = 6.112 * np.exp( 22.46 * tas_arr / (272.62 + tas_arr) )
 	return vap_arr/esa_arr * 100
 def convert_to_vap( tas_arr, hur_arr ):
-	esa_arr = 6.112 * np.exp( 17.62 * tas_arr / (243.12 + tas_arr) )
-	# esa_arr = 6.112 * np.exp( 22.46*tas_arr / (272.62 + tas_arr) )
-	return (hur_arr * esa_arr) / 100
+	''' create relative humidity from the CRU tas / vap '''
+	esa_arr = 6.112 * np.exp( 17.62 * tas_arr/ (243.12 + tas_arr) )
+	# esa_arr = 6.112 * np.exp( 22.46 * tas_arr / (272.62 + tas_arr) )
+	return (hur_arr*esa_arr)/100
 def run( x ):
 	tas = rasterio.open( x[0] )
 	hur = rasterio.open( x[1] )
