@@ -72,6 +72,7 @@ if __name__ == '__main__':
 
 	# unpack the args
 	variable = args.variable
+	mean_variable = args.mean_variable
 	scenario = args.scenario
 	model = args.model
 	units = args.units
