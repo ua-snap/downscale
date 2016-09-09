@@ -25,7 +25,6 @@ def delta_mm( fn, mean_fn, variable, mean_variable='tas' ):
 	delta = ds - ds_mean
 	return delta.to_dataset( name=variable )
 
-
 class DeltaDownscaleMinMax( DeltaDownscale ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
 				level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
@@ -50,7 +49,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
-		self.anomalies = self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )	
+		self.anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )	
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
