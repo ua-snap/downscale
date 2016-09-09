@@ -26,33 +26,28 @@ def delta_mm( fn, mean_fn, variable, mean_variable='tas' ):
 	return delta.to_dataset( name=variable )
 
 class DeltaDownscaleMinMax( DeltaDownscale ):
-	def __init__( self, baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
-				level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
-				varname, modelname, anom, resample_type, mean_ds=None, mean_variable=None ): # , *args, **kwargs
+	def __init__( self, mean_ds=None, mean_variable=None, *args, **kwargs ): 
 		'''
 			note here that all data falls into the 'historical' category, because we no longer need to 
 			have the 1961-1990 climatology period for the futures as this version of DeltaDownscale computes
 			deltas by removing the mean in time instead of removing the climatology.
 		'''
-		print(1)
-		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
-							level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
-							varname, modelname, anom, resample_type )
-
 		# setup new args
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
 
-		# , mean_ds=None, mean_variable=None
+		super( DeltaDownscaleMinMax, self ).__init__( *args, **kwargs )
 		
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
-
+	def _calc_climatolgy( self ):
+		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
+		pass
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
-		self.anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )	
+		self.anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
@@ -136,22 +131,4 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		# run it
 		out = mp_map( run, args, nproc=self.ncpus )
 		return output_dir
-
-
-
-# # FOR RUN OF THE MIN / MAX TAS DATA:
-# # 1. COMPUTE DELTAS FIRST ANND WRITE TO NETCDF
-# # 2. USE `DeltaDownscaleMinMax` for the downscaling
-
-
-# fn = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.tmx.dat.nc'
-# mean_fn = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.tmp.dat.nc'
-# variable = 'tmx'
-# mean_variable = 'tmp'
-# output_filename = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/test/cru_ts3.23.1901.2014.tmx_delta_tmp.dat.nc'
-# _ = delta_mm( fn, mean_fn, variable, mean_variable, output_filename )
-
-# # now use the new DeltaDownscaleMM class to do the work.
-
-
 
