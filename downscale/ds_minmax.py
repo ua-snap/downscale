@@ -28,19 +28,22 @@ def delta_mm( fn, mean_fn, variable, mean_variable='tas' ):
 class DeltaDownscaleMinMax( DeltaDownscale ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
 				level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
-				varname, modelname, anom, resample_type, mean_ds=None, mean_variable=None, *args, **kwargs ):
+				varname, modelname, anom, resample_type, mean_ds=None, mean_variable=None ): # , *args, **kwargs
 		'''
 			note here that all data falls into the 'historical' category, because we no longer need to 
 			have the 1961-1990 climatology period for the futures as this version of DeltaDownscale computes
 			deltas by removing the mean in time instead of removing the climatology.
 		'''
+		print(1)
+		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
+							level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
+							varname, modelname, anom, resample_type )
+
 		# setup new args
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
 
-		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future,
-				downscaling_operation, level, level_name, mask, mask_value,ncpus, src_crs, src_nodata, 
-				dst_nodata, post_downscale_function, varname, modelname, anom, resample_type )
+		# , mean_ds=None, mean_variable=None
 		
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
