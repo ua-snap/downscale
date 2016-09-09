@@ -3,7 +3,7 @@
 # Downscale PCMDI AR5 data to a pre-processed climatology
 #  extent, resolution, reference system
 #
-#  NOTE: this version od DeltaDownscale is built for tmin/tmax
+#  ::NOTE:: this version of DeltaDownscale is built for tmin/tmax
 #	data where our old method causes for the mins and max and means to 
 # 	cross each other in non-normal ways.
 #
@@ -15,7 +15,7 @@ import os
 import numpy as np
 import xarray as xr
 
-def delta_mm( fn, mean_fn, variable, mean_variable, output_filename ):
+def delta_mm( fn, mean_fn, variable, mean_variable='tas' ):
 	'''
 	simple way to compute extreme - mean deltas as 
 	native model resolution and write to NetCDF4 on disk
@@ -23,17 +23,34 @@ def delta_mm( fn, mean_fn, variable, mean_variable, output_filename ):
 	ds = xr.open_dataset( fn )[ variable ]
 	ds_mean = xr.open_dataset( mean_fn )[ mean_variable ]
 	delta = ds - ds_mean
-	delta_ds = delta.to_dataset( name=variable )
-	delta_ds.to_netcdf( output_filename )
-	return output_filename
+	return delta.to_dataset( name=variable )
+
 
 class DeltaDownscaleMinMax( DeltaDownscale ):
+	def __init__( self, baseline, clim_begin, clim_end, historical, future, downscaling_operation, 
+				level, level_name, mask, mask_value, ncpus, src_crs, src_nodata, dst_nodata, post_downscale_function, 
+				varname, modelname, anom, resample_type, mean_ds=None, mean_variable=None, *args, **kwargs ):
+		'''
+			note here that all data falls into the 'historical' category, because we no longer need to 
+			have the 1961-1990 climatology period for the futures as this version of DeltaDownscale computes
+			deltas by removing the mean in time instead of removing the climatology.
+		'''
+		# setup new args
+		self.mean_ds = mean_ds
+		self.mean_variable = mean_variable
+
+		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future=None,
+				downscaling_operation, level, level_name, mask, mask_value,ncpus, src_crs, src_nodata, 
+				dst_nodata, post_downscale_function, varname, modelname, anom, resample_type, mean_ds )
+		
+		# if there is no mean dataset to work with --> party's over
+		if mean_ds == None:
+			raise Exception( 'you must include the mean variable in the raw resolution \
+								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
+
 	def _calc_anomalies( self ):
-		''' calculate simple absolute or relative anomalies depending on variable '''
-		if self.historical != None and self.future != None:
-			self.anomalies = self.future.ds[ self.future.variable ].sel( time=self.future.ds.time )
-		else:
-			self.anomalies = self.historical.ds[ self.historical.variable ].sel( time=self.historical.ds.time )
+		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
+		self.anomalies = self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )	
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
