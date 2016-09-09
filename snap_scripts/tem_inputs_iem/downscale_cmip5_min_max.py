@@ -98,7 +98,7 @@ if __name__ == '__main__':
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
 	# base_path = os.path.join( base_dir, 'downscaled' )
-	downscaled_path = os.path.join( base_dir, 'downscaled' )
+	# downscaled_path = os.path.join( base_dir, 'downscaled' )
 	raw_path = os.path.join( base_dir, 'cmip5', 'prepped' )
 	output_dir = os.path.join( base_dir, 'downscaled_minmax_test' )
 	variables = [ variable ]
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
-	all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ] # temp for distributed run
+	all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
 	modelnames = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
 	modelnames = dict( zip( all_models, modelnames ) )
@@ -119,12 +119,19 @@ if __name__ == '__main__':
 	os.chdir( output_dir )
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
+		if scenario == 'historical':
+			begin = 1900
+			end = 2005
+		else:
+			begin = 2006
+			end = 2100
+
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
 		clim_path = os.path.join( base_dir, 'downscaled', model, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
-		filelist = only_years( sort_files( filelist ), begin=2006, end=2100 )
+		filelist = only_years( sort_files( filelist ), begin=begin, end=end )
 
 		# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
@@ -141,13 +148,6 @@ if __name__ == '__main__':
 		# ALL DATA FALL INTO THE historical ARGUMENT WITH THIS DOWNSCALING DUE TO NOT USING A CLIMATOLOGY TO 
 		# GENERATE ANOMALIES WE ARE GENERATING DELTAS OF MIN/MAX FROM MEAN OF THE SAME VARIABLE GROUP ie. tas/tasmax/tasmin
 		# list files for this set of downscaling -- one per folder
-		if scenario == 'historical':
-			begin = 1900
-			end = 2005
-		else:
-			begin = 2006
-			end = 2100
-
 		fn, = glob.glob( os.path.join( input_path, '*.nc' ) )
 		historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
 		# mean data -- hacky...

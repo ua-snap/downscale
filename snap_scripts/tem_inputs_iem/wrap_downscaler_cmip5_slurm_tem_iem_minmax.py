@@ -1,7 +1,7 @@
 # # # # # 
 # wrap downscaler for running on slurm
 # # # # # 
-def run_model( fn, base_dir, variable, model, scenario, units, metric, level=None, level_name=None ):
+def run_model( fn, base_dir, variable, mean_variable, model, scenario, units, metric, level=None, level_name=None ):
 	import os, subprocess
 	head = '#!/bin/sh\n' + \
 			'#SBATCH --ntasks=32\n' + \
@@ -12,15 +12,15 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, level=Non
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem/downscale_cmip5_tem_iem.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem/downscale_cmip5_min_max.py'
 	with open( fn, 'w' ) as f:
 		if level != None:
 			command = ' '.join([ 'ipython', script_path,\
-								 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, 
+								 '--', '-b', base_dir, '-m', model, '-v', variable, '-mv', mean_variable,'-s', scenario, 
 								 '-u', units, '-met', metric ,'-lev', level, '-levn', level_name ])
 		else:
 			command = ' '.join([ 'ipython', script_path,\
-								 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, 
+								 '--', '-b', base_dir, '-m', model, '-v', variable, '-mv', mean_variable, '-s', scenario, 
 								 '-u', units, '-met', metric ])
 
 		f.writelines( head + "\n" + command + '\n' )
@@ -30,12 +30,13 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, level=Non
 if __name__ == '__main__':
 	import os, glob, itertools, subprocess
 
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
-	variables = [ 'hur','tas','pr','clt' ]
+	variables = [ 'tasmin','tasmax' ]
+	mean_variable = 'tas'
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	path = os.path.join( base_dir,'downscaled','slurm_log' )
+	path = os.path.join( base_dir,'downscaled_minmax','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
 	
@@ -46,7 +47,7 @@ if __name__ == '__main__':
 			metric = 'total'
 			level = None
 			level_name = None
-		elif variable == 'tas':
+		elif variable in ['tas','tasmax','tasmin']:
 			units = 'C'
 			metric = 'mean'
 			level = None
@@ -62,6 +63,6 @@ if __name__ == '__main__':
 			level = None
 			level_name = None
 
-
 		fn = os.path.join( path, 'slurm_run_downscaler_'+'_'.join([variable, model, scenario])+'.slurm' )
-		_ = run_model( fn, base_dir, variable, model, scenario, units, metric, level, level_name )
+		_ = run_model( fn, base_dir, variable, mean_variable, model, scenario, units, metric, level, level_name )
+
