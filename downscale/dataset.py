@@ -26,7 +26,19 @@ class Baseline( object ):
 		'''
 		self.filelist = sorted( filelist )
 		self.meta = rasterio.open( self.filelist[0] ).meta
-		self.arrlist = [ rasterio.open( fn ).read( 1 ) for fn in self.filelist ]
+		self.arrlist = ( rasterio.open( fn ).read( 1 ) for fn in self.filelist )
+
+# this may be a ridiculous class considering the flexibility of its big brother.
+class BaselineTS( object ):
+	'''
+	class to read / sort / store the mean downscaled data series
+	used in min/max delta-style downscaling.  This is different to preserve
+	the relationships between the max/mean/min variables that diverge using
+	the standard DeltaDownscale approach. This will be a full timeseries of
+	pre-downscaled `tas` data...  
+	'''
+	def __init__( self, filelist )
+
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
