@@ -40,7 +40,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future,
 				downscaling_operation, level, level_name, mask, mask_value,ncpus, src_crs, src_nodata, 
-				dst_nodata, post_downscale_function, varname, modelname, anom, resample_type, mean_ds )
+				dst_nodata, post_downscale_function, varname, modelname, anom, resample_type )
 		
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
