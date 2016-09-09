@@ -31,9 +31,9 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 	def _calc_anomalies( self ):
 		''' calculate simple absolute or relative anomalies depending on variable '''
 		if self.historical != None and self.future != None:
-			self.anomalies = anomalies.sel( time=self.future.ds.time )
+			self.anomalies = self.future.ds[ self.future.variable ].sel( time=self.future.ds.time )
 		else:
-			self.anomalies = anomalies.sel( time=self.historical.ds.time )
+			self.anomalies = self.historical.ds[ self.historical.variable ].sel( time=self.historical.ds.time )
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
