@@ -14,10 +14,11 @@ from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
-				downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0,
-				ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-				post_downscale_function=None, varname=None, modelname=None, anom=False, 
-				resample_type='bilinear', *args, **kwargs ):
+				downscaling_operation='add', level=None, level_name=None, 
+				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
+				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
+				varname=None, modelname=None, anom=False, resample_type='bilinear', 
+				*args, **kwargs ):
 		
 		'''
 		simple delta downscaling
