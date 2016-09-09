@@ -38,7 +38,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
 
-		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future=None,
+		super( DeltaDownscaleMinMax, self ).__init__( baseline, clim_begin, clim_end, historical, future,
 				downscaling_operation, level, level_name, mask, mask_value,ncpus, src_crs, src_nodata, 
 				dst_nodata, post_downscale_function, varname, modelname, anom, resample_type, mean_ds )
 		
