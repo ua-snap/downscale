@@ -91,7 +91,7 @@ if __name__ == '__main__':
 	# variable = 'tasmax'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
-	# model = 'IPSL-CM5A-LR'
+	# model = 'CCSM4'
 	# units = 'C'
 	# metric = 'mean'
 
@@ -99,8 +99,8 @@ if __name__ == '__main__':
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
 	# base_path = os.path.join( base_dir, 'downscaled' )
 	# downscaled_path = os.path.join( base_dir, 'downscaled' )
-	raw_path = os.path.join( base_dir, 'cmip5', 'prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_minmax_test' )
+	# raw_path = os.path.join( base_dir, 'cmip5', 'prepped' )
+	output_dir = os.path.join( base_dir, 'downscaled_minmax' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -128,14 +128,14 @@ if __name__ == '__main__':
 
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		clim_path = os.path.join( base_dir, 'downscaled', model, scenario, mean_variable )
+		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
 		filelist = only_years( sort_files( filelist ), begin=begin, end=end )
 
 		# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
-		
+
 		input_path = os.path.join( base_path, model, scenario, variable )
 		output_path = os.path.join( output_dir, model, scenario, variable )
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
 		# DOWNSCALE
 		mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
-		
+
 		# these have absolutely no effect but are here since they are a required variable to the super class DeltaDownscale...
 		# we need a way to make this more nimble as this is not ideal...
 		clim_begin = '1961'
