@@ -154,13 +154,19 @@ if __name__ == '__main__':
 
 		# convert from Kelvin to Celcius
 		if variable in ['tas','tasmax','tasmin']:
+			print( '>>> conversion to Celcius >>>' )
 			if historical:
 				historical.ds[ variable ] = historical.ds[ variable ] - 273.15
 				historical.ds[ variable ][ 'units' ] = units
-			
-			if future:
-				future.ds[ variable ] = future.ds[ variable ] - 273.15
-				future.ds[ variable ][ 'units' ] = units
+				mean_ds.ds[ variable ] = mean_ds.ds[ variable ] - 273.15
+				mean_ds.ds[ variable ][ 'units' ] = units
+			else:
+				Exception( 'minmax only works with a single series run in the `historical` arg slot' )			
+			# if future:
+			# 	future.ds[ variable ] = future.ds[ variable ] - 273.15
+			# 	future.ds[ variable ][ 'units' ] = units
+			# 	mean_ds.ds[ variable ] = mean_ds.ds[ variable ] - 273.15
+			# 	mean_ds.ds[ variable ][ 'units' ] = units
 		
 		# these have absolutely no effect but are here since they are a required variable to the super class DeltaDownscale...
 		# we need a way to make this more nimble as this is not ideal...
