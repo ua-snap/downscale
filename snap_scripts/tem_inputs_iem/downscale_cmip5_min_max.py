@@ -124,7 +124,7 @@ if __name__ == '__main__':
 			end = 2100
 
 		modelname = modelnames[ model ]
-		`# SETUP BASELINE -- downscaled `tas` is our baseline data for the tasmin tasmax
+		# SETUP BASELINE -- downscaled `tas` is our baseline data for the tasmin tasmax
 		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
@@ -185,10 +185,10 @@ if __name__ == '__main__':
 		else:
 			post_downscale_function = round_data
 
-		ar5 = downscale.DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, historical=historical, future=future,
-					downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
-					src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-					post_downscale_function=post_downscale_function, varname=variable, 
+		ar5 = downscale.DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, 
+					historical=historical, future=future, downscaling_operation=downscaling_operation,
+					mask=mask, mask_value=0, ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=None, 
+					dst_nodata=None, post_downscale_function=post_downscale_function, varname=variable, 
 					modelname=modelname, anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
 
 		ar5.downscale( output_dir=output_path )
