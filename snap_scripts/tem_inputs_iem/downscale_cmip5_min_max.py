@@ -97,9 +97,6 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	# base_path = os.path.join( base_dir, 'downscaled' )
-	# downscaled_path = os.path.join( base_dir, 'downscaled' )
-	# raw_path = os.path.join( base_dir, 'cmip5', 'prepped' )
 	output_dir = os.path.join( base_dir, 'downscaled_minmax' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
@@ -127,13 +124,11 @@ if __name__ == '__main__':
 			end = 2100
 
 		modelname = modelnames[ model ]
-		# SETUP BASELINE
+		`# SETUP BASELINE -- downscaled `tas` is our baseline data for the tasmin tasmax
 		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
 		filelist = only_years( sort_files( filelist ), begin=begin, end=end )
-
-		# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
 
 		input_path = os.path.join( base_path, model, scenario, variable )
