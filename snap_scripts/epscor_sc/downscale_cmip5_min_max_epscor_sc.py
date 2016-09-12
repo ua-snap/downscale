@@ -84,7 +84,6 @@ if __name__ == '__main__':
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
-	# # base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	# # fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tasmax/tasmax_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
 	# # mean_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tas/tas_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
@@ -153,6 +152,16 @@ if __name__ == '__main__':
 		# DOWNSCALE
 		mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
 
+		# convert from Kelvin to Celcius
+		if variable in ['tas','tasmax','tasmin']:
+			if historical:
+				historical.ds[ variable ] = historical.ds[ variable ] - 273.15
+				historical.ds[ variable ][ 'units' ] = units
+			
+			if future:
+				future.ds[ variable ] = future.ds[ variable ] - 273.15
+				future.ds[ variable ][ 'units' ] = units
+		
 		# these have absolutely no effect but are here since they are a required variable to the super class DeltaDownscale...
 		# we need a way to make this more nimble as this is not ideal...
 		clim_begin = '1961'
