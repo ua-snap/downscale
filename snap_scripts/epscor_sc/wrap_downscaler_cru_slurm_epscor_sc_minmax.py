@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	mean_variable_cru = 'tmp'
 	mean_variable_out = 'tas'
 	
-	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled_minmax','slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
@@ -44,8 +44,8 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( base_dir, 'prism', out_varname )
-		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
+		clim_path = os.path.join( base_dir, 'downscaled', 'CRU_TS323', 'historical', mean_variable_out )
+		output_path = os.path.join( os.path.join( base_dir, 'downscaled_minmax', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )

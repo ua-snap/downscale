@@ -91,15 +91,15 @@ if __name__ ==	'__main__':
 	scenario = 'historical'
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
-	output_dir = os.path.join( base_dir, 'downscaled_minmax' )
-	output_path = os.path.join( output_dir, model, scenario, variable )
+	# output_dir = os.path.join( base_dir, 'downscaled_minmax' )
+	# output_path = os.path.join( output_dir, model, scenario, variable )
 
 	# RUN 2.0
 	# filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 	# # filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 	# baseline = Baseline( filelist )
 
-	clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
+	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 	# sort these files
 	filelist = only_years( sort_files( filelist ), begin=begin, end=end )
