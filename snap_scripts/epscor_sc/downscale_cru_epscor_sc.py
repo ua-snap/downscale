@@ -64,7 +64,7 @@ if __name__ ==	'__main__':
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=True )
+				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )

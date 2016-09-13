@@ -109,7 +109,7 @@ if __name__ == '__main__':
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 	begin = 2010
-	end = 2010
+	end = 2020
 	figsize = (16,9)
 
 	# shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax_TEST/select_pts/select_points_epscor_sc_test.shp'
@@ -158,7 +158,7 @@ if __name__ == '__main__':
 			# sort the columns for output plotting cleanliness:
 			if 'tas' in variables:
 				# col_list = ['tasmax', 'tas', 'tasmin']
-				col_list = ['tasmax_old','tasmax', 'tas_old', 'tas', 'tasmin_old','tasmin']
+				col_list = ['tasmax','tas','tasmin','tasmax_old','tasmin_old' ]
 			elif 'pr' in variables:
 				col_list = ['pr', 'pr_old']
 			
@@ -171,7 +171,7 @@ if __name__ == '__main__':
 				title = 'EPSCoR SC AOI Temp Metrics {} {} {} - {}'.format( m, scenario, begin, end )
 
 			if 'tas' in variables:
-				colors = ['red', 'black', 'darkred', 'green', 'pink', 'yellow' ]
+				colors = ['darkred', 'blue', 'darkred', 'black', 'black' ]
 			else:
 				colors = [ 'blue', 'black' ]
 
