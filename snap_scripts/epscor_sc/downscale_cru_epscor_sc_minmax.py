@@ -84,6 +84,8 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 	mean_variable_cru = args.mean_variable_cru
 	mean_variable_out = args.mean_variable_out
+	begin = 1901
+	end = 2014
 
 	# standard args
 	clim_begin = '01-1961'
