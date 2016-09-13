@@ -126,14 +126,14 @@ if __name__ ==	'__main__':
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
 							interp=True, method='linear', ncpus=32 )
 
-	mean_fn, = cru_ts.replace( variable, mean_variable_cru )
+	mean_fn = cru_ts.replace( variable, mean_variable_cru )
 	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
 
-	ar5 = DeltaDownscaleMinMax( baseline, clim_begin, clim_end, historical, future=None,
+	ar5 = DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, historical=historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=False, 
-				mean_ds=mean_ds, mean_variable=mean_variable_cru )
+					mean_ds=mean_ds, mean_variable=mean_variable_cru )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
