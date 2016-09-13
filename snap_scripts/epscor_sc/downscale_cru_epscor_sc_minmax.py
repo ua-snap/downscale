@@ -53,7 +53,7 @@ def only_years( files, begin=1901, end=2100, split_on='_', elem_year=-1 ):
 if __name__ ==	'__main__':
 	import glob, os, itertools, rasterio
 	import downscale
-	from downscale import DeltaDownscale, Baseline, Dataset, utils
+	from downscale import DeltaDownscaleMinMax, Baseline, Dataset, utils
 	from functools import partial
 	import numpy as np
 	import argparse
