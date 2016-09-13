@@ -90,7 +90,7 @@ if __name__ == '__main__':
 	# variable = 'tasmin'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
-	# model = 'CCSM4'
+	# model = 'IPSL-CM5A-LR'
 	# units = 'C'
 	# metric = 'mean'
 
@@ -206,6 +206,6 @@ if __name__ == '__main__':
 					dst_nodata=None, post_downscale_function=post_downscale_function, varname=variable, 
 					modelname=modelname, anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
 
-		output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax_TEST'
+		# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax_TEST'
 		ar5.downscale( output_dir=output_path )
 		
