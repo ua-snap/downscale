@@ -127,7 +127,7 @@ if __name__ ==	'__main__':
 							interp=True, method='linear', ncpus=32 )
 
 	mean_fn, = cru_ts.replace( variable, mean_variable )
-	mean_ds = downscale.Dataset( mean_fn, mean_variable, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
+	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
 
 	ar5 = DeltaDownscaleMinMax( baseline, clim_begin, clim_end, historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
