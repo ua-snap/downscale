@@ -56,43 +56,43 @@ if __name__ == '__main__':
 	import numpy as np
 	import argparse
 
-	# # parse the commandline arguments
-	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	# parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
-	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	# parser.add_argument( "-mv", "--mean_variable", action='store', dest='mean_variable', type=str, help="cmip5 mean variable name (exact)" )
-	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
-	# parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
-	# parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
-	# parser.add_argument( "-lev", "--level", action='store', dest='level', const=None, type=int, help="optional level to extract for downscaling" )
-	# parser.add_argument( "-levn", "--level_name", action='store', dest='level_name', const=None, type=str, help="name of level variable" )
+	# parse the commandline arguments
+	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
+	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	parser.add_argument( "-mv", "--mean_variable", action='store', dest='mean_variable', type=str, help="cmip5 mean variable name (exact)" )
+	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
+	parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
+	parser.add_argument( "-lev", "--level", action='store', dest='level', const=None, type=int, help="optional level to extract for downscaling" )
+	parser.add_argument( "-levn", "--level_name", action='store', dest='level_name', const=None, type=str, help="name of level variable" )
 	
-	# args = parser.parse_args()
+	args = parser.parse_args()
 
-	# # unpack the args
-	# variable = args.variable
-	# mean_variable = args.mean_variable
-	# scenario = args.scenario
-	# model = args.model
-	# units = args.units
-	# metric = args.metric
-	# base_dir = args.base_dir
-	# level = args.level
-	# level_name = args.level_name
+	# unpack the args
+	variable = args.variable
+	mean_variable = args.mean_variable
+	scenario = args.scenario
+	model = args.model
+	units = args.units
+	metric = args.metric
+	base_dir = args.base_dir
+	level = args.level
+	level_name = args.level_name
 
 	project = 'ar5'
 	
-	# # # FOR TESTING # # # 
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tasmax/tasmax_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
-	# mean_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tas/tas_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
-	variable = 'tasmin'
-	mean_variable = 'tas'
-	scenario = 'rcp85'
-	model = 'CCSM4'
-	units = 'C'
-	metric = 'mean'
+	# # # # FOR TESTING # # # 
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# # fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tasmax/tasmax_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
+	# # mean_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tas/tas_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
+	# variable = 'tasmin'
+	# mean_variable = 'tas'
+	# scenario = 'rcp85'
+	# model = 'CCSM4'
+	# units = 'C'
+	# metric = 'mean'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = True # write out anoms (True) or not (False)
+	anom = False # write out anoms (True) or not (False)
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
