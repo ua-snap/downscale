@@ -24,7 +24,7 @@ class Baseline( object ):
 		filelist = [list] of str paths to each of the 12 monthly climatology files.
 				* must be in chronological order jan-dec.
 		'''
-		self.filelist = sorted( filelist )
+		self.filelist = filelist
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = ( rasterio.open( fn ).read( 1 ) for fn in self.filelist )
 
