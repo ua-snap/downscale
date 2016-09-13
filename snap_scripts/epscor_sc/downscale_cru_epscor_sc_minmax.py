@@ -126,7 +126,7 @@ if __name__ ==	'__main__':
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
 							interp=True, method='linear', ncpus=32 )
 
-	mean_fn, = cru_ts.replace( variable, mean_variable )
+	mean_fn, = cru_ts.replace( variable, mean_variable_cru )
 	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
 
 	ar5 = DeltaDownscaleMinMax( baseline, clim_begin, clim_end, historical, future=None,
