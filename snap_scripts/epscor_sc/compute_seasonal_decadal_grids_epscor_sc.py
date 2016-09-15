@@ -89,10 +89,10 @@ def calc_decadal_from_annual( season_name, files, output_path, agg_metric, *args
 	years = [ int( get_year( fn ) ) for fn in files ]
 	year = str( max( years ) )
 	fn = files[0]
-	rst = rasterio.open( fn )
-	mask = rst.read_masks( 1 )
-	meta = rst.meta
-	
+	with rasterio.open( fn ) as rst:
+		mask = rst.read_masks( 1 )
+		meta = rst.meta
+		
 	if 'transform' in meta.keys():
 		meta.pop( 'transform' )
 

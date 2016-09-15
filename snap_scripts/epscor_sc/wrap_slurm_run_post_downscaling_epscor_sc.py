@@ -22,15 +22,15 @@ if __name__ == '__main__':
 	output_base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_minmax'
 	scripts_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc'
 	ncpus = 32
-	variables = [ 'pr' ] #, 'tasmin', 'tasmax', 'tas' ]
-	# # # cmip5
-	# project = 'cmip5'
-	# models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
-	# scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-	# # cru
-	project = 'cru'
-	models = [ 'ts323' ]
-	scenarios = [ 'historical' ]
+	variables = ['pr','tasmin', 'tasmax', 'tas' ]
+	# # cmip5
+	project = 'cmip5'
+	models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
+	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	# # # cru
+	# project = 'cru'
+	# models = [ 'ts323' ]
+	# scenarios = [ 'historical' ]
 	
 	for model in models:
 		for scenario in scenarios:

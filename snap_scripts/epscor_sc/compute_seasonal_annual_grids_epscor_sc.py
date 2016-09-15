@@ -80,14 +80,14 @@ def calc_seasonal_mean( season_name, files, output_path, agg_metric, *args, **kw
 	calculate seasonal means
 	'''
 	from functools import partial
-	
+
 	years = [ int( get_year( fn ) ) for fn in files ]
 	year = str( max( years ) )
 	fn = files[0]
 	rst = rasterio.open( fn )
 	mask = rst.read_masks( 1 )
 	meta = rst.meta
-	
+
 	if 'transform' in meta.keys():
 		meta.pop( 'transform' )
 
@@ -95,6 +95,11 @@ def calc_seasonal_mean( season_name, files, output_path, agg_metric, *args, **kw
 
 	metric_switch = { 'mean':np.mean, 'total':np.sum, 'min':np.min, 'max':np.max }
 	variable, metric, units, project, model, scenario = os.path.basename( fn ).split( '.' )[0].split( '_' )[:-2]
+
+	# THIS IS A HACK TO GET AROUND THE ISSUE OF MODEL NAMES FOR CRU:
+	if model == 'TS323':
+		model = 'ts323'
+
 	arr = np.array([ read_raster( i ) for i in files ])
 	arr = metric_switch[ agg_metric ]( arr, axis=0 )
 
@@ -116,7 +121,7 @@ def calc_seasonal_mean( season_name, files, output_path, agg_metric, *args, **kw
 	arr[ mask == 0 ] = meta[ 'nodata' ]
 
 	# output to GTiff
-	output_filename = os.path.join( output_path, model, scenario, variable, '_'.join([ variable, agg_metric, units, project, model, scenario, season_name, year]) + '.tif' )
+	output_filename = os.path.join( output_path, model, scenario, variable, '_'.join([ variable, agg_metric, units, project, model.upper(), scenario, season_name, year]) + '.tif' )
 
 	dirname = os.path.dirname( output_filename )
 	try:
