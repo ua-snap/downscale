@@ -116,7 +116,7 @@ if __name__ == '__main__':
 	# shp = gpd.read_file( shp_fn )
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['IPSL-CM5A-LR'] # ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4'] # '5ModelAvg',
+	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4'] # '5ModelAvg',
 	variables_list = [['tasmax', 'tas', 'tasmin']]
 	# models = ['CRU_TS323']
 	
