@@ -172,12 +172,12 @@ if __name__ == '__main__':
 	from pathos import multiprocessing as mp
 
 	# setup args
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/downscaled'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/downscaled/derived'
 	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/derived/tabular'
 	ncpus = 32
 	project = 'cru'
 	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
-	models = [ 'CRU_TS323' ]
+	models = [ 'ts323' ]
 	scenarios = [ 'historical' ]
 	begin_out = 1901
 	end_out = 2014
