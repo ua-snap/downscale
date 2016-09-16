@@ -100,7 +100,7 @@ if __name__ == '__main__':
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
