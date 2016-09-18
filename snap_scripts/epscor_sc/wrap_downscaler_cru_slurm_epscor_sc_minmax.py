@@ -44,7 +44,8 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( base_dir, 'downscaled', 'CRU_TS323', 'historical', mean_variable_out )
+		# clim_path = os.path.join( base_dir, 'downscaled', 'CRU_TS323', 'historical', mean_variable_out )
+		clim_path = os.path.join( base_dir, 'downscaled', model, 'historical', mean_variable_out )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled_minmax', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):

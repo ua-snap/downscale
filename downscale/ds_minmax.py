@@ -155,7 +155,6 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		# run and output
 		rstlist = self.baseline.filelist
-		# rstlist = only_years( sort_files( self.baseline.filelist ), begin=self.historical.begin, end=self.historical.end )
 		
 		if isinstance( self.anomalies_rot, xr.Dataset ):
 			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data

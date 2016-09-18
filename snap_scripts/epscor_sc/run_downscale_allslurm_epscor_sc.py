@@ -6,4 +6,3 @@ done = subprocess.call([ 'ipython', '/workspace/UA/malindgren/repos/downscale/sn
 
 # RUN CMIP5
 done = subprocess.call([ 'ipython', '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/wrap_downscaler_cmip5_slurm_epscor_sc.py' ])
-
