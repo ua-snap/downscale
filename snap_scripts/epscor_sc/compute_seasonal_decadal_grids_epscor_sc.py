@@ -157,13 +157,8 @@ def make_decadal_seasonal( base_path, output_path, variable, model, scenario, de
 	'''
 	decade_begin, decade_end = decade
 
-	# HACK FOR PR's DIFFERENCE WITH 'total' 'mean's
-	am = agg_metric
-	if variable == 'pr':
-		am = 'total'
-
 	# modeled data
-	files = glob.glob( os.path.join( base_path, model, scenario, variable, '*' + am + '*.tif' ) )
+	files = glob.glob( os.path.join( base_path, model, scenario, variable, '*' + agg_metric + '*.tif' ) )
 	files = only_years( files, begin=decade_begin, end=decade_end, split_on='_', elem_year=-1 )
 
 	# season_names = [ get_month_seaon( fn ) for fn in files ]
