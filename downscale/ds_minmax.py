@@ -109,6 +109,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		'''	
 		import rasterio
 		from rasterio.warp import reproject, RESAMPLING
+		from affine import Affine
 
 		resampling = {'average':RESAMPLING.average,
 					'cubic':RESAMPLING.cubic,
