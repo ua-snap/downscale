@@ -14,6 +14,7 @@ from downscale import DeltaDownscale, utils
 import os
 import numpy as np
 import xarray as xr
+import rasterio # potentially remove
 
 # def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
 # 	'''
@@ -105,7 +106,8 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 								baseline for combining with anomalies.
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
 		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-		'''		
+		'''	
+		import rasterio
 		from rasterio.warp import reproject, RESAMPLING
 
 		resampling = {'average':RESAMPLING.average,
