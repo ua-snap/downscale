@@ -119,7 +119,13 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 					'count':RESAMPLING.count,
 					'index':RESAMPLING.index,
 					'nearest':RESAMPLING.nearest }
-			
+		
+		# lets try to flip the data and affine and do this right.
+		a,b,c,d,e,f,g,h,i = src_transform
+		src_transform = Affine( a, b, c, d, -(e), np.abs(f) ) # DANGEROUS
+		anom = np.flipud( anom )
+		# end new stuff for flipping...
+
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
