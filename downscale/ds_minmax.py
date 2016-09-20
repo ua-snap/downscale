@@ -96,87 +96,37 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		self.anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-	def downscale( self, output_dir, prefix=None ):
-		import affine
-		from affine import Affine
-		import itertools
-		from functools import partial
-		from pathos.mp_map import mp_map
+	@staticmethod
+	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
+		'''	
+		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
+								Must also be representative of anomalies.
+		base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
+								baseline for combining with anomalies.
+		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
+		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
+		'''		
+		from rasterio.warp import reproject, RESAMPLING
 
-		operation_switch = { 'add':self.add, 'mult':self.mult }
+		resampling = {'average':RESAMPLING.average,
+					'cubic':RESAMPLING.cubic,
+					'lanczos':RESAMPLING.lanczos,
+					'bilinear':RESAMPLING.bilinear,
+					'cubic_spline':RESAMPLING.cubic_spline,
+					'mode':RESAMPLING.mode,
+					'count':RESAMPLING.count,
+					'index':RESAMPLING.index,
+					'nearest':RESAMPLING.nearest }
+			
+		base = rasterio.open( base )
+		baseline_arr = base.read( 1 )
+		baseline_meta = base.meta
+		baseline_meta.update( compress='lzw' )
+		output_arr = np.empty_like( baseline_arr )
 
-		def two_digit_month( x ):
-			''' make 1 digit month a standard 2-digit for output filenames '''
-			month = str( x )
-			if len(month) == 1:
-				month = '0'+month
-			return month
-
-		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
+		with rasterio.drivers( CHECK_WITH_INVERT_PROJ=True ):
+			reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata,
+					dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],
+					dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		
-		# handle missing variable / model names
-		if self.varname != None:
-			variable = self.varname
-		elif self.historical.variable != None:
-			variable = self.historical.variable
-		else:
-			variable = 'variable'
-		
-		if self.modelname != None:
-			model = self.modelname
-		elif self.historical.model != None:
-			model = self.historical.model
-		else:
-			model = 'model'
-
-		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
-					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
-
-		# if there is a specific name prefix, use it
-		if prefix != None:
-			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
-		
-		# rotate to greenwich-centered
-		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
-			self.anomalies_rot = dat
-			a,b,c,d,e,f,g,h,i = self.affine
-			# flip it to the greenwich-centering
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
-			print( 'anomalies rotated!' )
-		else:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
-			self.anomalies_rot = dat
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			# src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
-			# src_transform = self.affine
-			print( 'anomalies NOT rotated!' )
-
-		# run and output
-		rstlist = self.baseline.filelist
-		
-		if isinstance( self.anomalies_rot, xr.Dataset ):
-			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
-		elif isinstance( self.anomalies_rot, xr.DataArray ):
-			self.anomalies_rot = self.anomalies_rot.data
-		else:
-			self.anomalies_rot = self.anomalies_rot
-
-		args = zip( self.anomalies_rot, rstlist, output_filenames )
-
-		args = [{'anom':i, 'base':j, 'output_filename':k,\
-				'downscaling_operation':self.downscaling_operation, \
-				'post_downscale_function':self.post_downscale_function,\
-				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
-
-		# partial and wrapper
-		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
-					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
-
-		run = partial( self._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
-
-		# run it
-		out = mp_map( run, args, nproc=self.ncpus )
-		return output_dir
-
+		return output_arr
