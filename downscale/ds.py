@@ -251,14 +251,16 @@ class DeltaDownscale( object ):
 			# flip it to the greenwich-centering
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
-			print( 'anomalies rotated!' )
+			print( src_transform )
+			print( 'anomalies NOT rotated!' )
 		else:
 			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lons )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 			# src_transform = self.affine
-			print( 'anomalies NOT rotated!' )
+			print( src_transform )
+			print( 'anomalies rotated!' )
 
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
