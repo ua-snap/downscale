@@ -66,6 +66,9 @@ class Dataset( object ):
 		else:
 			self.metric = 'metric'
 
+		# update the lats and data to be NorthUp if necessary
+		self._northup()
+
 		# slice to the years we want if given
 		if self.begin != None and self.end != None:
 			self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
@@ -79,34 +82,34 @@ class Dataset( object ):
 			print( 'running interpolation across NAs' )
 			_ = self.interp_na( )
 	
-	@staticmethod
-	def transform_from_latlon( lat, lon ):
-		''' simple way to make an affine transform from lats and lons coords '''
-		from affine import Affine
-		lat = np.asarray( lat )
-		lon = np.asarray( lon )
-		trans = Affine.translation(lon[0], lat[0])
-		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
-		return trans * scale
 	# @staticmethod
 	# def transform_from_latlon( lat, lon ):
 	# 	''' simple way to make an affine transform from lats and lons coords '''
 	# 	from affine import Affine
 	# 	lat = np.asarray( lat )
 	# 	lon = np.asarray( lon )
-	# 	if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
-	# 		lat_max = 90.0
-	# 	else:
-	# 		lat_max = np.max( lat )
-
-	# 	# set the lonmax to the corner.
-	# 	lon_arr = np.array([-180.0, 0.0 ])
-	# 	idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
-	# 	lon_max = lon_arr[ idx ]
-
-	# 	trans = Affine.translation(lon_max, lat_max)
+	# 	trans = Affine.translation(lon[0], lat[0])
 	# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
 	# 	return trans * scale
+	@staticmethod
+	def transform_from_latlon( lat, lon ):
+		''' simple way to make an affine transform from lats and lons coords '''
+		from affine import Affine
+		lat = np.asarray( lat )
+		lon = np.asarray( lon )
+		if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
+			lat_max = 90.0
+		else:
+			lat_max = np.max( lat )
+
+		# set the lonmax to the corner.
+		lon_arr = np.array([-180.0, 0.0 ])
+		idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
+		lon_max = lon_arr[ idx ]
+
+		trans = Affine.translation(lon_max, lat_max)
+		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+		return trans * scale
 	def _calc_affine( self ):
 		return self.transform_from_latlon( self.ds.lat, self.ds.lon )
 	def _northup( self, latitude='lat' ):
@@ -136,7 +139,7 @@ class Dataset( object ):
 		np.float32
 		method = [str] one of 'cubic', 'near', 'linear'
 
-		return a list of dicts to pass to the xyz_to_grid hopefully in parallel
+		return a list of dicts to pass to the xyz_to_grid in parallel
 		'''
 		from copy import copy
 		import pandas as pd

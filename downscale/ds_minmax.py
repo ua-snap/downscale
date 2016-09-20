@@ -125,7 +125,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		a,b,c,d,e,f,g,h,i = src_transform
 		src_transform = Affine( a, b, c, d, -(e), np.abs(f) ) # DANGEROUS
 		anom = np.flipud( anom )
-		# end new stuff for flipping...
+		# end new stuff for flipping... <-- this should happen before the anoms and the src_transform get to this point.
 
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )

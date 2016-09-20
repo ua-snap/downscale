@@ -125,10 +125,10 @@ class DeltaDownscale( object ):
 		baseline_meta = base.meta
 		baseline_meta.update( compress='lzw' )
 		output_arr = np.empty_like( baseline_arr )
-		with rasterio.drivers( CHECK_WITH_INVERT_PROJ=True ):
-			reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-					dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-					dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
+		
+		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		return output_arr
 	@staticmethod
 	def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
@@ -242,17 +242,18 @@ class DeltaDownscale( object ):
 		if prefix != None:
 			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
 		
-		# rotate to greenwich-centered
+		# rotate to pacific-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
+			dat, lons = ( self.anomalies, self.anomalies.lon )
+			# dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			self.anomalies_rot = dat
-			a,b,c,d,e,f,g,h,i = self.affine
+			# a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
 			print( 'anomalies rotated!' )
 		else:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
+			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lons )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
