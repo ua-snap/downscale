@@ -31,14 +31,14 @@ if __name__ == '__main__':
 	# # # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	# variable = 'tasmin'
-	# scenario = 'rcp85'
-	# model = 'MRI-CGCM3'
+	# scenario = 'rcp60'
+	# model = 'GFDL-CM3'
 	# units = 'C'
 	# metric = 'mean'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_v2' )
+	output_dir = os.path.join( base_dir, 'downscaled_minmax_TEST_CHANGES' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
