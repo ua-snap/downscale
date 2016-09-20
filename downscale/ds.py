@@ -106,7 +106,8 @@ class DeltaDownscale( object ):
 								baseline for combining with anomalies.
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
 		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-		'''		
+		'''	
+		import rasterio
 		from rasterio.warp import reproject, RESAMPLING
 
 		resampling = {'average':RESAMPLING.average,
@@ -118,16 +119,16 @@ class DeltaDownscale( object ):
 					'count':RESAMPLING.count,
 					'index':RESAMPLING.index,
 					'nearest':RESAMPLING.nearest }
-			
+		
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
 		baseline_meta.update( compress='lzw' )
 		output_arr = np.empty_like( baseline_arr )
-
-		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
+		with rasterio.drivers( CHECK_WITH_INVERT_PROJ=True ):
+			reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+					dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+					dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		return output_arr
 	@staticmethod
 	def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
