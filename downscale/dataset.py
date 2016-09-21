@@ -102,7 +102,8 @@ class Dataset( object ):
 		else:
 			lat_max = np.max( lat )
 
-		# set the lonmax to the corner.
+		# set the lonmax to the corner. --> this can get you into trouble with non-global data
+		# but I am unsure how to make it more dynamic at the moment. [ML]
 		lon_arr = np.array([-180.0, 0.0 ])
 		idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
 		lon_max = lon_arr[ idx ]

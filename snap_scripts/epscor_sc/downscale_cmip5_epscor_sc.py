@@ -1,5 +1,5 @@
 # downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016
+# author: Michael Lindgren -- June 09, 2016 (UPDATED: September 21, 2016 -- [ML])
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 	
 	# # # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tasmin'
+	# variable = 'tas'
 	# scenario = 'rcp60'
 	# model = 'GFDL-CM3'
 	# units = 'C'
