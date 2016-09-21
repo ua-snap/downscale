@@ -89,10 +89,10 @@ def calc_decadal_from_annual( season_name, files, output_path, agg_metric, *args
 	years = [ int( get_year( fn ) ) for fn in files ]
 	year = str( max( years ) )
 	fn = files[0]
-	rst = rasterio.open( fn )
-	mask = rst.read_masks( 1 )
-	meta = rst.meta
-	
+	with rasterio.open( fn ) as rst:
+		mask = rst.read_masks( 1 )
+		meta = rst.meta
+		
 	if 'transform' in meta.keys():
 		meta.pop( 'transform' )
 
@@ -156,6 +156,7 @@ def make_decadal_seasonal( base_path, output_path, variable, model, scenario, de
 
 	'''
 	decade_begin, decade_end = decade
+
 	# modeled data
 	files = glob.glob( os.path.join( base_path, model, scenario, variable, '*' + agg_metric + '*.tif' ) )
 	files = only_years( files, begin=decade_begin, end=decade_end, split_on='_', elem_year=-1 )
@@ -300,16 +301,16 @@ if __name__ == '__main__':
 # 			os.system( command )
 
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # # cru
 # import subprocess, os
-# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_cru_clipped'
+# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax'
 # # base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_cmip5_clipped'
-# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_outputs/decadal_seasonal'
+# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_outputs_minmax/decadal_seasonal'
 # ncpus = 32
 # project = 'cru'
 # # project = 'cmip5'
-# variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
+# variables = ['pr'] #[ 'tasmin', 'tasmax', 'tas', 'pr' ]
 # models = [ 'ts323' ]
 # # models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4', '5ModelAvg' ]
 # scenarios = [ 'historical']
@@ -323,8 +324,8 @@ if __name__ == '__main__':
 # 			# 	agg_metric = 'total'
 # 			# else:
 # 			# 	agg_metric = 'mean'
-# 			os.chdir( '/workspace/UA/malindgren/repos/downscale/snap_scripts' )
-# 			command = ' '.join([ 'ipython', 'compute_seasonal_decadal_grids_epscor_se.py', '--', '-b', base_path, '-o ', output_path, '-m ', model , '-s', scenario, '-p', project, '-v', variable ,'-am', agg_metric ,'-nc', str(ncpus) ])
+# 			os.chdir( '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc' )
+# 			command = ' '.join([ 'ipython', 'compute_seasonal_decadal_grids_epscor_sc.py', '--', '-b', base_path, '-o ', output_path, '-m ', model , '-s', scenario, '-p', project, '-v', variable ,'-am', agg_metric ,'-nc', str(ncpus) ])
 # 			os.system( command )
 
 # import subprocess, os

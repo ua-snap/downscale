@@ -18,19 +18,19 @@ def run_model( fn, command ):
 if __name__ == '__main__':
 	import subprocess, os
 	
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
-	output_base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax'
+	output_base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_minmax'
 	scripts_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc'
 	ncpus = 32
-	variables = [ 'pr', 'tasmin', 'tasmax', 'tas' ]
-	# # cmip5
-	# project = 'cmip5'
-	# models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
-	# scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-	# # cru
-	project = 'cru'
-	models = [ 'CRU_TS323' ]
-	scenarios = [ 'historical' ]
+	variables = ['tasmin', 'tasmax', 'tas', 'pr' ]
+	# cmip5
+	project = 'cmip5'
+	models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
+	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	# # # cru
+	# project = 'cru'
+	# models = [ 'ts323' ]
+	# scenarios = [ 'historical' ]
 	
 	for model in models:
 		for scenario in scenarios:
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 												'-am', agg_metric ,'-nc', str(ncpus) ])
 					
 					# combine command -- for if variable != tas
-					command = '\n\n'.join([ decadal_seasonals, annual_seasonals, decadals ]) + '\n'
+					command = '\n\n'.join([ decadals, annual_seasonals, decadal_seasonals ]) + '\n'
 
 					# # swi decadals if the variable is 'tas'
 					if variable == 'tas':
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 						decadal_swi = ' '.join([ 'python', os.path.join( scripts_directory, 'swi_calc_decadal_epscor_sc.py' ), \
 													'-b', monthly_decadals_path, '-o', output_path, '-m', model , '-s', scenario, '-p', project, '-v', variable ])
 						# add swi to command
-						command = '\n\n'.join([ decadal_seasonals, annual_seasonals, decadals, decadal_swi ]) + '\n'
+						command = '\n\n'.join([ decadals, annual_seasonals, decadal_seasonals, decadal_swi ]) + '\n'
 
 					# run the command using slurm on ATLAS
 					run_model( fn, command )

@@ -1,5 +1,5 @@
 # downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016
+# author: Michael Lindgren -- June 09, 2016 (UPDATED: September 21, 2016 -- [ML])
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
@@ -30,19 +30,19 @@ if __name__ == '__main__':
 	
 	# # # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tasmin'
-	# scenario = 'rcp85'
-	# model = 'MRI-CGCM3'
+	# variable = 'tas'
+	# scenario = 'rcp60'
+	# model = 'GFDL-CM3'
 	# units = 'C'
 	# metric = 'mean'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled' )
+	output_dir = os.path.join( base_dir, 'downscaled_minmax_TEST_CHANGES' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable

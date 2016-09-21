@@ -14,10 +14,11 @@ from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
-				downscaling_operation='add', level=None, level_name=None, mask=None, mask_value=0,
-				ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None,
-				post_downscale_function=None, varname=None, modelname=None, anom=False, 
-				resample_type='bilinear', *args, **kwargs ):
+				downscaling_operation='add', level=None, level_name=None, 
+				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
+				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
+				varname=None, modelname=None, anom=False, resample_type='bilinear', 
+				*args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -105,7 +106,8 @@ class DeltaDownscale( object ):
 								baseline for combining with anomalies.
 		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
 		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-		'''		
+		'''	
+		import rasterio
 		from rasterio.warp import reproject, RESAMPLING
 
 		resampling = {'average':RESAMPLING.average,
@@ -117,13 +119,13 @@ class DeltaDownscale( object ):
 					'count':RESAMPLING.count,
 					'index':RESAMPLING.index,
 					'nearest':RESAMPLING.nearest }
-			
+		
 		base = rasterio.open( base )
 		baseline_arr = base.read( 1 )
 		baseline_meta = base.meta
 		baseline_meta.update( compress='lzw' )
 		output_arr = np.empty_like( baseline_arr )
-
+		
 		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
 				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
@@ -240,22 +242,25 @@ class DeltaDownscale( object ):
 		if prefix != None:
 			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
 		
-		# rotate to greenwich-centered
+		# rotate to pacific-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
+			dat, lons = ( self.anomalies, self.anomalies.lon )
+			# dat, lons = utils.shiftgrid( 180., self.anomalies, self.anomalies.lon, start=False )
 			self.anomalies_rot = dat
-			a,b,c,d,e,f,g,h,i = self.affine
+			# a,b,c,d,e,f,g,h,i = self.affine
 			# flip it to the greenwich-centering
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = affine.Affine( a, b, -180.0, d, e, 90.0 )
-			print( 'anomalies rotated!' )
+			print( src_transform )
+			print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
+			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lons )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# src_transform = Affine(0.5, 0.0, -180.0, 0.0, -0.5, 90.0)
 			# src_transform = self.affine
-			print( 'anomalies NOT rotated!' )
+			print( src_transform )
+			print( 'anomalies rotated!' )
 
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
