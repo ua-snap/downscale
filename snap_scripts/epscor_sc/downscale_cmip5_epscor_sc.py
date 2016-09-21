@@ -38,11 +38,11 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_minmax_TEST_CHANGES' )
+	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = True # write out anoms (True) or not (False)
+	anom = False # write out anoms (True) or not (False)
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
