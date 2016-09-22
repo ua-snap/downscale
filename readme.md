@@ -1,6 +1,8 @@
 [![Stories in Ready](https://badge.waffle.io/ua-snap/downscale.svg?label=ready&title=Ready)](http://waffle.io/ua-snap/downscale)
 [![Build Status](https://travis-ci.org/ua-snap/downscale.svg?branch=master)](https://travis-ci.org/ua-snap/downscale)
 
+!THIS PACKAGE IS BROKEN AND SHOULD NOT BE USED...  RASTERIO CANNOT CORRECTLY REPROJECT IMAGERY IN THE SAME WAY AS ITS PARENT `gdalwarp`, THEREFORE THE LARGEST DEPENDENCY IN THIS PROJECT IS UNUSABLE AND PRODUCING INCORRECT RESULTS.  DO NOT USE THIS PACKAGE!
+
 downscale
 ---------
 
