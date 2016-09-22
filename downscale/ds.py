@@ -203,57 +203,57 @@ class DeltaDownscale( object ):
 		''' multiply anomalies to baseline '''
 		return base * anom
 	def downscale( self, output_dir, prefix=None ):
-	import affine
-	from affine import Affine
-	import itertools
-	from functools import partial
-	from pathos.mp_map import mp_map
+		import affine
+		from affine import Affine
+		import itertools
+		from functools import partial
+		from pathos.mp_map import mp_map
 
-	operation_switch = { 'add':self.add, 'mult':self.mult }
+		operation_switch = { 'add':self.add, 'mult':self.mult }
 
-	def two_digit_month( x ):
-		''' make 1 digit month a standard 2-digit for output filenames '''
-		month = str( x )
-		if len(month) == 1:
-			month = '0'+month
-		return month
+		def two_digit_month( x ):
+			''' make 1 digit month a standard 2-digit for output filenames '''
+			month = str( x )
+			if len(month) == 1:
+				month = '0'+month
+			return month
 
-	time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
 
-	# handle missing variable / model names
-	if self.varname != None:
-		variable = self.varname
-	elif self.historical.variable != None:
-		variable = self.historical.variable
-	else:
-		variable = 'variable'
+		# handle missing variable / model names
+		if self.varname != None:
+			variable = self.varname
+		elif self.historical.variable != None:
+			variable = self.historical.variable
+		else:
+			variable = 'variable'
 
-	if self.modelname != None:
-		model = self.modelname
-	elif self.historical.model != None:
-		model = self.historical.model
-	else:
-		model = 'model'
+		if self.modelname != None:
+			model = self.modelname
+		elif self.historical.model != None:
+			model = self.historical.model
+		else:
+			model = 'model'
 
-	output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
-				self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
 
-	# if there is a specific name prefix, use it
-	if prefix != None:
-		output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
+		# if there is a specific name prefix, use it
+		if prefix != None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
 
-	# rotate to pacific-centered
-	if ( self.anomalies.lon.data > 200.0 ).any() == True:
-		dat, lons = ( self.anomalies, self.anomalies.lon )
-		self.anomalies_rot = dat
-		src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-		print( 'anomalies NOT rotated!' )
-	else:
-		dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
-		self.anomalies_rot = dat
-		src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-		print( src_transform )
-		print( 'anomalies rotated!' )
+		# rotate to pacific-centered
+		if ( self.anomalies.lon.data > 200.0 ).any() == True:
+			dat, lons = ( self.anomalies, self.anomalies.lon )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			print( 'anomalies NOT rotated!' )
+		else:
+			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			print( src_transform )
+			print( 'anomalies rotated!' )
 
 		# run and output
 		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
