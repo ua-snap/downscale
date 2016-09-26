@@ -106,15 +106,15 @@ if __name__ == '__main__':
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	os.chdir( base_dir )
-	scenario = 'rcp45'
+	scenario = 'rcp60'
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	# models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	variables_list = [['tasmax', 'tas', 'tasmin'],['pr']]
-	models = ['CRU_TS323']
+	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	variables_list = [['tasmax', 'tas', 'tasmin']]#,['pr']]
+	# models = ['CRU_TS323']
 	
 	for variables in variables_list:
 		for m in models:
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
 			ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-			output_dir = os.path.join( base_dir, 'compare_downscaling_vars_v2_pkg' )
+			output_dir = os.path.join( base_dir, 'compare_downscaling_versions' )
 			if not os.path.exists( output_dir ):
 				os.makedirs( output_dir )
 
