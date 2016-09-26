@@ -12,7 +12,7 @@ def run_model( fn, base_dir, variable, mean_variable, model, scenario, units, me
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/downscale_cmip5_min_max_epscor_sc.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/downscale_cmip5_epscor_sc_minmax.py'
 	with open( fn, 'w' ) as f:
 		if level != None:
 			command = ' '.join([ 'ipython', script_path,\
