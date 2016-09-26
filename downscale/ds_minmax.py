@@ -47,48 +47,55 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		pass
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
-		self.anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-	@staticmethod
-	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
-		'''	
-		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
-								Must also be representative of anomalies.
-		base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
-								baseline for combining with anomalies.
-		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-		'''	
-		import rasterio
-		from rasterio.warp import reproject, RESAMPLING
-		from affine import Affine
+		if self.downscaling_operation == 'add':
+			anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+		elif self.downscaling_operation == 'mult':
+			anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+		else:
+			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
+		self.anomalies = anomalies
 
-		resampling = {'average':RESAMPLING.average,
-					'cubic':RESAMPLING.cubic,
-					'lanczos':RESAMPLING.lanczos,
-					'bilinear':RESAMPLING.bilinear,
-					'cubic_spline':RESAMPLING.cubic_spline,
-					'mode':RESAMPLING.mode,
-					'count':RESAMPLING.count,
-					'index':RESAMPLING.index,
-					'nearest':RESAMPLING.nearest }
+	# @staticmethod
+	# def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
+	# 	'''	
+	# 	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
+	# 							Must also be representative of anomalies.
+	# 	base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
+	# 							baseline for combining with anomalies.
+	# 	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
+	# 	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
+	# 	'''	
+	# 	import rasterio
+	# 	from rasterio.warp import reproject, RESAMPLING
+	# 	from affine import Affine
+
+	# 	resampling = {'average':RESAMPLING.average,
+	# 				'cubic':RESAMPLING.cubic,
+	# 				'lanczos':RESAMPLING.lanczos,
+	# 				'bilinear':RESAMPLING.bilinear,
+	# 				'cubic_spline':RESAMPLING.cubic_spline,
+	# 				'mode':RESAMPLING.mode,
+	# 				'count':RESAMPLING.count,
+	# 				'index':RESAMPLING.index,
+	# 				'nearest':RESAMPLING.nearest }
 		
-		# # lets try to flip the data and affine and do this right.
-		# a,b,c,d,e,f,g,h,i = src_transform
-		# src_transform = Affine( a, b, c, d, -(e), np.abs(f) ) # DANGEROUS
-		# anom = np.flipud( anom )
-		# # end new stuff for flipping... <-- this should happen before the anoms and the src_transform get to this point.
+	# 	# # lets try to flip the data and affine and do this right.
+	# 	# a,b,c,d,e,f,g,h,i = src_transform
+	# 	# src_transform = Affine( a, b, c, d, -(e), np.abs(f) ) # DANGEROUS
+	# 	# anom = np.flipud( anom )
+	# 	# # end new stuff for flipping... <-- this should happen before the anoms and the src_transform get to this point.
 
-		base = rasterio.open( base )
-		baseline_arr = base.read( 1 )
-		baseline_meta = base.meta
-		baseline_meta.update( compress='lzw' )
-		output_arr = np.empty_like( baseline_arr )
+	# 	base = rasterio.open( base )
+	# 	baseline_arr = base.read( 1 )
+	# 	baseline_meta = base.meta
+	# 	baseline_meta.update( compress='lzw' )
+	# 	output_arr = np.empty_like( baseline_arr )
 
-		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata,
-					dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],
-					dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
+	# 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata,
+	# 				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],
+	# 				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 		
-		return output_arr
+	# 	return output_arr
 
 # def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
 # 	'''
