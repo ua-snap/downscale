@@ -90,7 +90,7 @@ if __name__ == '__main__':
 	# variable = 'tasmin'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
-	# model = 'IPSL-CM5A-LR'
+	# model = 'GFDL-CM3'
 	# units = 'C'
 	# metric = 'mean'
 
