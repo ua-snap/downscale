@@ -51,13 +51,10 @@ if __name__ == '__main__':
 
 	modelnames = dict( zip( all_models, modelnames ) )
 	
-	# # #
 	if not os.path.exists( output_dir ):
 		os.makedirs( output_dir )
 
 	os.chdir( output_dir )
-	# # open a log file to find out where we are messing up
-	# log = open( os.path.join( output_dir, 'log_file_downscale.txt' ), 'w' )
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
@@ -123,5 +120,3 @@ if __name__ == '__main__':
 				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom )
 
 		ar5.downscale( output_dir=output_path )
-		
-	# log.close()
