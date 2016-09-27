@@ -49,10 +49,13 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/raw'
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/r2i1p1/raw'
 	prepped_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped'
-	variables = [ 'tas', 'pr', 'tasmin', 'tasmax' ]
+	# prepped_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/r2i1p1/prepped'
+	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
+	# models = [ 'IPSL-CM5A-LR' ]
 
 	if not os.path.exists( prepped_dir ):
 		os.makedirs( prepped_dir )

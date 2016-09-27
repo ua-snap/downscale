@@ -18,11 +18,11 @@ def run_model( fn, command ):
 if __name__ == '__main__':
 	import subprocess, os
 	
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_minmax'
-	output_base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_minmax'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
+	output_base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
 	scripts_directory = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc'
 	ncpus = 32
-	variables = ['tasmin', 'tasmax', 'tas', 'pr' ]
+	variables = ['tasmin', 'tasmax', 'tas' ] # , 'pr'
 	# cmip5
 	project = 'cmip5'
 	models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]

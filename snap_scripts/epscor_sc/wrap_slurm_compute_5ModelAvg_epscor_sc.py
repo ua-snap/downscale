@@ -19,16 +19,17 @@ def run_model( fn, base_dir, variable ):
 	subprocess.call([ 'sbatch', fn ])
 	return 1
 
-
 if __name__ == '__main__':
 	import os, subprocess
 	
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	variables = [ 'tasmin','tasmax','tas'] #,'pr']
+	variables = [ 'tasmin', 'tasmax', 'tas' ]
 
 	slurm_path = os.path.join( base_dir, 'slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
+	
+	os.chdir( slurm_path )
 
 	for variable in variables:
 		fn = os.path.join( slurm_path, 'slurm_run_compute_5ModelAvg_'+variable+'.slurm' )

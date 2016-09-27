@@ -198,7 +198,7 @@ if __name__ == '__main__':
 	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/derived/tabular'
 	ncpus = 32
 	project = 'cmip5'
-	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
+	variables = [ 'tasmin', 'tasmax', 'tas'] #, 'pr' ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	template_rst = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/downscaled/NCAR-CCSM4/historical/tasmax/tasmax_mean_C_ar5_NCAR-CCSM4_historical_01_1901.tif'
