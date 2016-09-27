@@ -80,7 +80,6 @@ if __name__ == '__main__':
 	# # # # # # # # 
 
 	# some setup args
-	# base_dir = os.path.join( base_dir, 'downscaled' )
 	base_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ] # ['pr','tas','tasmax', 'tasmin' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
