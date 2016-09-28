@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
 	# setup args
 	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_minmax'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
 	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/downscaled'
 	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/derived/grids'
 	ncpus = 32
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 	# list up all the args we want to run through the multicore clipping
 	args_list = []
 	for root, subs, files in os.walk( base_path ):
-		tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'pr_' in fn ]
+		tif_files = [ fn for fn in files if fn.endswith( '.tif' ) ]
 		if len( tif_files ) > 0:
 			args_list = args_list + [ ( subdomain_fn, os.path.join( root, fn ), os.path.join( root, fn ).replace( base_path, output_path ) ) for fn in tif_files ]
 	

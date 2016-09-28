@@ -176,7 +176,7 @@ if __name__ == '__main__':
 	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_SEP2016/derived/tabular'
 	ncpus = 32
 	project = 'cru'
-	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
+	variables = [ 'tasmin', 'tasmax', 'tas' ]
 	models = [ 'ts323' ]
 	scenarios = [ 'historical' ]
 	begin_out = 1901
