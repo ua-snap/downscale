@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
 	varname = 'pre' # 'pr'
 	convert_to_mm = False
+	landonly = True
 
 	# read it
 	ds = xr.open_dataset( fn )
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 	if landonly:
 		# find the boundary -- where there *is* data
 		bound_mask = find_boundary( climatology[ 1, ... ].data )
-	
+
 	# fix the data
 	clim_fixed = np.array( [ np.flipud( run( i.data, bound_mask ) ) for i in climatology ] )
 	
