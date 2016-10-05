@@ -13,6 +13,7 @@ def find_boundary( arr ):
 	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)
 	this is especially useful if the data are land-only.  As in the CRU TS3.x data.
 	'''
+	from skimage.segmentation import find_boundaries
 	bool_arr = np.copy( arr )
 	ind = np.isnan( bool_arr )
 	bool_arr[ ~ind ] = 1
@@ -47,7 +48,6 @@ def run( arr, bound_mask ):
 if __name__ == '__main__':
 	import xarray as xr
 	import numpy as np
-	from skimage.segmentation import find_boundaries
 	from affine import Affine
 	import rasterio
 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 	fn = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.pre.dat.nc'
 
 	varname = 'pre' # 'pr'
-	convert_to_mm = False
+	convert_to_mm = False # {'cru':False, 'cmip5':True}
 	landonly = True
 
 	# read it
@@ -66,8 +66,8 @@ if __name__ == '__main__':
 
 	# CONVERT THE PRECIP TO MM/MONTH
 	if convert_to_mm:
-		days_in_month = 31
-		climatology = climatology * 86400 * days_in_month
+		for index, days_in_month in enumerate([31,28,31,30,31,30,31,31,30,31,30,31]):
+			climatology[index, ...] = climatology[index, ...] * 86400 * days_in_month
 
 	# make the monthly means	
 	climatology = climatology.groupby( 'time.month' ).mean( 'time' )
