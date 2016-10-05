@@ -58,12 +58,25 @@ class DeltaDownscale( object ):
 		self.dst_nodata = dst_nodata
 		self.post_downscale_function = post_downscale_function
 		
+
 		# calculate args
 		self.anomalies = None
 		self.ds = None
 		self._concat_nc()
 		self._calc_climatolgy()
+		# fix pr climatologies if desired
+		if fix_clim == True: # ARG ME!
+			self._fix_clim()
+
+		# calculate anomalies with the new climatology values
 		self._calc_anomalies()
+
+		# interpolate across space here instead of in `Dataset`
+		self._rotated = False # brought from dataset KEEP?
+		self._lonpc = None # brought from dataset KEEP?
+		if interp == True or fix_clim == True:
+			print( 'running interpolation across NAs -- base resolution' )
+			_ = self.interp_na( )
 
 	def _concat_nc( self ):
 		if self.historical and self.future:
@@ -97,6 +110,102 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
+
+	# # # # # # # # # MOVED FROM Dataset
+	def _fix_clim( self, find_bounds=False ):
+		''' fix values in precip data '''
+		if find_bounds == True:
+			bound_mask = find_boundary( climatology[ 0, ... ].data )
+			for idx in range( self.climatology.shape[0] ):
+				arr = self.climatology[ idx, ... ].data
+				arr = correct_boundary( arr, bound_mask )
+				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask )
+
+		elif find_bounds == False:
+			for idx in range( self.climatology.shape[0] ):
+				arr = self.climatology[ idx, ... ].data
+				self.climatology[ idx, ... ].data = correct_values( arr )
+		else:
+			ValueError( 'find_bounds arg is boolean only' )
+	@staticmethod
+	def rotate( dat, lons, to_pacific=False ):
+		'''rotate longitudes in WGS84 Global Extent'''
+		if to_pacific == True:
+			# to 0 - 360
+			dat, lons = utils.shiftgrid( 0., dat, lons )
+		elif to_pacific == False:
+			# to -180.0 - 180.0 
+			dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
+		else:
+			raise AttributeError( 'to_pacific must be boolean True:False' )
+		return dat, lons
+	@staticmethod
+	def wrap( d ):
+		return utils.xyz_to_grid( **d )
+	def interp_na( self ):
+		'''
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
+
+		return a list of dicts to pass to the xyz_to_grid in parallel
+		'''
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
+
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
+		
+		# if 0-360 leave it alone
+		if ( self.ds.lon > 200.0 ).any() == True:
+			dat, lons = self.ds[ self.variable ].data, self.ds.lon
+			self._lonpc = lons
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.rotate( self.ds[ self.variable ].values, self.ds.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
+
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+		# # # # USE MLAB's griddata which we _can_ parallelize
+		def wrap( d ):
+			''' simple wrapper around utils.xyz_to_grid for mp_map '''
+			x = np.array( d['x'] )
+			y = np.array( d['y'] )
+			z = np.array( d['z'] )
+			xi, yi = d['grid']
+			return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
+		# # # # 
+
+		try:
+			print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+			dat_list = mp_map( wrap, args, nproc=self.ncpus )
+			dat_list = [ i.data for i in dat_list ] # drop the output mask
+			dat = np.array( dat_list )
+		except:
+			print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+			dat = np.array([ wrap( **i ) for i in args ])
+
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.rotate( dat, lons, to_pacific=False )
+				
+		# place back into a new xarray.Dataset object for further processing
+		self.ds = self.ds.update( { self.variable:( ['time','lat','lon'], dat ) } )
+		print( 'ds interpolated updated into self.ds' )
+		return 1
+	# # # # # # # # # END! MOVED FROM Dataset
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
 		'''	
@@ -281,3 +390,49 @@ class DeltaDownscale( object ):
 		# run it
 		out = mp_map( run, args, nproc=self.ncpus )
 		return output_dir
+
+
+# # # # # # # # # NEW FILL Dataset FOR A SPECIFIC SNAP ISSUE WITH pre DATA from CRU 
+# # # # # # # # # # and pr DATA from CMIP5
+def find_boundary( arr ):
+	'''
+	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)
+	this is especially useful if the data are land-only.  As in the CRU TS3.x data.
+	'''
+	from skimage.segmentation import find_boundaries
+	bool_arr = np.copy( arr )
+	ind = np.isnan( bool_arr )
+	bool_arr[ ~ind ] = 1
+	bool_arr[ ind ] = 0
+	return find_boundaries( bool_arr, mode='inner' )
+
+def correct_boundary( arr, bound_mask, percentile=95 ):
+	''' correct the boundary pixels with non-acceptable values '''
+	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
+	ind = np.where( bound_mask == True )
+	vals = arr[ ind ]
+	vals[ vals < 0.5 ] = 0.5
+	vals[ vals > upperthresh ] = upperthresh
+	arr[ ind ] = vals
+	return arr
+
+def correct_inner( arr, bound_mask, percentile=95 ):
+	''' correct the inner pixels with non-acceptable values '''
+	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
+	mask = np.copy( arr )	
+	ind = np.where( (arr > 0) & bound_mask != True )
+	vals = arr[ ind ]
+	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
+	vals[ vals > upperthresh ] = upperthresh
+	arr[ ind ] = vals
+	return arr
+
+def correct_values( arr, percentile=95 ):
+	''' correct the values for precip -- from @leonawicz'''
+	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
+	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
+	arr[ arr > upperthresh ] = upperthresh
+	return arr
+
+# # # # # # # # # END! NEW FILL Dataset
+
