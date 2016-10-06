@@ -143,6 +143,7 @@ class DeltaDownscale( object ):
 	# @staticmethod
 	# def wrap( d ):
 	# 	return utils.xyz_to_grid( **d )
+	@staticmethod
 	def wrap( d ):
 		''' simple wrapper around utils.xyz_to_grid for mp_map '''
 		x = np.array( d['x'] )
