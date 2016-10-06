@@ -140,9 +140,16 @@ class DeltaDownscale( object ):
 		else:
 			raise AttributeError( 'to_pacific must be boolean True:False' )
 		return dat, lons
-	@staticmethod
+	# @staticmethod
+	# def wrap( d ):
+	# 	return utils.xyz_to_grid( **d )
 	def wrap( d ):
-		return utils.xyz_to_grid( **d )
+		''' simple wrapper around utils.xyz_to_grid for mp_map '''
+		x = np.array( d['x'] )
+		y = np.array( d['y'] )
+		z = np.array( d['z'] )
+		xi, yi = d['grid']
+		return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
 	def interp_na( self ):
 		'''
 		np.float32
@@ -161,11 +168,11 @@ class DeltaDownscale( object ):
 		
 		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.ds[ self.historical.variable ].data, self.ds.lon
+			dat, lons = self.ds.data, self.ds.lon
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.ds[ self.historical.variable ].values, self.ds.lon, to_pacific=True )
+			dat, lons = self.rotate( self.ds.values, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -180,13 +187,13 @@ class DeltaDownscale( object ):
 				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
 		
 		# # # # USE MLAB's griddata which we _can_ parallelize
-		def wrap( d ):
-			''' simple wrapper around utils.xyz_to_grid for mp_map '''
-			x = np.array( d['x'] )
-			y = np.array( d['y'] )
-			z = np.array( d['z'] )
-			xi, yi = d['grid']
-			return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
+		# def wrap( d ):
+		# 	''' simple wrapper around utils.xyz_to_grid for mp_map '''
+		# 	x = np.array( d['x'] )
+		# 	y = np.array( d['y'] )
+		# 	z = np.array( d['z'] )
+		# 	xi, yi = d['grid']
+		# 	return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
 		# # # # 
 
 		try:
@@ -195,15 +202,17 @@ class DeltaDownscale( object ):
 			dat_list = [ i.data for i in dat_list ] # drop the output mask
 			dat = np.array( dat_list )
 		except:
-			print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-			dat = np.array([ wrap( **i ) for i in args ])
+			NotImplementedError( 'install matlab to use mlab regrid' )
+			# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+			# dat = np.array([ wrap( **i ) for i in args ])
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.ds.data = dat
 		print( 'ds interpolated updated into self.ds' )
 		return 1
 	# # # # # # # # # END! MOVED FROM Dataset
