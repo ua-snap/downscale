@@ -161,11 +161,11 @@ class DeltaDownscale( object ):
 		
 		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.ds[ self.variable ].data, self.ds.lon
+			dat, lons = self.ds[ self.historical.variable ].data, self.ds.lon
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.ds[ self.variable ].values, self.ds.lon, to_pacific=True )
+			dat, lons = self.rotate( self.ds[ self.historical.variable ].values, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -177,7 +177,7 @@ class DeltaDownscale( object ):
 		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
 
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
-				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
 		
 		# # # # USE MLAB's griddata which we _can_ parallelize
 		def wrap( d ):
@@ -203,7 +203,7 @@ class DeltaDownscale( object ):
 			dat, lons = self.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		self.ds = self.ds.update( { self.variable:( ['time','lat','lon'], dat ) } )
+		self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
 		print( 'ds interpolated updated into self.ds' )
 		return 1
 	# # # # # # # # # END! MOVED FROM Dataset
