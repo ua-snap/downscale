@@ -18,7 +18,7 @@ class DeltaDownscale( object ):
 				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
 				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
 				varname=None, modelname=None, anom=False, resample_type='bilinear', 
-				*args, **kwargs ):
+				fix_clim=False, interp=False, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -57,7 +57,8 @@ class DeltaDownscale( object ):
 		self.src_nodata = src_nodata
 		self.dst_nodata = dst_nodata
 		self.post_downscale_function = post_downscale_function
-		
+		self.fix_clim = fix_clim
+		self.interp = interp		
 
 		# calculate args
 		self.anomalies = None

@@ -28,13 +28,13 @@ if __name__ == '__main__':
 
 	project = 'ar5'
 	
-	# # # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tas'
-	# scenario = 'rcp60'
-	# model = 'GFDL-CM3'
-	# units = 'C'
-	# metric = 'mean'
+	# # # # FOR TESTING # # # 
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	variable = 'pr'
+	scenario = 'rcp60'
+	model = 'GFDL-CM3'
+	units = 'mm'
+	metric = 'total'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
@@ -99,18 +99,18 @@ if __name__ == '__main__':
 			# convert to mm/month
 			if historical:
 				timesteps, = historical.ds.time.shape # this assumes time begins in January
-				days = [31,28,31,30,31,30,31,31,30,31,30,31] * timesteps
+				days = [31,28,31,30,31,30,31,31,30,31,30,31] * (timesteps / 12)
 
-				for index, days_in_month in days:
-					historical.ds[ variable ][index, ...] = historical.ds[ variable ][index, ...] * 86400 * days_in_month
+				for index, days_in_month in zip(range( len( days ) ), days ):
+					historical.ds[ variable ][index, ...] = historical.ds[ variable ][index, ...].data * 86400 * days_in_month
 
 				historical.ds[ variable ][ 'units' ] = units
 			
 			if future:
 				timesteps, = future.ds.time.shape # this assumes time begins in January
-				days = [31,28,31,30,31,30,31,31,30,31,30,31] * timesteps
+				days = [31,28,31,30,31,30,31,31,30,31,30,31] * (timesteps / 12)
 
-				for index, days_in_month in days:
+				for index, days_in_month in enumerate( days ):
 					future.ds[ variable ][index, ...] = future.ds[ variable ][index, ...] * 86400 * days_in_month
 					
 				future.ds[ variable ][ 'units' ] = units
