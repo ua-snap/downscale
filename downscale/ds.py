@@ -199,8 +199,8 @@ class DeltaDownscale( object ):
 
 		try:
 			print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
-			dat_list = mp_map( wrap, args, nproc=self.ncpus )
-			dat_list = [ i.data for i in dat_list ] # drop the output mask
+			dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+			dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
 			dat = np.array( dat_list )
 		except:
 			NotImplementedError( 'install matlab to use mlab regrid' )
