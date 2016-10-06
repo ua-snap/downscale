@@ -75,9 +75,9 @@ class DeltaDownscale( object ):
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
 		self._lonpc = None # brought from dataset KEEP?
-		if interp == True or fix_clim == True:
-			print( 'running interpolation across NAs -- base resolution' )
-			_ = self.interp_na( )
+		# if interp == True or fix_clim == True:
+		# 	print( 'running interpolation across NAs -- base resolution' )
+		# 	_ = self.interp_na( )
 
 	def _concat_nc( self ):
 		if self.historical and self.future:
