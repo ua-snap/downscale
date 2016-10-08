@@ -66,7 +66,7 @@ class DeltaDownscale( object ):
 		self._concat_nc()
 		self._calc_climatolgy()
 		# fix pr climatologies if desired
-		if fix_clim == True: # ARG ME!
+		if fix_clim == True:
 			self._fix_clim()
 
 		# calculate anomalies with the new climatology values
@@ -75,7 +75,7 @@ class DeltaDownscale( object ):
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
 		self._lonpc = None # brought from dataset KEEP?
-		if interp == True or fix_clim == True:
+		if (interp == True) or (fix_clim == True):
 			print( 'running interpolation across NAs -- base resolution' )
 			_ = self.interp_na( )
 
