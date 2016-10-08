@@ -68,9 +68,8 @@ class DeltaDownscale( object ):
 		# fix pr climatologies if desired
 		if fix_clim == True:
 			self._fix_clim()
-
-		# calculate anomalies with the new climatology values
-		self._calc_anomalies()
+			# interpolate clims across space
+			self._interp_na_fix_clim()
 
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
@@ -78,6 +77,9 @@ class DeltaDownscale( object ):
 		if (interp == True) or (fix_clim == True):
 			print( 'running interpolation across NAs -- base resolution' )
 			_ = self.interp_na( )
+
+		# calculate anomalies with the new climatology values
+		self._calc_anomalies()
 
 	def _concat_nc( self ):
 		if self.historical and self.future:
@@ -197,13 +199,13 @@ class DeltaDownscale( object ):
 		# 	return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
 		# # # # 
 
-		try:
-			print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
-			dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
-			dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
-			dat = np.array( dat_list )
-		except:
-			NotImplementedError( 'install matlab to use mlab regrid' )
+		# try:
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
+		# except:
+		# 	NotImplementedError( 'install matlab to use mlab regrid' )
 			# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
 			# dat = np.array([ wrap( **i ) for i in args ])
 
@@ -216,6 +218,73 @@ class DeltaDownscale( object ):
 		self.ds.data = dat
 		print( 'ds interpolated updated into self.ds' )
 		return 1
+	def _interp_na_fix_clim( self ):
+		'''
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
+
+		return a list of dicts to pass to the xyz_to_grid in parallel
+		'''
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
+
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
+		
+		# if 0-360 leave it alone
+		if ( self.ds.lon > 200.0 ).any() == True:
+			dat, lons = self.climatology.data, self.ds.lon
+			self._lonpc = lons
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
+
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+		# # # # USE MLAB's griddata which we _can_ parallelize
+		# def wrap( d ):
+		# 	''' simple wrapper around utils.xyz_to_grid for mp_map '''
+		# 	x = np.array( d['x'] )
+		# 	y = np.array( d['y'] )
+		# 	z = np.array( d['z'] )
+		# 	xi, yi = d['grid']
+		# 	return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
+		# # # # 
+
+		# try:
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
+		# except:
+		# 	NotImplementedError( 'install matlab to use mlab regrid' )
+			# print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
+			# dat = np.array([ wrap( **i ) for i in args ])
+
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.rotate( dat, lons, to_pacific=False )
+			self._rotated = False # reset it now that its back
+				
+		# place back into a new xarray.Dataset object for further processing
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.climatology.data = dat
+		print( 'ds interpolated updated into self.ds' )
+		return 1
+
 	# # # # # # # # # END! MOVED FROM Dataset
 	@staticmethod
 	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
