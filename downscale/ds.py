@@ -18,7 +18,7 @@ class DeltaDownscale( object ):
 				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
 				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
 				varname=None, modelname=None, anom=False, resample_type='bilinear', 
-				fix_clim=False, interp=False, *args, **kwargs ):
+				fix_clim=False, interp=False, find_bounds=False, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -58,7 +58,8 @@ class DeltaDownscale( object ):
 		self.dst_nodata = dst_nodata
 		self.post_downscale_function = post_downscale_function
 		self.fix_clim = fix_clim
-		self.interp = interp		
+		self.interp = interp
+		self.find_bounds = find_bounds
 
 		# calculate args
 		self.anomalies = None
@@ -67,9 +68,13 @@ class DeltaDownscale( object ):
 		self._calc_climatolgy()
 		# fix pr climatologies if desired
 		if fix_clim == True:
-			self._fix_clim()
+			self._fix_clim( find_bounds=self.find_bounds )
+			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
+			
+			# fix the ds values
+			self._fix_ds( find_bounds=self.find_bounds )
 
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
@@ -128,6 +133,21 @@ class DeltaDownscale( object ):
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
 				self.climatology[ idx, ... ].data = correct_values( arr )
+		else:
+			ValueError( 'find_bounds arg is boolean only' )
+	def _fix_ds( self, find_bounds=False ):
+		''' fix values in precip data '''
+		if find_bounds == True:
+			bound_mask = find_boundary( ds[ 0, ... ].data )
+			for idx in range( self.ds.shape[0] ):
+				arr = self.ds[ idx, ... ].data
+				arr = correct_boundary( arr, bound_mask )
+				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask )
+
+		elif find_bounds == False:
+			for idx in range( self.ds.shape[0] ):
+				arr = self.ds[ idx, ... ].data
+				self.ds[ idx, ... ].data = correct_values( arr )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
 	@staticmethod
@@ -254,18 +274,8 @@ class DeltaDownscale( object ):
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
 		
-		# # # # USE MLAB's griddata which we _can_ parallelize
-		# def wrap( d ):
-		# 	''' simple wrapper around utils.xyz_to_grid for mp_map '''
-		# 	x = np.array( d['x'] )
-		# 	y = np.array( d['y'] )
-		# 	z = np.array( d['z'] )
-		# 	xi, yi = d['grid']
-		# 	return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
-		# # # # 
-
 		# try:
-		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		print( 'processing interpolation to convex hull in parallel using {} cpus. -- CLIMATOLOGY'.format( self.ncpus ) )
 		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
 		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
 		dat = np.array( dat_list )
