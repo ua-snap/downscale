@@ -123,7 +123,7 @@ class DeltaDownscale( object ):
 	def _fix_clim( self, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
-			bound_mask = find_boundary( climatology[ 0, ... ].data )
+			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
 				arr = correct_boundary( arr, bound_mask )
@@ -138,7 +138,7 @@ class DeltaDownscale( object ):
 	def _fix_ds( self, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
-			bound_mask = find_boundary( ds[ 0, ... ].data )
+			bound_mask = find_boundary( self.ds[ 0, ... ].data )
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
 				arr = correct_boundary( arr, bound_mask )
