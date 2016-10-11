@@ -23,10 +23,10 @@ if __name__ == '__main__':
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
-	variables = ['tmp'] #['tmx','tmn','tmp','pre']
-	out_varnames = ['tas'] #['tasmax','tasmin','tas','pr']
+	variables = [ 'tmp','tmx','tmn' ]
+	out_varnames = [ 'tas','tasmax','tasmin' ]
 	
-	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled_NEW_PR','slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 			units = 'C'
 
 		clim_path = os.path.join( base_dir, 'prism', out_varname )
-		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
+		output_path = os.path.join( os.path.join( base_dir, 'downscaled_NEW_PR', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )

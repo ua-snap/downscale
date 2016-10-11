@@ -28,21 +28,24 @@ if __name__ == '__main__':
 
 	project = 'ar5'
 	
-	# # # # FOR TESTING # # # 
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	variable = 'pr'
-	scenario = 'rcp60'
-	model = 'GFDL-CM3'
-	units = 'mm'
-	metric = 'total'
+	# # # # # FOR TESTING # # # 
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# variable = 'pr'
+	# scenario = 'rcp60'
+	# model = 'GFDL-CM3'
+	# units = 'mm'
+	# metric = 'total'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled' )
+	output_dir = os.path.join( base_dir, 'downscaled_NEW_PR' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
+	interp = False # interpolate across space -- Low Res
+	find_bounds = False
+	fix_clim = False
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
@@ -57,6 +60,10 @@ if __name__ == '__main__':
 	os.chdir( output_dir )
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
+		# fix the climatology -- precip only
+		if variable == 'pr':
+			fix_clim = True
+		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
 		clim_path = os.path.join( base_dir, 'prism', variable )
@@ -138,6 +145,6 @@ if __name__ == '__main__':
 		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom )
+				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom, fix_clim=fix_clim )
 
 		ar5.downscale( output_dir=output_path )
