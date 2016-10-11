@@ -133,7 +133,7 @@ if __name__ ==	'__main__':
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom, 
-					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=True)
+					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=True )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )

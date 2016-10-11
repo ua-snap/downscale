@@ -37,6 +37,8 @@ if __name__ ==	'__main__':
 	scenario = 'historical'
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
+	interp = True # interpolate across space -- Low Res
+
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -50,21 +52,26 @@ if __name__ ==	'__main__':
 	if variable == 'pr' or variable == 'pre':
 		rounder = np.rint
 		downscaling_operation = 'mult'
+		find_bounds = True
+		fix_clim = True
 	else:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
+		find_bounds = False
+		fix_clim = False
 
 	def round_it( arr ):
 		return rounder( arr )
 
-	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
-							interp=True, method='linear', ncpus=32 )
+							method='linear', ncpus=32 )
 
+	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom )
+				post_downscale_function=round_it, varname=out_varname, modelname=None, 
+				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )

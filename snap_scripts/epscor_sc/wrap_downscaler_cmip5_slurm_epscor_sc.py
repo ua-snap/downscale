@@ -28,7 +28,7 @@ if __name__ == '__main__':
 	variables = [ 'tas','pr' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	path = os.path.join( base_dir,'downscaled_NEW_PR','slurm_log' )
+	path = os.path.join( base_dir,'downscaled','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
 	
