@@ -65,9 +65,9 @@ class DeltaDownscale( object ):
 		self.anomalies = None
 		self.ds = None
 		self._concat_nc()
-		self._calc_climatolgy()
 		# fix pr climatologies if desired
 		if fix_clim == True:
+			self._calc_climatolgy()
 			self._fix_clim( find_bounds=self.find_bounds )
 			
 			# interpolate clims across space
@@ -83,6 +83,10 @@ class DeltaDownscale( object ):
 			print( 'running interpolation across NAs -- base resolution' )
 			_ = self.interp_na( )
 
+		# calculate climatology if fix_clim == False
+		if self.fix_clim == False:
+			self._calc_climatolgy()
+			
 		# calculate anomalies with the new climatology values
 		self._calc_anomalies()
 
