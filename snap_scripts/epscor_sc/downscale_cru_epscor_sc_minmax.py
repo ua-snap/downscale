@@ -93,7 +93,7 @@ if __name__ ==	'__main__':
 	clim_end = '12-1990'
 	scenario = 'historical'
 	project = 'cru'
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 	# output_dir = os.path.join( base_dir, 'downscaled_minmax' )
 	# output_path = os.path.join( output_dir, model, scenario, variable )
 
@@ -122,18 +122,18 @@ if __name__ ==	'__main__':
 	def round_it( arr ):
 		return rounder( arr )
 
-	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
 							method='linear', ncpus=32 )
 
 	mean_fn = cru_ts.replace( variable, mean_variable_cru )
 	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
 
+	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, historical=historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=False, 
-					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=True, anom=True )
+				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom, 
+					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=True)
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )

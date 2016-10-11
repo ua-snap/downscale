@@ -38,14 +38,13 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_NEW_PR' )
+	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
 	anom = True # write out anoms (True) or not (False)
 	interp = False # interpolate across space -- Low Res
 	find_bounds = False
-	fix_clim = False
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
@@ -63,6 +62,8 @@ if __name__ == '__main__':
 		# fix the climatology -- precip only
 		if variable == 'pr':
 			fix_clim = True
+		else:
+			fix_clim = False
 		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE

@@ -104,7 +104,7 @@ if __name__ == '__main__':
 	import geopandas as gpd
 	
 	# args / set working dir
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_GFDL_TEST'
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
 	os.chdir( base_dir )
 	scenario = 'rcp60'
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['GFDL-CM3'] #,'GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4'] # '5ModelAvg',
+	models = ['MRI-CGCM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4', 'GFDL-CM3', '5ModelAvg']
 	variables = ['tas']
 	# models = ['CRU_TS323']
 	
@@ -129,8 +129,8 @@ if __name__ == '__main__':
 				end = 1965
 			else:
 				old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models'
-				begin = 2060
-				end = 2070
+				begin = 2016
+				end = 2016
 
 		figsize = (16,9)
 		out = {}

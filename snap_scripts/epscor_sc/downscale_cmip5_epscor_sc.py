@@ -30,11 +30,11 @@ if __name__ == '__main__':
 	
 	# # # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tas'
+	# variable = 'pr'
 	# scenario = 'rcp60'
 	# model = 'GFDL-CM3'
-	# units = 'C'
-	# metric = 'mean'
+	# units = 'mm'
+	# metric = 'total'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
@@ -42,7 +42,9 @@ if __name__ == '__main__':
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
+	interp = False # interpolate across space -- Low Res
+	find_bounds = False
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
@@ -57,6 +59,12 @@ if __name__ == '__main__':
 	os.chdir( output_dir )
 
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
+		# fix the climatology -- precip only
+		if variable == 'pr':
+			fix_clim = True
+		else:
+			fix_clim = False
+		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
 		clim_path = os.path.join( base_dir, 'prism', variable )
@@ -94,6 +102,27 @@ if __name__ == '__main__':
 				future.ds[ variable ] = future.ds[ variable ] - 273.15
 				future.ds[ variable ][ 'units' ] = units
 
+		
+		if variable == 'pr':
+			# convert to mm/month
+			if historical:
+				timesteps, = historical.ds.time.shape # this assumes time begins in January
+				days = [31,28,31,30,31,30,31,31,30,31,30,31] * (timesteps / 12)
+
+				for index, days_in_month in zip(range( len( days ) ), days ):
+					historical.ds[ variable ][index, ...] = historical.ds[ variable ][index, ...].data * 86400 * days_in_month
+
+				historical.ds[ variable ][ 'units' ] = units
+			
+			if future:
+				timesteps, = future.ds.time.shape # this assumes time begins in January
+				days = [31,28,31,30,31,30,31,31,30,31,30,31] * (timesteps / 12)
+
+				for index, days_in_month in enumerate( days ):
+					future.ds[ variable ][index, ...] = future.ds[ variable ][index, ...] * 86400 * days_in_month
+					
+				future.ds[ variable ][ 'units' ] = units
+
 		# DOWNSCALE
 		mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
 		clim_begin = '1961'
@@ -117,6 +146,6 @@ if __name__ == '__main__':
 		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom )
+				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom, fix_clim=fix_clim )
 
 		ar5.downscale( output_dir=output_path )

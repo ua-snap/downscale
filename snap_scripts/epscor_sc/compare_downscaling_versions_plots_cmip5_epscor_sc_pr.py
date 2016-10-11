@@ -112,8 +112,8 @@ if __name__ == '__main__':
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	variables_list = [['tasmax', 'tas', 'tasmin']]#,['pr']]
+	models = ['GFDL-CM3']#['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	variables_list = [['pr']]# ['tasmax', 'tas', 'tasmin']]#,
 	# models = ['CRU_TS323']
 	
 	for variables in variables_list:
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 			figsize = (16,9)
 			out = {}
 			for v in variables:
-				path = os.path.join( base_dir,'downscaled', m, scenario, v )
+				path = os.path.join( base_dir,'downscaled_GFDL_TEST', m, scenario, v )
 				files = glob.glob( os.path.join( path, '*.tif' ) )
 				files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 				out[ v ] = mp_map( masked_mean, files, nproc=4 )
@@ -173,7 +173,7 @@ if __name__ == '__main__':
 
 			ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-			output_dir = os.path.join( base_dir, 'compare_downscaling_versions_NEW' )
+			output_dir = os.path.join( base_dir, 'compare_downscaling_versions_PR' )
 			if not os.path.exists( output_dir ):
 				os.makedirs( output_dir )
 
