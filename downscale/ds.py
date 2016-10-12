@@ -60,13 +60,18 @@ class DeltaDownscale( object ):
 		self.fix_clim = fix_clim
 		self.interp = interp
 		self.find_bounds = find_bounds
+		# interpolate across space here instead of in `Dataset`
+		self._rotated = False # brought from dataset KEEP?
+		self._lonpc = None # brought from dataset KEEP?
 
 		# calculate args
 		self.anomalies = None
+		self.climatology = None
 		self.ds = None
 		self._concat_nc()
 		# fix pr climatologies if desired
 		if fix_clim == True:
+			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
 			self._fix_clim( find_bounds=self.find_bounds )
 			
@@ -76,10 +81,7 @@ class DeltaDownscale( object ):
 			# fix the ds values
 			self._fix_ds( find_bounds=self.find_bounds )
 
-		# interpolate across space here instead of in `Dataset`
-		self._rotated = False # brought from dataset KEEP?
-		self._lonpc = None # brought from dataset KEEP?
-		if (interp == True) or (fix_clim == True):
+		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
 			_ = self.interp_na( )
 
