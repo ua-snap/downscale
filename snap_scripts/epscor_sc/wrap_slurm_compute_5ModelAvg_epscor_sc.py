@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	import os, subprocess
 	
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	variables = [ 'tasmin', 'tasmax', 'tas' ]
+	variables = [ 'pr' ] #[ 'tasmin', 'tasmax', 'tas' ]
 
 	slurm_path = os.path.join( base_dir, 'slurm_log' )
 	if not os.path.exists( slurm_path ):
@@ -34,4 +34,3 @@ if __name__ == '__main__':
 	for variable in variables:
 		fn = os.path.join( slurm_path, 'slurm_run_compute_5ModelAvg_'+variable+'.slurm' )
 		_ = run_model( fn, base_dir, variable )
-
