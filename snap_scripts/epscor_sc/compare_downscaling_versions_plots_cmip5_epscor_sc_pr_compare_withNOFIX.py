@@ -112,7 +112,7 @@ if __name__ == '__main__':
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
 	variables_list = [['pr']]# ['tasmax', 'tas', 'tasmin']]#,
 	# models = ['CRU_TS323']
 
@@ -151,6 +151,12 @@ if __name__ == '__main__':
 							files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 							out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4 )
 
+							# nofix
+							path = os.path.join( base_dir,'downscaled_pr_nofix', m, scenario, v )
+							files = glob.glob( os.path.join( path, '*.tif' ) )
+							files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
+							out[ v+'_nofix' ] = mp_map( masked_mean, files, nproc=4 )
+
 					plot_df = pd.DataFrame( out )
 					plot_df.index = pd.date_range( start=str(begin), end=str(end+1), freq='M' )
 					
@@ -158,7 +164,7 @@ if __name__ == '__main__':
 					if 'tas' in variables:
 						col_list = ['tasmax', 'tas_old', 'tas', 'tasmin']
 					elif 'pr' in variables:
-						col_list = ['pr', 'pr_old']
+						col_list = ['pr', 'pr_old', 'pr_nofix']
 					
 					plot_df = plot_df[ col_list ] # get em in the order for plotting
 
@@ -171,11 +177,11 @@ if __name__ == '__main__':
 					if 'tas' in variables:
 						colors = ['red', 'black', 'blue', 'red' ]
 					else:
-						colors = [ 'blue', 'black' ]
+						colors = [ 'blue', 'black', 'darkred' ]
 
 					ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-					output_dir = os.path.join( base_dir, 'compare_downscaling_versions_PR' )
+					output_dir = os.path.join( base_dir, 'compare_downscaling_versions_PR_no_fix' )
 					if not os.path.exists( output_dir ):
 						os.makedirs( output_dir )
 
