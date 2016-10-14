@@ -106,30 +106,34 @@ if __name__ == '__main__':
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	os.chdir( base_dir )
-	scenarios = ['rcp60', 'rcp85']
+	# scenarios = ['rcp60', 'rcp85']
+	scenarios = ['historical']
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	# models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	models = ['ts323']
 	variables_list = [['pr']]# ['tasmax', 'tas', 'tasmin']]#,
 	# models = ['CRU_TS323']
+	# begin_end_groups = [[2016,2016],[2010,2020],[2095, 2100]]
+	begin_end_groups = [[1916, 1916],[1950, 1960],[1995, 2000]]
 
 	for scenario in scenarios:
 		for variables in variables_list:
 			for m in models:
-				for begin, end in [[2016,2016],[2010,2020],[2095, 2100]]: # not fully wired-up yet
-					if m == 'CRU_TS323':
+				for begin, end in begin_end_groups: # not fully wired-up yet
+					if m == 'ts323':
 						old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/CRU/CRU_TS32'
-						begin = 1950
-						end = 1965
+						# begin = 1950
+						# end = 1965
 
 					else:
 						if scenario == 'historical':
 							old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/historical/AR5_CMIP5_models'
-							begin = 1950
-							end = 1965
+							# begin = 1950
+							# end = 1965
 						else:
 							old_dir = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models'
 							# begin = 2095
@@ -143,7 +147,7 @@ if __name__ == '__main__':
 						files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 						out[ v ] = mp_map( masked_mean, files, nproc=4 )
 						if v == 'tas' or v == 'pr':
-							if m == 'CRU_TS323':
+							if m == 'ts323':
 								path = os.path.join( old_dir, v )
 							else:	
 								path = os.path.join( old_dir, scenario, m, v )

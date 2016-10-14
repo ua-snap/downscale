@@ -71,6 +71,7 @@ class DeltaDownscale( object ):
 		self._concat_nc()
 		# fix pr climatologies if desired
 		if fix_clim == True:
+			print( 'fix climatology' )
 			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
 			self._fix_clim( find_bounds=self.find_bounds )
