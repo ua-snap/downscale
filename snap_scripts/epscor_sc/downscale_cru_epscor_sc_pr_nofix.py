@@ -39,7 +39,6 @@ if __name__ ==	'__main__':
 	anom = False # write out anoms (True) or not (False)
 	interp = True # interpolate across space -- Low Res
 
-
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 	filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
@@ -65,6 +64,14 @@ if __name__ ==	'__main__':
 
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
 							method='linear', ncpus=32 )
+
+	# this is a hack to 'compare' the outputs between on/off modes of fix_clim
+	if variable == 'pr' and fix_clim == False:
+		# update the problem pixels first then downscale...
+		dat = historical.ds[ variable ].data
+		dat[ dat < 0.5 ] = 0.5
+		historical.ds[ variable ].data = dat
+
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
