@@ -229,3 +229,83 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 # 	with rasterio.open( output_filename, 'w', **meta ) as out:
 # 		out.write( output_arr, 1 )
 # 	return output_filename
+
+
+# OLDER NON-SNAPPING version:
+# def transform_from_latlon( lat, lon ):
+# 	''' simple way to make an affine transform from lats and lons coords '''
+# 	from affine import Affine
+# 	lat = np.asarray( lat )
+# 	lon = np.asarray( lon )
+# 	trans = Affine.translation(lon[0], lat[0])
+# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+# 	return trans * scale
+
+def transform_from_latlon( lat, lon ):
+	''' simple way to make an affine transform from lats and lons coords '''
+	from affine import Affine
+	lat = np.asarray( lat )
+	lon = np.asarray( lon )
+	if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
+		lat_max = 90.0
+	else:
+		lat_max = np.max( lat )
+
+	# set the lonmax to the corner. --> this can get you into trouble with non-global data
+	# but I am unsure how to make it more dynamic at the moment. [ML]
+	lon_arr = np.array([-180.0, 0.0 ])
+	idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
+	lon_max = lon_arr[ idx ]
+
+	trans = Affine.translation(lon_max, lat_max)
+	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
+	return trans * scale
+
+def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=None, **kwargs ):
+	'''
+	Rasterize a list of (geometry, fill_value) tuples onto the given
+	xarray coordinates. This only works for 1d latitude and longitude
+	arrays.
+
+	ARGUMENTS:
+	----------
+	shapes
+	coords
+	latitude
+	longitude
+	fill
+
+	RETURNS:
+	--------
+
+	xarray.DataArray
+
+	'''
+	from rasterio import features
+	if fill == None:
+		fill = np.nan
+	transform = transform_from_latlon( coords[ latitude ], coords[ longitude ] )
+	out_shape = ( len( coords[ latitude ] ), len( coords[ longitude ] ) )
+	raster = features.rasterize(shapes, out_shape=out_shape,
+								fill=fill, transform=transform,
+								dtype=float, **kwargs)
+	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
+	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
+
+
+# # EXAMPLE OF HOW TO RASTERIZE A SHAPE TO An xarray.Dataset
+# # this shapefile is from natural earth data
+# # http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/
+# states = geopandas.read_file('/Users/shoyer/Downloads/ne_10m_admin_1_states_provinces_lakes')
+# us_states = states.query("admin == 'United States of America'").reset_index(drop=True)
+# state_ids = {k: i for i, k in enumerate(us_states.woe_name)}
+# shapes = [(shape, n) for n, shape in enumerate(us_states.geometry)]
+
+# ds = xray.Dataset(coords={'longitude': np.linspace(-125, -65, num=5000),
+#                           'latitude': np.linspace(50, 25, num=3000)})
+# ds['states'] = rasterize(shapes, ds.coords)
+
+# example of applying a mask
+# ds.states.where(ds.states == state_ids['California'])
+
+# # # # # # # # # END! NEW FILL Dataset
