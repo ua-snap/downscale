@@ -512,12 +512,14 @@ def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95 ):
 		arr = np.ma.masked_arr( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
+	arr = np.array( arr ) # drop the mask if need be
+
 	ind = np.where( bound_mask == True )
 	vals = arr[ ind ]
 	vals[ vals < 0.5 ] = 0.5
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return np.array( arr ) # drop the mask
+	return arr
 
 def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	''' correct the inner pixels with non-acceptable values '''
@@ -526,13 +528,16 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 		arr = np.ma.masked_arr( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
-	mask = np.copy( arr )	
+	
+	arr = np.array( arr ) # drop the mask if need be
+	
+	# mask = np.copy( arr )	
 	ind = np.where( (arr > 0) & bound_mask != True )
 	vals = arr[ ind ]
 	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return np.array( arr ) # drop the mask
+	return arr 
 
 def correct_values( arr, aoi_mask=None, percentile=95 ):
 	''' correct the values for precip -- from @leonawicz'''
@@ -541,9 +546,11 @@ def correct_values( arr, aoi_mask=None, percentile=95 ):
 		arr = np.ma.masked_arr( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
+	arr = np.array( arr ) # drop the mask if need be
+
 	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
-	return np.array( arr ) # drop the mask
+	return arr 
 
 def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=None, **kwargs ):
 	'''
