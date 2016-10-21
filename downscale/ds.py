@@ -18,7 +18,7 @@ class DeltaDownscale( object ):
 				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
 				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
 				varname=None, modelname=None, anom=False, resample_type='bilinear', 
-				fix_clim=False, interp=False, find_bounds=False, *args, **kwargs ):
+				fix_clim=False, interp=False, find_bounds=False, aoi_mask=None, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -59,6 +59,7 @@ class DeltaDownscale( object ):
 		self.post_downscale_function = post_downscale_function
 		self.fix_clim = fix_clim
 		self.interp = interp
+		self.aoi_mask = aoi_mask
 		self.find_bounds = find_bounds
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
@@ -69,18 +70,19 @@ class DeltaDownscale( object ):
 		self.climatology = None
 		self.ds = None
 		self._concat_nc()
+			
 		# fix pr climatologies if desired
 		if fix_clim == True:
 			print( 'fix climatology' )
 			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
-			self._fix_clim( find_bounds=self.find_bounds )
+			self._fix_clim( aoi_mask=self.aoi_mask, find_bounds=self.find_bounds )
 			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
 			# fix the ds values
-			self._fix_ds( find_bounds=self.find_bounds )
+			self._fix_ds( aoi_mask=self.aoi_mask, find_bounds=self.find_bounds )
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
@@ -127,34 +129,34 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
 
 	# # # # # # # # # MOVED FROM Dataset
-	def _fix_clim( self, find_bounds=False ):
+	def _fix_clim( self, aoi_mask=None, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
 			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
-				arr = correct_boundary( arr, bound_mask )
-				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask )
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
+				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
 		elif find_bounds == False:
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
-				self.climatology[ idx, ... ].data = correct_values( arr )
+				self.climatology[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
-	def _fix_ds( self, find_bounds=False ):
+	def _fix_ds( self, aoi_mask=None, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
 			bound_mask = find_boundary( self.ds[ 0, ... ].data )
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
-				arr = correct_boundary( arr, bound_mask )
-				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask )
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
+				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
 		elif find_bounds == False:
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
-				self.ds[ idx, ... ].data = correct_values( arr )
+				self.ds[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
 	@staticmethod
@@ -503,18 +505,26 @@ def find_boundary( arr ):
 	bool_arr[ ind ] = 0
 	return find_boundaries( bool_arr, mode='inner' )
 
-def correct_boundary( arr, bound_mask, percentile=95 ):
+def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	''' correct the boundary pixels with non-acceptable values '''
+	
+	if aoi_mask:
+		arr = np.ma.masked_arr( arr, aoi_mask )
+
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	ind = np.where( bound_mask == True )
 	vals = arr[ ind ]
 	vals[ vals < 0.5 ] = 0.5
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return arr
+	return np.array( arr ) # drop the mask
 
-def correct_inner( arr, bound_mask, percentile=95 ):
+def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	''' correct the inner pixels with non-acceptable values '''
+
+	if aoi_mask:
+		arr = np.ma.masked_arr( arr, aoi_mask )
+
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	mask = np.copy( arr )	
 	ind = np.where( (arr > 0) & bound_mask != True )
@@ -522,14 +532,65 @@ def correct_inner( arr, bound_mask, percentile=95 ):
 	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return arr
+	return np.array( arr ) # drop the mask
 
-def correct_values( arr, percentile=95 ):
+def correct_values( arr, aoi_mask=None, percentile=95 ):
 	''' correct the values for precip -- from @leonawicz'''
+
+	if aoi_mask:
+		arr = np.ma.masked_arr( arr, aoi_mask )
+
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
-	return arr
+	return np.array( arr ) # drop the mask
+
+def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=None, **kwargs ):
+	'''
+	Rasterize a list of (geometry, fill_value) tuples onto the given
+	xarray coordinates. This only works for 1d latitude and longitude
+	arrays.
+
+	ARGUMENTS:
+	----------
+	shapes
+	coords
+	latitude
+	longitude
+	fill
+
+	RETURNS:
+	--------
+
+	xarray.DataArray
+
+	'''
+	from rasterio import features
+	if fill == None:
+		fill = np.nan
+	transform = transform_from_latlon( coords[ latitude ], coords[ longitude ] )
+	out_shape = ( len( coords[ latitude ] ), len( coords[ longitude ] ) )
+	raster = features.rasterize(shapes, out_shape=out_shape,
+								fill=fill, transform=transform,
+								dtype=float, **kwargs)
+	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
+	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
+
+
+# # EXAMPLE OF HOW TO RASTERIZE A SHAPE TO An xarray.Dataset
+# # this shapefile is from natural earth data
+# # http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/
+# states = geopandas.read_file('/Users/shoyer/Downloads/ne_10m_admin_1_states_provinces_lakes')
+# us_states = states.query("admin == 'United States of America'").reset_index(drop=True)
+# state_ids = {k: i for i, k in enumerate(us_states.woe_name)}
+# shapes = [(shape, n) for n, shape in enumerate(us_states.geometry)]
+
+# ds = xray.Dataset(coords={'longitude': np.linspace(-125, -65, num=5000),
+#                           'latitude': np.linspace(50, 25, num=3000)})
+# ds['states'] = rasterize(shapes, ds.coords)
+
+# example of applying a mask
+# ds.states.where(ds.states == state_ids['California'])
 
 # # # # # # # # # END! NEW FILL Dataset
 
