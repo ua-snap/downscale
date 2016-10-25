@@ -525,7 +525,7 @@ def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	''' correct the boundary pixels with non-acceptable values '''
 	
 	if isinstance( aoi_mask, np.ndarray ):
-		arr = np.ma.masked_arr( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	arr = np.array( arr ) # drop the mask if need be
@@ -541,7 +541,7 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	''' correct the inner pixels with non-acceptable values '''
 
 	if isinstance( aoi_mask, np.ndarray ):
-		arr = np.ma.masked_arr( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	
@@ -559,7 +559,7 @@ def correct_values( arr, aoi_mask=None, percentile=95 ):
 	''' correct the values for precip -- from @leonawicz'''
 
 	if isinstance( aoi_mask, np.ndarray ):
-		arr = np.ma.masked_arr( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask )
 
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	arr = np.array( arr ) # drop the mask if need be
