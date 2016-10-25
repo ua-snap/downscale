@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	mean_variable = 'tas'
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	path = os.path.join( base_dir,'downscaled','slurm_log' )
+	path = os.path.join( base_dir,'downscaled_FINAL_OCT','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
 	
