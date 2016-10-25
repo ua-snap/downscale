@@ -39,6 +39,8 @@ if __name__ ==	'__main__':
 	anom = False # write out anoms (True) or not (False)
 	interp = True # interpolate across space -- Low Res
 
+	# AOI MASK -- HARDWIRE -- GCLL for CRU
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/akcan_aoi_mask_GCLL.shp'
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -54,11 +56,13 @@ if __name__ ==	'__main__':
 		downscaling_operation = 'mult'
 		find_bounds = True
 		fix_clim = True
+		aoi_mask = aoi_mask_fn
 	else:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
 		find_bounds = False
 		fix_clim = False
+		aoi_mask = None
 
 	def round_it( arr ):
 		return rounder( arr )
@@ -71,7 +75,7 @@ if __name__ ==	'__main__':
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, 
-				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim )
+				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
