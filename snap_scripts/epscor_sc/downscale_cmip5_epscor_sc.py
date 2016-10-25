@@ -26,9 +26,11 @@ if __name__ == '__main__':
 	metric = args.metric
 	base_dir = args.base_dir
 
+	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
-	# # # # # FOR TESTING # # # 
+	# # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	# variable = 'pr'
 	# scenario = 'rcp60'
@@ -39,6 +41,7 @@ if __name__ == '__main__':
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
 	output_dir = os.path.join( base_dir, 'downscaled' )
+	# output_dir = os.path.join( base_dir, 'downscaled_PR_TEST_2' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -102,7 +105,6 @@ if __name__ == '__main__':
 				future.ds[ variable ] = future.ds[ variable ] - 273.15
 				future.ds[ variable ][ 'units' ] = units
 
-		
 		if variable == 'pr':
 			# convert to mm/month
 			if historical:
@@ -132,10 +134,12 @@ if __name__ == '__main__':
 			# truncate to whole number
 			rounder = np.rint
 			downscaling_operation = 'mult'
+			aoi_mask = aoi_mask_fn
 		else:
 			# round to 2 decimals
 			rounder = partial( np.round, decimals=1 )
 			downscaling_operation = 'add'
+			aoi_mask = None
 
 		def round_it( x, mask ):
 			arr = np.ma.masked_array( data=x, mask=mask )
@@ -143,9 +147,10 @@ if __name__ == '__main__':
 
 		round_data = partial( round_it, mask=( mask==0 ) )
 
-		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
+		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, 
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, 
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom, fix_clim=fix_clim )
+				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom,
+				fix_clim=fix_clim, aoi_mask=aoi_mask )
 
 		ar5.downscale( output_dir=output_path )

@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
-	variables = [ 'tas','pr' ]
+	variables = [ 'pr' ] #'tas',
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
 	path = os.path.join( base_dir,'downscaled','slurm_log' )

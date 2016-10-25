@@ -143,24 +143,28 @@ if __name__ == '__main__':
 					out = {}
 					for v in variables:
 						path = os.path.join( base_dir,'downscaled', m, scenario, v )
+						print( path )
 						files = glob.glob( os.path.join( path, '*.tif' ) )
 						files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 						out[ v ] = mp_map( masked_mean, files, nproc=4 )
 						if v == 'tas' or v == 'pr':
 							if m == 'ts323':
 								path = os.path.join( old_dir, v )
+								print( path )
 							else:	
 								path = os.path.join( old_dir, scenario, m, v )
+
 							files = glob.glob( os.path.join( path, '*.tif' ) )
 							files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 							out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4 )
 
 							# nofix
 							path = os.path.join( base_dir,'downscaled_pr_nofix', m, scenario, v )
+							print( path )
 							files = glob.glob( os.path.join( path, '*.tif' ) )
 							files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 							out[ v+'_nofix' ] = mp_map( masked_mean, files, nproc=4 )
-
+							
 					plot_df = pd.DataFrame( out )
 					plot_df.index = pd.date_range( start=str(begin), end=str(end+1), freq='M' )
 					
@@ -171,6 +175,9 @@ if __name__ == '__main__':
 						col_list = ['pr', 'pr_old', 'pr_nofix']
 					
 					plot_df = plot_df[ col_list ] # get em in the order for plotting
+
+					if v == 'pr':
+						plot_df = plot_df.round()[['pr','pr_old']]
 
 					# now plot the dataframe
 					if begin == end:
