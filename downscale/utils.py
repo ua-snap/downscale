@@ -282,6 +282,7 @@ def rasterize( shapes, coords, latitude='lat', longitude='lon', fill=None, **kwa
 
 	'''
 	from rasterio import features
+	import xarray as xr
 	if fill == None:
 		fill = np.nan
 	transform = transform_from_latlon( coords[ latitude ], coords[ longitude ] )
@@ -291,38 +292,6 @@ def rasterize( shapes, coords, latitude='lat', longitude='lon', fill=None, **kwa
 								dtype=float, **kwargs )
 	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
 	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
-
-
-# def rasterize( shapes, coords, latitude='lat', longitude='lon', fill=None, **kwargs ):
-# 	'''
-# 	Rasterize a list of (geometry, fill_value) tuples onto the given
-# 	xarray coordinates. This only works for 1d latitude and longitude
-# 	arrays.
-
-# 	ARGUMENTS:
-# 	----------
-# 	shapes = [list] of tuples of (shapely.geom, fill_value)
-# 	coords = [dict] of named 1d latitude and longitude arrays.
-# 	latitude = [str] name of latitude key. default:'latitude'
-# 	longitude = [str] name of longitude key. default:'longitude'
-# 	fill = fill_value
-
-# 	RETURNS:
-# 	--------
-
-# 	xarray.DataArray
-
-# 	'''
-# 	from rasterio import features
-# 	if fill == None:
-# 		fill = np.nan
-# 	transform = transform_from_latlon( coords[ latitude ], coords[ longitude ] )
-# 	out_shape = ( len( coords[ latitude ] ), len( coords[ longitude ] ) )
-# 	raster = features.rasterize(shapes, out_shape=out_shape,
-# 								fill=fill, transform=transform,
-# 								dtype=float, **kwargs)
-# 	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
-# 	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
 
 
 # # EXAMPLE OF HOW TO RASTERIZE A SHAPE TO An xarray.Dataset
