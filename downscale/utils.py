@@ -269,11 +269,11 @@ def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=
 
 	ARGUMENTS:
 	----------
-	shapes
-	coords
-	latitude
-	longitude
-	fill
+	shapes = [list] of tuples of (shapely.geom, fill_value)
+	coords = [dict] of named 1d latitude and longitude arrays.
+	latitude = [str] name of latitude key. default:'latitude'
+	longitude = [str] name of longitude key. default:'longitude'
+	fill = fill_value
 
 	RETURNS:
 	--------

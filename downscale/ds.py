@@ -9,6 +9,7 @@
 import rasterio, os, copy
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import xarray as xr
 from downscale import utils
 
@@ -59,7 +60,7 @@ class DeltaDownscale( object ):
 		self.post_downscale_function = post_downscale_function
 		self.fix_clim = fix_clim
 		self.interp = interp
-		self.aoi_mask = aoi_mask
+		self.aoi_mask = aoi_mask # NEW AOI_MASK
 		self.find_bounds = find_bounds
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
@@ -74,15 +75,26 @@ class DeltaDownscale( object ):
 		# fix pr climatologies if desired
 		if fix_clim == True:
 			print( 'fix climatology' )
+			# add the aoi_mask into the xarray Dataset
+			gdf = gpd.read_file( self.aoi_mask )
+			shapes = [ (geom, 1) for geom in gdf.geometry ]
+			coords = self.ds.coords
+			
+			if self.aoi_mask != None:
+				try:
+					mask = utils.rasterize( shapes, coords=coords, latitude='lat', longitude='lon', fill=0 ).data
+				except:
+					mask = utils.rasterize( shapes, coords=coords, latitude='latitude', longitude='longitude', fill=0 ).data
+
 			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
-			self._fix_clim( aoi_mask=self.aoi_mask, find_bounds=self.find_bounds )
+			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
 			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
 			# fix the ds values
-			self._fix_ds( aoi_mask=self.aoi_mask, find_bounds=self.find_bounds )
+			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
@@ -530,7 +542,7 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	upperthresh = np.percentile( arr[~np.isnan( arr )], percentile )
 	
 	arr = np.array( arr ) # drop the mask if need be
-	
+
 	# mask = np.copy( arr )	
 	ind = np.where( (arr > 0) & bound_mask != True )
 	vals = arr[ ind ]
@@ -551,53 +563,3 @@ def correct_values( arr, aoi_mask=None, percentile=95 ):
 	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
 	return arr 
-
-def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=None, **kwargs ):
-	'''
-	Rasterize a list of (geometry, fill_value) tuples onto the given
-	xarray coordinates. This only works for 1d latitude and longitude
-	arrays.
-
-	ARGUMENTS:
-	----------
-	shapes
-	coords
-	latitude
-	longitude
-	fill
-
-	RETURNS:
-	--------
-
-	xarray.DataArray
-
-	'''
-	from rasterio import features
-	if fill == None:
-		fill = np.nan
-	transform = transform_from_latlon( coords[ latitude ], coords[ longitude ] )
-	out_shape = ( len( coords[ latitude ] ), len( coords[ longitude ] ) )
-	raster = features.rasterize(shapes, out_shape=out_shape,
-								fill=fill, transform=transform,
-								dtype=float, **kwargs)
-	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
-	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
-
-
-# # EXAMPLE OF HOW TO RASTERIZE A SHAPE TO An xarray.Dataset
-# # this shapefile is from natural earth data
-# # http://www.naturalearthdata.com/downloads/10m-cultural-vectors/10m-admin-1-states-provinces/
-# states = geopandas.read_file('/Users/shoyer/Downloads/ne_10m_admin_1_states_provinces_lakes')
-# us_states = states.query("admin == 'United States of America'").reset_index(drop=True)
-# state_ids = {k: i for i, k in enumerate(us_states.woe_name)}
-# shapes = [(shape, n) for n, shape in enumerate(us_states.geometry)]
-
-# ds = xray.Dataset(coords={'longitude': np.linspace(-125, -65, num=5000),
-#                           'latitude': np.linspace(50, 25, num=3000)})
-# ds['states'] = rasterize(shapes, ds.coords)
-
-# example of applying a mask
-# ds.states.where(ds.states == state_ids['California'])
-
-# # # # # # # # # END! NEW FILL Dataset
-
