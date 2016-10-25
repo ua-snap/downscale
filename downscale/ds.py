@@ -82,7 +82,7 @@ class DeltaDownscale( object ):
 			
 			if self.aoi_mask:
 				# try:
-				mask = utils.rasterize( shapes, coords=coords, latitude='lat', longitude='lon', fill=0 ).data
+				mask = utils.rasterize( shapes, coords=coords, latitude='lat', longitude='lon', fill=0, all_touched=True ).data
 				# except:
 				# 	mask = utils.rasterize( shapes, coords=coords, latitude='latitude', longitude='longitude', fill=0 ).data
 			else:
