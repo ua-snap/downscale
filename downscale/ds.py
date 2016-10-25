@@ -80,7 +80,7 @@ class DeltaDownscale( object ):
 			shapes = [ (geom, 1) for geom in gdf.geometry ]
 			coords = self.ds.coords
 			
-			if self.aoi_mask != None:
+			if self.aoi_mask:
 				# try:
 				mask = utils.rasterize( shapes, coords=coords, latitude='lat', longitude='lon', fill=0 ).data
 				# except:
@@ -89,7 +89,7 @@ class DeltaDownscale( object ):
 				mask = None
 
 			print( mask )
-			
+
 			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
 			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
