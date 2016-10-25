@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled' )
+	output_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT' )
 	# output_dir = os.path.join( base_dir, 'downscaled_PR_TEST_2' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
