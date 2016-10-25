@@ -80,7 +80,7 @@ if __name__ == '__main__':
 	# # # # # # # # 
 
 	# some setup args
-	base_dir = os.path.join( base_dir, 'downscaled' )
+	base_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT' )
 	variables = [ variable ] # ['pr','tas','tasmax', 'tasmin' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
