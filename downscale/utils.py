@@ -261,7 +261,7 @@ def transform_from_latlon( lat, lon ):
 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
 	return trans * scale
 
-def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=None, **kwargs ):
+def rasterize( shapes, coords, latitude='lat', longitude='lon', fill=None, **kwargs ):
 	'''
 	Rasterize a list of (geometry, fill_value) tuples onto the given
 	xarray coordinates. This only works for 1d latitude and longitude
