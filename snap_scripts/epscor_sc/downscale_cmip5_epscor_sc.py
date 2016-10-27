@@ -8,44 +8,43 @@ if __name__ == '__main__':
 	import argparse
 	import numpy as np
 
-	# # parse the commandline arguments
-	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
-	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
-	parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
-	parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
-	args = parser.parse_args()
+	# # # parse the commandline arguments
+	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	# parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
+	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	# parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
+	# parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
+	# args = parser.parse_args()
 
-	# unpack the args
-	variable = args.variable
-	scenario = args.scenario
-	model = args.model
-	units = args.units
-	metric = args.metric
-	base_dir = args.base_dir
+	# # unpack the args
+	# variable = args.variable
+	# scenario = args.scenario
+	# model = args.model
+	# units = args.units
+	# metric = args.metric
+	# base_dir = args.base_dir
 
 	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
 	aoi_mask_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
-	# # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'pr'
-	# scenario = 'rcp60'
-	# model = 'GFDL-CM3'
-	# units = 'mm'
-	# metric = 'total'
+	# # # FOR TESTING # # # 
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	variable = 'pr'
+	scenario = 'rcp60'
+	model = 'GFDL-CM3'
+	units = 'mm'
+	metric = 'total'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT' )
-	# output_dir = os.path.join( base_dir, 'downscaled_PR_TEST_2' )
+	output_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT_TESTING' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 	interp = False # interpolate across space -- Low Res
 	find_bounds = False
 
@@ -135,6 +134,11 @@ if __name__ == '__main__':
 			rounder = np.rint
 			downscaling_operation = 'mult'
 			aoi_mask = aoi_mask_fn
+			# make AOI_Mask input resolution for computing 95th percentiles...
+			if aoi_mask is not None:
+				aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
+			else:
+				aoi_mask = None
 		else:
 			# round to 2 decimals
 			rounder = partial( np.round, decimals=1 )
