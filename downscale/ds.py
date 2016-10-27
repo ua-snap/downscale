@@ -12,7 +12,6 @@ import pandas as pd
 import geopandas as gpd
 import xarray as xr
 from downscale import utils
-from downscale 
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
