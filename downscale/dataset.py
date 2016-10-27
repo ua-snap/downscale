@@ -53,7 +53,7 @@ class Mask( object ):
 		import geopandas as gpd
 		from downscale import utils
 
-		gdf = gpd.read_file( self.aoi_mask )
+		gdf = gpd.read_file( self.aoi )
 		shapes = [ (geom, self.mask_value) for geom in gdf.geometry ]
 		ds = self.ds.ds # grab the ds sub-object from the Dataset object
 		coords = ds.coords # get lats and lons as a coords dict from xarray
