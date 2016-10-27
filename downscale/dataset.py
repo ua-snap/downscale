@@ -43,7 +43,7 @@ class Mask( object ):
 		fill_value = [int] value to use for unmasked areas. default:0.
 
 		'''
-		self.aoi_mask = aoi_mask
+		self.aoi = aoi
 		self.ds = ds
 		self.mask_value = mask_value
 		self.fill_value = fill_value
