@@ -23,8 +23,8 @@ if __name__ == '__main__':
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
-	variables = ['tmp'] #[ 'pre','tmx','tmn' ]
-	out_varnames = ['tas'] #[ 'pr','tasmax','tasmin' ]
+	variables = ['pre'] #['tmp', 'pre'] #[ 'tmx','tmn' ]
+	out_varnames = ['pr'] #['tas', 'pr'] #[ 'tasmax','tasmin' ]
 	
 	slurm_path = os.path.join( base_dir, 'downscaled_FINAL_OCT','slurm_log' )
 	if not os.path.exists( slurm_path ):

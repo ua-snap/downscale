@@ -169,6 +169,113 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 	xi, yi = grid
 	zi = griddata( x, y, z, xi, yi, interp=method )
 	return zi.astype( output_dtype )
+
+def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
+	'''	
+	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
+							Must also be representative of anomalies.
+	base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
+							baseline for combining with anomalies.
+	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
+	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
+	'''	
+	import rasterio
+	from rasterio.warp import reproject, RESAMPLING
+
+	resampling = {'average':RESAMPLING.average,
+				'cubic':RESAMPLING.cubic,
+				'lanczos':RESAMPLING.lanczos,
+				'bilinear':RESAMPLING.bilinear,
+				'cubic_spline':RESAMPLING.cubic_spline,
+				'mode':RESAMPLING.mode,
+				'count':RESAMPLING.count,
+				'index':RESAMPLING.index,
+				'nearest':RESAMPLING.nearest }
+	
+	base = rasterio.open( base )
+	baseline_arr = base.read( 1 )
+	baseline_meta = base.meta
+	baseline_meta.update( compress='lzw' )
+	output_arr = np.empty_like( baseline_arr )
+	
+	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+			dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
+	return output_arr
+
+def add( base, anom ):
+	''' add anomalies to baseline '''
+	return base + anom
+
+def mult( base, anom ):
+	''' multiply anomalies to baseline '''
+	return base * anom
+
+def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
+	'''
+	run the meat of downscaling with this runner function for parallel processing
+
+	ARGUMENTS:
+	----------
+	d = [dict] kwargs dict of args to pass to interpolation function
+	f = [ ]
+
+	RETURNS:
+	--------
+
+	'''
+	import copy
+	post_downscale_function = d[ 'post_downscale_function' ]
+	interped = f( **d )
+	base = rasterio.open( d[ 'base' ] )
+	base_arr = base.read( 1 )
+	mask = base.read_masks( 1 )
+
+	# set up output file metadata.
+	meta = base.meta
+	meta.update( compress='lzw' )
+	if 'transform' in meta.keys():
+		meta.pop( 'transform' )
+
+	# write out the anomalies
+	if anom == True:
+		anom_filename = copy.copy( d[ 'output_filename' ] )
+		dirname, basename = os.path.split( anom_filename )
+		dirname = os.path.join( dirname, 'anom' )
+		basename = basename.replace( '.tif', '_anom.tif' )
+		try:
+			if not os.path.exists( dirname ):
+				os.makedirs( dirname )
+		except:
+			pass
+		anom_filename = os.path.join( dirname, basename )
+		with rasterio.open( anom_filename, 'w', **meta ) as anom:
+			anom.write( interped, 1 )
+	
+	# make sure the output dir exists and if not, create it
+	dirname = os.path.dirname( d[ 'output_filename' ] )
+	if not os.path.exists( dirname ):
+		os.makedirs( dirname )
+
+	# operation switch
+	output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+	
+	# post downscale it if func given
+	if post_downscale_function != None:
+		output_arr = post_downscale_function( output_arr )
+		# drop the mask if there is one
+		if hasattr( output_arr, 'mask'):
+			output_arr = output_arr.data
+
+	# make sure data is masked
+	output_arr[ mask == mask_value ] = meta[ 'nodata' ]
+
+	# write it to disk.
+	with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
+		out.write( output_arr, 1 )
+	return d['output_filename']
+
+
 # def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \
 # 	meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
 # 	'''
