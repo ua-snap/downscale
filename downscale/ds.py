@@ -62,6 +62,7 @@ class DeltaDownscale( object ):
 		self.interp = interp
 		self.aoi_mask = aoi_mask # NEW AOI_MASK
 		self.find_bounds = find_bounds
+
 		# interpolate across space here instead of in `Dataset`
 		self._rotated = False # brought from dataset KEEP?
 		self._lonpc = None # brought from dataset KEEP?
@@ -81,14 +82,11 @@ class DeltaDownscale( object ):
 			coords = self.ds.coords
 			
 			if self.aoi_mask:
-				# try:
 				mask = utils.rasterize( shapes, coords=coords, latitude='lat', longitude='lon', fill=0, all_touched=True ).data
-				# except:
-				# 	mask = utils.rasterize( shapes, coords=coords, latitude='latitude', longitude='longitude', fill=0 ).data
 			else:
 				mask = None
 
-			print( mask )
+			print( np.unique( mask, return_counts=True ) )
 
 			self.interp = True # force True since we need to interp across missing cells
 			self._calc_climatolgy()
