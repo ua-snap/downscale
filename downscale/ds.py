@@ -139,6 +139,7 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
 	def _fix_clim( self, aoi_mask, find_bounds=False ):
 		''' fix values in precip data '''
+		print( '_fix_clim' )
 		if find_bounds == True:
 			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
 			for idx in range( self.climatology.shape[0] ):
@@ -154,6 +155,8 @@ class DeltaDownscale( object ):
 			ValueError( 'find_bounds arg is boolean only' )
 	def _fix_ds( self, aoi_mask, find_bounds=False ):
 		''' fix high/low values in precip data '''
+		print( '_fix_ds ' )
+		print( self.ds.shape[0] )
 		if find_bounds == True:
 			bound_mask = find_boundary( self.ds[ 0, ... ].data )
 			for idx in range( self.ds.shape[0] ):
