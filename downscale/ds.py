@@ -158,7 +158,7 @@ class DeltaDownscale( object ):
 			bound_mask = find_boundary( self.ds[ 0, ... ].data )
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
-				arr = correct_boundary( arr, bound_mask, aoi_mask=self.aoi_mask.mask )
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
 				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
 		elif find_bounds == False:
