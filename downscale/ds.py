@@ -137,8 +137,6 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
-
-	# # # # # # # # # MOVED FROM Dataset
 	def _fix_clim( self, aoi_mask=None, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
@@ -247,6 +245,7 @@ class DeltaDownscale( object ):
 		if ( self.ds.lon > 200.0 ).any() == True:
 			dat, lons = self.climatology.data, self.ds.lon
 			self._lonpc = lons
+			self._rotated = False
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
 			dat, lons = self.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
@@ -278,8 +277,6 @@ class DeltaDownscale( object ):
 		self.climatology.data = dat
 		print( 'ds interpolated updated into self.ds' )
 		return 1
-
-	# # # # # # # # # END! MOVED FROM Dataset
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
@@ -334,7 +331,7 @@ class DeltaDownscale( object ):
 			print( 'anomalies rotated!' )
 
 		# run and output
-		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
+		rstlist = self.baseline.repeat( n=self.anomalies_rot.shape[0] / 12 ) # months
 		
 		if isinstance( self.anomalies_rot, xr.Dataset ):
 			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
@@ -362,7 +359,7 @@ class DeltaDownscale( object ):
 
 
 # # # # # # # # # NEW FILL Dataset FOR A SPECIFIC SNAP ISSUE WITH pre DATA from CRU 
-# # # # # # # # # # and pr DATA from CMIP5
+# # # # # # # # # # and pr DATA from CMIP5 / CRU
 def find_boundary( arr ):
 	'''
 	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)

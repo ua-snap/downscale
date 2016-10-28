@@ -28,6 +28,11 @@ class Baseline( object ):
 		self.filelist = filelist
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = ( rasterio.open( fn ).read( 1 ) for fn in self.filelist )
+	def repeat( self, n ):
+		out = []
+		for i in range(n):
+			out = out + self.filelist
+		return out
 
 class Mask( object ):
 	def __init__( self, aoi, ds, mask_value=1, fill_value=0, *args, **kwargs ):

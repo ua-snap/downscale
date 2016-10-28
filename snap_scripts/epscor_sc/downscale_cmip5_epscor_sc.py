@@ -4,7 +4,7 @@ if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
-	from downscale import preprocess
+	from downscale import preprocess, Mask
 	import argparse
 	import numpy as np
 
@@ -135,7 +135,7 @@ if __name__ == '__main__':
 			downscaling_operation = 'mult'
 			aoi_mask = aoi_mask_fn
 			# make AOI_Mask input resolution for computing 95th percentiles...
-			if aoi_mask is not None:
+			if aoi_mask_fn is not None:
 				aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
 			else:
 				aoi_mask = None
