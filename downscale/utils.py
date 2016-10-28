@@ -5,6 +5,8 @@
 # as an object comprehension
 # # # # 
 import numpy as np
+import rasterio
+
 def write_gtiff( output_arr, template_meta, output_filename, compress=True ):
 	'''
 	DESCRIPTION:
@@ -236,6 +238,8 @@ def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
 
 	'''
 	import copy
+	import rasterio
+	
 	post_downscale_function = d[ 'post_downscale_function' ]
 	interped = f( **d )
 	base = rasterio.open( d[ 'base' ] )
