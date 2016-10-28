@@ -80,19 +80,19 @@ class DeltaDownscale( object ):
 			print( 'fixing high/low values -- {}...'.format( self.varname ) )
 			self.interp = True # force True 
 			
-			if self.aoi_mask is not None:
+			if self.aoi_mask is not None: # hairy
 				mask = self.aoi_mask.mask
 			else:
 				mask = None
 
 			self._calc_climatolgy()
-			self._fix_clim( find_bounds=self.find_bounds )
+			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
 			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
 			# fix the ds values -- will be interped below...
-			self._fix_ds( find_bounds=self.find_bounds )
+			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
@@ -137,34 +137,34 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
-	def _fix_clim( self, find_bounds=False ):
+	def _fix_clim( self, aoi_mask, find_bounds=False ):
 		''' fix values in precip data '''
 		if find_bounds == True:
 			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
-				arr = correct_boundary( arr, bound_mask, aoi_mask=self.aoi_mask.mask )
-				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=self.aoi_mask.mask )
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
+				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
 		elif find_bounds == False:
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
-				self.climatology[ idx, ... ].data = correct_values( arr, aoi_mask=self.aoi_mask.mask )
+				self.climatology[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
-	def _fix_ds( self, find_bounds=False ):
+	def _fix_ds( self, aoi_mask, find_bounds=False ):
 		''' fix high/low values in precip data '''
 		if find_bounds == True:
 			bound_mask = find_boundary( self.ds[ 0, ... ].data )
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
 				arr = correct_boundary( arr, bound_mask, aoi_mask=self.aoi_mask.mask )
-				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=self.aoi_mask.mask )
+				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
 		elif find_bounds == False:
 			for idx in range( self.ds.shape[0] ):
 				arr = self.ds[ idx, ... ].data
-				self.ds[ idx, ... ].data = correct_values( arr, aoi_mask=self.aoi_mask.mask )
+				self.ds[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
 	@staticmethod

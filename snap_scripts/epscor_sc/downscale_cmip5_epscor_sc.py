@@ -44,7 +44,7 @@ if __name__ == '__main__':
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = True # write out anoms (True) or not (False)
+	anom = False # write out anoms (True) or not (False)
 	interp = False # interpolate across space -- Low Res
 	find_bounds = False
 
