@@ -237,9 +237,8 @@ def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
 	--------
 
 	'''
-	import copy
-	import rasterio
-	
+	import copy, rasterio, os
+		
 	post_downscale_function = d[ 'post_downscale_function' ]
 	interped = f( **d )
 	base = rasterio.open( d[ 'base' ] )
