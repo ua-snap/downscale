@@ -197,7 +197,7 @@ class DeltaDownscale( object ):
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.ds.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( self.ds.values, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -218,7 +218,7 @@ class DeltaDownscale( object ):
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
-			dat, lons = self.rotate( dat, lons, to_pacific=False )
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
 		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
@@ -248,7 +248,7 @@ class DeltaDownscale( object ):
 			self._rotated = False
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -269,7 +269,7 @@ class DeltaDownscale( object ):
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
-			dat, lons = self.rotate( dat, lons, to_pacific=False )
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
 			self._rotated = False # reset it now that its back
 				
 		# place back into a new xarray.Dataset object for further processing
@@ -324,7 +324,7 @@ class DeltaDownscale( object ):
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			print( src_transform )
