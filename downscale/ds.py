@@ -387,7 +387,7 @@ def calc_percentile( arr, aoi_mask=None, percentile=95, fill_value=0, nodata=Non
 	'''
 	if aoi_mask is not None:
 		# mask the background
-		arr = arr[ (aoi_mask == fill_value) ]
+		arr = arr[ (aoi_mask != fill_value) ]
 
 	if nodata is not None:
 		arr = arr[ arr != nodata ]
@@ -436,4 +436,4 @@ def correct_values( arr, aoi_mask=None, percentile=95, fill_value=0 ):
 
 	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
-	return np.array( arr ) 
+	return np.array( arr )
