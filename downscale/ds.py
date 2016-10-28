@@ -386,12 +386,12 @@ def calc_percentile( arr, aoi_mask=None, percentile=95, fill_value=0, nodata=Non
 		# mask the background
 		arr = arr[ (aoi_mask == fill_value) ]
 
-	if nodata:
+	if nodata is not None:
 		arr = arr[ arr != nodata ]
 
 	upperthresh = np.nanpercentile( arr, percentile )
 	idx = (np.abs(arr - upperthresh)).argmin()
-	return arr[ 1 ]
+	return arr[ idx ]
 
 def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the boundary pixels with non-acceptable values '''
