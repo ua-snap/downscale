@@ -53,7 +53,7 @@ class Mask( object ):
 		self.mask_value = mask_value
 		self.fill_value = fill_value
 	@property
-	def mask( self, latitude='lat', longitude='lon' ):
+	def mask( self, latitude='lat', longitude='lon', all_touched=True ):
 		''' make a mask from the aoi shapefile and the low-res input NetCDF '''
 		import geopandas as gpd
 		from downscale import utils
@@ -62,7 +62,7 @@ class Mask( object ):
 		shapes = [ (geom, self.mask_value) for geom in gdf.geometry ]
 		ds = self.ds.ds # grab the ds sub-object from the Dataset object
 		coords = ds.coords # get lats and lons as a coords dict from xarray
-		return utils.rasterize( shapes, coords=coords, latitude=latitude, longitude=longitude, fill=self.fill_value ).data
+		return utils.rasterize( shapes, coords=coords, latitude=latitude, longitude=longitude, fill=self.fill_value, **{'all_touched':all_touched} ).data
 	def to_gtiff( self, output_filename ):
 		''' write the mask to geotiff given an output_filename '''
 		meta = {'compress':'lzw'}

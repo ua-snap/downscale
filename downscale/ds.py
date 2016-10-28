@@ -372,13 +372,27 @@ def find_boundary( arr ):
 	bool_arr[ ind ] = 0
 	return find_boundaries( bool_arr, mode='inner' )
 
+def calc_percentile( arr, aoi_mask=None, percentile=95, fill_value=0, nodata=None ):
+	''' 
+	calculate the percentile value potentially over a masked domain, 
+	and avoiding nodata and np.nan AND return the nearest actual value to
+	the np.nanpercentile( arr, percentile )
+	'''
+	if aoi_mask is not None:
+		# mask the background
+		arr = arr[ (aoi_mask == fill_value) ]
+
+	if nodata:
+		arr = arr[ arr != nodata ]
+
+	upperthresh = np.nanpercentile( arr, percentile )
+	idx = (np.abs(arr - upperthresh)).argmin()
+	return arr[ 1 ]
+
 def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the boundary pixels with non-acceptable values '''
 	
-	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
-
-	upperthresh = np.nanpercentile( arr, percentile )
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 
 	# drop any masks
 	arr = np.array( arr )
@@ -393,10 +407,7 @@ def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=
 def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the inner pixels with non-acceptable values '''
 
-	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
-
-	upperthresh = np.nanpercentile( arr, percentile )
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 	
 	# drop any masks
 	arr = np.array( arr )
@@ -411,10 +422,7 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 )
 def correct_values( arr, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the values for precip -- from @leonawicz'''
 
-	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
-
-	upperthresh = np.nanpercentile( arr, percentile )
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 
 	# drop any masks
 	arr = np.array( arr )
