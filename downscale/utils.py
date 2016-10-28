@@ -115,10 +115,10 @@ def rotate( dat, lons, to_pacific=False ):
 	'''rotate longitudes in WGS84 Global Extent'''
 	if to_pacific == True:
 		# to 0 - 360
-		dat, lons = utils.shiftgrid( 0., dat, lons )
+		dat, lons = shiftgrid( 0., dat, lons )
 	elif to_pacific == False:
 		# to -180.0 - 180.0 
-		dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
+		dat, lons = shiftgrid( 180., dat, lons, start=False )
 	else:
 		raise AttributeError( 'to_pacific must be boolean True:False' )
 	return dat, lons

@@ -2,7 +2,7 @@
 
 if __name__ ==	'__main__':
 	import glob, os, itertools, rasterio
-	from downscale import DeltaDownscale, Baseline, Dataset, utils
+	from downscale import DeltaDownscale, Baseline, Dataset, utils, Mask
 	from functools import partial
 	import numpy as np
 	import argparse
@@ -49,6 +49,9 @@ if __name__ ==	'__main__':
 
 	# DOWNSCALE
 	mask = rasterio.open( baseline.filelist[0] ).read_masks( 1 )
+	
+	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
+							method='linear', ncpus=32 )
 
 	# make round/trunc function for post_downscale_function
 	if variable == 'pr' or variable == 'pre':
@@ -56,7 +59,11 @@ if __name__ ==	'__main__':
 		downscaling_operation = 'mult'
 		find_bounds = True
 		fix_clim = True
-		aoi_mask = aoi_mask_fn
+		# make AOI_Mask at input resolution for computing 95th percentiles...
+		if aoi_mask_fn is not None:
+			aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
+		else:
+			aoi_mask = None
 	else:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
@@ -67,8 +74,7 @@ if __name__ ==	'__main__':
 	def round_it( arr ):
 		return rounder( arr )
 
-	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
-							method='linear', ncpus=32 )
+
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
