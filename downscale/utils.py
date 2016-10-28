@@ -109,6 +109,17 @@ def shiftgrid( lon0, datain, lonsin, start=True, cyclic=360.0 ):
 		lonsout[i0_shift:] = lonsin[start_idx:i0+start_idx]
 	dataout[...,i0_shift:] = datain[...,start_idx:i0+start_idx]
 	return dataout,lonsout
+def rotate( dat, lons, to_pacific=False ):
+	'''rotate longitudes in WGS84 Global Extent'''
+	if to_pacific == True:
+		# to 0 - 360
+		dat, lons = utils.shiftgrid( 0., dat, lons )
+	elif to_pacific == False:
+		# to -180.0 - 180.0 
+		dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
+	else:
+		raise AttributeError( 'to_pacific must be boolean True:False' )
+	return dat, lons
 def bounds_to_extent( bounds ):
 	'''
 	take input rasterio bounds object and return an extent

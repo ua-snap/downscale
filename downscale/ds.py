@@ -25,6 +25,7 @@ class DeltaDownscale( object ):
 		simple delta downscaling
 		
 		Arguments:
+
 		----------
 		baseline = []
 		clim_begin = []
@@ -62,6 +63,7 @@ class DeltaDownscale( object ):
 		self.interp = interp
 		self.find_bounds = find_bounds
 		self.aoi_mask = aoi_mask
+		self.utils = utils
 
 		# interpolate across space GCLL/PCLL args
 		self._rotated = False
@@ -167,18 +169,6 @@ class DeltaDownscale( object ):
 				self.ds[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
 		else:
 			ValueError( 'find_bounds arg is boolean only' )
-	@staticmethod
-	def rotate( dat, lons, to_pacific=False ):
-		'''rotate longitudes in WGS84 Global Extent'''
-		if to_pacific == True:
-			# to 0 - 360
-			dat, lons = utils.shiftgrid( 0., dat, lons )
-		elif to_pacific == False:
-			# to -180.0 - 180.0 
-			dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
-		else:
-			raise AttributeError( 'to_pacific must be boolean True:False' )
-		return dat, lons
 	@staticmethod
 	def wrap( d ):
 		''' simple wrapper around utils.xyz_to_grid for mp_map '''
@@ -290,103 +280,6 @@ class DeltaDownscale( object ):
 		return 1
 
 	# # # # # # # # # END! MOVED FROM Dataset
-	# @staticmethod
-	# def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
-	# 	'''	
-	# 	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
-	# 							Must also be representative of anomalies.
-	# 	base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
-	# 							baseline for combining with anomalies.
-	# 	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-	# 	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-	# 	'''	
-	# 	import rasterio
-	# 	from rasterio.warp import reproject, RESAMPLING
-
-	# 	resampling = {'average':RESAMPLING.average,
-	# 				'cubic':RESAMPLING.cubic,
-	# 				'lanczos':RESAMPLING.lanczos,
-	# 				'bilinear':RESAMPLING.bilinear,
-	# 				'cubic_spline':RESAMPLING.cubic_spline,
-	# 				'mode':RESAMPLING.mode,
-	# 				'count':RESAMPLING.count,
-	# 				'index':RESAMPLING.index,
-	# 				'nearest':RESAMPLING.nearest }
-		
-	# 	base = rasterio.open( base )
-	# 	baseline_arr = base.read( 1 )
-	# 	baseline_meta = base.meta
-	# 	baseline_meta.update( compress='lzw' )
-	# 	output_arr = np.empty_like( baseline_arr )
-		
-	# 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-	# 			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-	# 			dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
-	# 	return output_arr
-	# @staticmethod
-	# def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
-	# 	'''
-	# 	run the meat of downscaling with this runner function for parallel processing
-
-	# 	ARGUMENTS:
-	# 	----------
-	# 	d = [dict] kwargs dict of args to pass to interpolation function
-	# 	f = [ ]
-
-	# 	RETURNS:
-	# 	--------
-
-	# 	'''
-	# 	import copy
-	# 	post_downscale_function = d[ 'post_downscale_function' ]
-	# 	interped = f( **d )
-	# 	base = rasterio.open( d[ 'base' ] )
-	# 	base_arr = base.read( 1 )
-	# 	mask = base.read_masks( 1 )
-
-	# 	# set up output file metadata.
-	# 	meta = base.meta
-	# 	meta.update( compress='lzw' )
-	# 	if 'transform' in meta.keys():
-	# 		meta.pop( 'transform' )
-
-	# 	# write out the anomalies
-	# 	if anom == True:
-	# 		anom_filename = copy.copy( d[ 'output_filename' ] )
-	# 		dirname, basename = os.path.split( anom_filename )
-	# 		dirname = os.path.join( dirname, 'anom' )
-	# 		basename = basename.replace( '.tif', '_anom.tif' )
-	# 		try:
-	# 			if not os.path.exists( dirname ):
-	# 				os.makedirs( dirname )
-	# 		except:
-	# 			pass
-	# 		anom_filename = os.path.join( dirname, basename )
-	# 		with rasterio.open( anom_filename, 'w', **meta ) as anom:
-	# 			anom.write( interped, 1 )
-		
-	# 	# make sure the output dir exists and if not, create it
-	# 	dirname = os.path.dirname( d[ 'output_filename' ] )
-	# 	if not os.path.exists( dirname ):
-	# 		os.makedirs( dirname )
-
-	# 	# operation switch
-	# 	output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
-		
-	# 	# post downscale it if func given
-	# 	if post_downscale_function != None:
-	# 		output_arr = post_downscale_function( output_arr )
-	# 		# drop the mask if there is one
-	# 		if hasattr( output_arr, 'mask'):
-	# 			output_arr = output_arr.data
-
-	# 	# make sure data is masked
-	# 	output_arr[ mask == mask_value ] = meta[ 'nodata' ]
-
-	# 	# write it to disk.
-	# 	with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
-	# 		out.write( output_arr, 1 )
-	# 	return d['output_filename']
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
@@ -394,7 +287,7 @@ class DeltaDownscale( object ):
 		from functools import partial
 		from pathos.mp_map import mp_map
 
-		operation_switch = { 'add':self.add, 'mult':self.mult }
+		operation_switch = { 'add':self.utils.add, 'mult':self.utils.mult }
 
 		def two_digit_month( x ):
 			''' make 1 digit month a standard 2-digit for output filenames '''
@@ -458,10 +351,10 @@ class DeltaDownscale( object ):
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
 
 		# partial and wrapper
-		f = partial( utils.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
+		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
 					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
 
-		run = partial( utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
+		run = partial( self.utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 
 		# run it
 		out = mp_map( run, args, nproc=self.ncpus )
@@ -482,11 +375,11 @@ def find_boundary( arr ):
 	bool_arr[ ind ] = 0
 	return find_boundaries( bool_arr, mode='inner' )
 
-def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95 ):
+def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the boundary pixels with non-acceptable values '''
 	
 	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
 
 	upperthresh = np.nanpercentile( arr, percentile )
 
@@ -500,11 +393,11 @@ def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	arr[ ind ] = vals
 	return np.array( arr )
 
-def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
+def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the inner pixels with non-acceptable values '''
 
 	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
 
 	upperthresh = np.nanpercentile( arr, percentile )
 	
@@ -518,11 +411,11 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95 ):
 	arr[ ind ] = vals
 	return np.array( arr ) 
 
-def correct_values( arr, aoi_mask=None, percentile=95 ):
+def correct_values( arr, aoi_mask=None, percentile=95, fill_value=0 ):
 	''' correct the values for precip -- from @leonawicz'''
 
 	if aoi_mask is not None:
-		arr = np.ma.masked_array( arr, aoi_mask )
+		arr = np.ma.masked_array( arr, aoi_mask == fill_value )
 
 	upperthresh = np.nanpercentile( arr, percentile )
 
