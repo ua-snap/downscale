@@ -100,10 +100,11 @@ def make_decadals( base_path, output_path, variable, model, scenario, decade, nc
 			meta.pop( 'transform' )
 		meta.update( compress='lzw' )
 
-		metric_switch = { 'mean':np.mean, 'total':np.sum, 'min':np.min, 'max':np.max }
+		# NOTE HOW FOR DECADALS WE ARE ONLY PERFORMING MEANS!!!!  THIS IS IMPORTANT!!!
+		metric_switch = { 'mean':np.mean, 'total':np.mean, 'min':np.min, 'max':np.max }
+
 		# variable, metric, units, project, model, scenario = os.path.basename( fn ).split( '.' )[0].split( '_' )[:-2]
 		arr = metric_switch[ agg_metric ]( arr, axis=0 )
-
 
 		# round the data 
 		if variable == 'pr':

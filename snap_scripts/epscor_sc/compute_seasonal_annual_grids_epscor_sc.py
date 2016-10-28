@@ -233,6 +233,18 @@ if __name__ == '__main__':
 	ncpus = args.ncpus
 	agg_metric = args.agg_metric
 
+	# # # # # FOR TESTING
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_FINAL_OCT_TESTING'
+	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_FINAL_OCT_TESTING'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# project = 'cmip5'
+	# variable = 'pr'
+	# agg_metric = 'total'
+	# ncpus = 32
+
+	# # # # # # # # # # #
+
 	# switches to deal with different date groups.  Hardwired to CMIP5 and CRU TS323 currently.
 	cmip_switch = { 'historical':(1900,2005), 'rcp26':(2006,2100), 'rcp45':(2006,2100), 'rcp60':(2006,2100), 'rcp85':(2006,2100) }
 	cru_switch = { 'historical':(1901,2014) }

@@ -1,58 +1,10 @@
 # downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016 (UPDATED: Sep 26, 2016)
-def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
-	'''
-	sort a list of files properly using the month and year parsed
-	from the filename.  This is useful with SNAP data since the standard
-	is to name files like '<prefix>_MM_YYYY.tif'.  If sorted using base
-	Pythons sort/sorted functions, things will be sorted by the first char
-	of the month, which makes thing go 1, 11, ... which sucks for timeseries
-	this sorts it properly following SNAP standards as the default settings.
-	ARGUMENTS:
-	----------
-	files = [list] list of `str` pathnames to be sorted by month and year. usually from glob.glob.
-	split_on = [str] `str` character to split the filename on.  default:'_', SNAP standard.
-	elem_month = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
-		default:-2. For SNAP standard.
-	elem_year = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
-		default:-1. For SNAP standard.
-	RETURNS:
-	--------
-	sorted `list` by month and year ascending. 
-	'''
-	import pandas as pd
-	months = [ int(fn.split('.')[0].split( split_on )[elem_month]) for fn in files ]
-	years = [ int(fn.split('.')[0].split( split_on )[elem_year]) for fn in files ]
-	df = pd.DataFrame( {'fn':files, 'month':months, 'year':years} )
-	df_sorted = df.sort_values( ['year', 'month' ] )
-	return df_sorted.fn.tolist()
-
-def only_years( files, begin=1901, end=2100, split_on='_', elem_year=-1 ):
-	'''
-	return new list of filenames where they are truncated to begin:end
-	ARGUMENTS:
-	----------
-	files = [list] list of `str` pathnames to be sorted by month and year. usually from glob.glob.
-	begin = [int] four digit integer year of the begin time default:1901
-	end = [int] four digit integer year of the end time default:2100
-	split_on = [str] `str` character to split the filename on.  default:'_', SNAP standard.
-	elem_year = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
-		default:-1. For SNAP standard.
-	RETURNS:
-	--------
-	sliced `list` to begin and end year.
-	'''
-	import pandas as pd
-	years = [ int(fn.split('.')[0].split( split_on )[elem_year]) for fn in files ]
-	df = pd.DataFrame( { 'fn':files, 'year':years } )
-	df_slice = df[ (df.year >= begin ) & (df.year <= end ) ]
-	return df_slice.fn.tolist()
-
+# author: Michael Lindgren -- June 09, 2016 (UPDATED: Oct 28, 2016)
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
-	from downscale import preprocess
+	from downscale import preprocess, Mask, utils
 	import numpy as np
 	import argparse
 
@@ -96,7 +48,7 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT' )
+	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -127,7 +79,7 @@ if __name__ == '__main__':
 		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
-		filelist = only_years( sort_files( filelist ), begin=begin, end=end )
+		filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
 		baseline = downscale.Baseline( filelist )
 
 		input_path = os.path.join( base_path, model, scenario, variable )
