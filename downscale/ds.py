@@ -88,16 +88,16 @@ class DeltaDownscale( object ):
 			self._calc_climatolgy()
 			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
 			
-			print( 'climmin:{}'format( np.nanmin( self.climatology.data ) ) )
-			print( 'climmax:{}'format( np.nanmax( self.climatology.data ) ) )
+			print( 'climmin:{}'.format( np.nanmin( self.climatology.data ) ) )
+			print( 'climmax:{}'.format( np.nanmax( self.climatology.data ) ) )
 
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
 			# fix the ds values -- will be interped below...
 			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
-			print( 'dsmin:{}'format( np.nanmin( self.ds.data ) ) )
-			print( 'dsmax:{}'format( np.nanmax( self.ds.data ) ) )
+			print( 'dsmin:{}'.format( np.nanmin( self.ds.data ) ) )
+			print( 'dsmax:{}'.format( np.nanmax( self.ds.data ) ) )
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
