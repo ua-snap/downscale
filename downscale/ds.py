@@ -86,11 +86,11 @@ class DeltaDownscale( object ):
 				mask = None
 
 			self._calc_climatolgy()
-			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
-			
 			print( 'climmin:{}'.format( np.nanmin( self.climatology.data ) ) )
 			print( 'climmax:{}'.format( np.nanmax( self.climatology.data ) ) )
 
+			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
+			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
@@ -146,6 +146,7 @@ class DeltaDownscale( object ):
 		''' fix values in precip data '''
 		print( '_fix_clim' )
 		if find_bounds == True:
+			print('bounds')
 			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
 			for idx in range( self.climatology.shape[0] ):
 				arr = self.climatology[ idx, ... ].data
@@ -266,7 +267,7 @@ class DeltaDownscale( object ):
 
 		# setup args for multiprocessing
 		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
-		df_list = [ df[ df.z > 0.5 ] for df in df_list ]
+		# df_list = [ df[ df.z > 0.5 ] for df in df_list ]
 
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
@@ -274,7 +275,12 @@ class DeltaDownscale( object ):
 		print( 'processing interpolation to convex hull in parallel using {} cpus. -- CLIMATOLOGY'.format( self.ncpus ) )
 		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
 		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
-		dat = np.array( dat_list )
+		new_dat = np.array( dat_list )
+
+		# add back only the cells that had NANs before and now have data
+		dat[ np.isnan( dat )] = new_dat[ np.isnan( dat )]
+		# set low vals to 0.5mm (the minimum acceptable value)
+		dat[ (~np.isnan(dat)) and (dat < 0.5) ] = 0.5
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
@@ -282,7 +288,8 @@ class DeltaDownscale( object ):
 			self._rotated = False # reset it now that its back
 				
 		# place back into a new xarray.Dataset object for further processing
-		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )		
+		
 		self.climatology.data = dat
 		print( 'ds interpolated updated into self.ds' )
 		return 1
@@ -412,7 +419,7 @@ def correct_boundary( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
 
 	ind = np.where( bound_mask == True )
 	vals = arr[ ind ]
-	vals[ vals <= 0.5 ] = 0.5
+	vals[ vals < 0.5 ] = 0.5
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
 	return arr
@@ -427,7 +434,7 @@ def correct_inner( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
 
 	ind = np.where( (arr > 0) & bound_mask != True )
 	vals = arr[ ind ]
-	vals[ vals <= 0.5 ] = np.nan # set to the out-of-bounds value
+	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
 	return arr 
@@ -440,6 +447,6 @@ def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
 	# drop any masks
 	arr = np.array( arr )
 
-	arr[ arr <= 0.5 ] = np.nan # set to the out-of-bounds value
+	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
 	return arr
