@@ -88,11 +88,16 @@ class DeltaDownscale( object ):
 			self._calc_climatolgy()
 			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
 			
+			print( 'climmin:{}'format( np.nanmin( self.climatology.data ) ) )
+			print( 'climmax:{}'format( np.nanmax( self.climatology.data ) ) )
+
 			# interpolate clims across space
 			self._interp_na_fix_clim()
 			
 			# fix the ds values -- will be interped below...
 			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
+			print( 'dsmin:{}'format( np.nanmin( self.ds.data ) ) )
+			print( 'dsmax:{}'format( np.nanmax( self.ds.data ) ) )
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
@@ -261,6 +266,7 @@ class DeltaDownscale( object ):
 
 		# setup args for multiprocessing
 		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+		df_list = [ df[ df.z > 0.5 ] for df in df_list ]
 
 		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
 				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
@@ -375,7 +381,7 @@ def find_boundary( arr ):
 	bool_arr[ ind ] = 0
 	return find_boundaries( bool_arr, mode='inner' )
 
-def calc_percentile( arr, aoi_mask=None, percentile=95, fill_value=0, nodata=None ):
+def calc_percentile( arr, aoi_mask, percentile=95, fill_value=0, nodata=None ):
 	''' 
 	calculate the percentile value potentially over a masked domain, 
 	and avoiding nodata and np.nan AND return the nearest actual value to
@@ -396,7 +402,7 @@ def calc_percentile( arr, aoi_mask=None, percentile=95, fill_value=0, nodata=Non
 	idx = (np.abs(arr - upperthresh)).argmin()
 	return arr[ idx ]
 
-def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
+def correct_boundary( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
 	''' correct the boundary pixels with non-acceptable values '''
 	
 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
@@ -406,12 +412,12 @@ def correct_boundary( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=
 
 	ind = np.where( bound_mask == True )
 	vals = arr[ ind ]
-	vals[ vals < 0.5 ] = 0.5
+	vals[ vals <= 0.5 ] = 0.5
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return np.array( arr )
+	return arr
 
-def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 ):
+def correct_inner( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
 	''' correct the inner pixels with non-acceptable values '''
 
 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
@@ -421,12 +427,12 @@ def correct_inner( arr, bound_mask, aoi_mask=None, percentile=95, fill_value=0 )
 
 	ind = np.where( (arr > 0) & bound_mask != True )
 	vals = arr[ ind ]
-	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
+	vals[ vals <= 0.5 ] = np.nan # set to the out-of-bounds value
 	vals[ vals > upperthresh ] = upperthresh
 	arr[ ind ] = vals
-	return np.array( arr ) 
+	return arr 
 
-def correct_values( arr, aoi_mask=None, percentile=95, fill_value=0 ):
+def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
 	''' correct the values for precip -- from @leonawicz'''
 
 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
@@ -434,6 +440,6 @@ def correct_values( arr, aoi_mask=None, percentile=95, fill_value=0 ):
 	# drop any masks
 	arr = np.array( arr )
 
-	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
+	arr[ arr <= 0.5 ] = np.nan # set to the out-of-bounds value
 	arr[ arr > upperthresh ] = upperthresh
-	return np.array( arr )
+	return arr
