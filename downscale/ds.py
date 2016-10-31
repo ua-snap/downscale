@@ -289,12 +289,12 @@ class DeltaDownscale( object ):
 		print( 'processing interpolation to convex hull in parallel using {} cpus. -- CLIMATOLOGY'.format( self.ncpus ) )
 		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
 		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
-		new_dat = np.array( dat_list )
+		dat = np.array( dat_list )
 
-		# add back only the cells that had NANs before and now have data
-		dat[ np.isnan( dat )] = new_dat[ np.isnan( dat )]
-		# set low vals to 0.5mm (the minimum acceptable value)
-		dat[ (~np.isnan(dat)) and (dat < 0.5) ] = 0.5
+		# # add back only the cells that had NANs before and now have data
+		# dat[ np.isnan( dat )] = new_dat[ np.isnan( dat )]
+		# # set low vals to 0.5mm (the minimum acceptable value)
+		# dat[ (~np.isnan(dat)) and (dat < 0.5) ] = 0.5
 
 		lons = self._lonpc
 		if self._rotated == True: # rotate it back
