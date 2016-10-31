@@ -93,6 +93,12 @@ class DeltaDownscale( object ):
 			
 			# interpolate clims across space
 			self._interp_na_fix_clim()
+
+			# if there are still values <0.5 set them to 0.5
+			climatology = self.climatology.data
+			climatology[ climatology < 0.5 ] = 0.5
+			self.climatology.data = climatology
+			del climatology
 			
 			# fix the ds values -- will be interped below...
 			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
@@ -102,6 +108,14 @@ class DeltaDownscale( object ):
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
 			_ = self.interp_na( )
+
+
+		if fix_clim == True:
+			# if there are still values <0.5 set them to 0.5
+			dat = self.ds.data
+			dat[ dat < 0.5 ] = 0.5
+			self.ds.data = dat
+			del dat
 
 		# calculate climatology if fix_clim == False
 		if self.fix_clim == False:
