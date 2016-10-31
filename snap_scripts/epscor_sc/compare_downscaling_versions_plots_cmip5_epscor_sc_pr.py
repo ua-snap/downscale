@@ -24,7 +24,6 @@ def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=
 								dtype=float, **kwargs)
 	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
 	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
-
 def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
 	'''
 	sort a list of files properly using the month and year parsed

@@ -53,8 +53,9 @@ if __name__ ==	'__main__':
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
 							method='linear', ncpus=32 )
 
-	# make round/trunc function for post_downscale_function
+	# post_downscale_function -- rounding
 	if variable == 'pr' or variable == 'pre':
+		print variable
 		rounder = np.rint
 		downscaling_operation = 'mult'
 		find_bounds = True
@@ -73,8 +74,6 @@ if __name__ ==	'__main__':
 
 	def round_it( arr ):
 		return rounder( arr )
-
-
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
