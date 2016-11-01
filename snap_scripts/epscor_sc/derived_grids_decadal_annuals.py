@@ -111,6 +111,10 @@ if __name__ == '__main__':
 		dirname, basename = os.path.split( filenames[0] )
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, year = basename.split( '_' )
+		
+		if variable == 'pr':
+			metric = 'mean_total'
+
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, decade ]) + ext
 		out_fn = os.path.join( dirname.replace( 'annuals', 'decadal_annuals' ), new_basename )
 		arr = np.rint( arr )

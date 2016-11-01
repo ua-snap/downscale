@@ -74,7 +74,6 @@ if __name__ == '__main__':
 	# unpack
 	variable = args.variable
 	base_dir = args.base_dir
-	model = args.model
 	scenario = args.scenario
 
 	# some setup args

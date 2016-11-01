@@ -89,8 +89,9 @@ if __name__ == '__main__':
 
 	# split to decades
 	decades = [ get_decade( fn ) for fn in files ]
-	df = pd.DataFrame( {'decades':decades, 'files':files})
-	file_groups = [ sub_df for idx,sub_df in df.groupby( decades ) if len(sub_df.files) == 10*4 ]
+	seasons = [ get_monyear( fn )[0] for fn in files ] # season name in month spot
+	df = pd.DataFrame( {'decades':decades, 'files':files, 'seasons':seasons})
+	file_groups = [ sub_df for idx,sub_df in df.groupby( [decades, seasons] ) if len(sub_df.files) == 10 ]
 	
 	# compute
 	_aggregate = partial( aggregate, metric=metric )
@@ -110,6 +111,8 @@ if __name__ == '__main__':
 		dirname, basename = os.path.split( filenames[0] )
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, season, year = basename.split( '_' )
+		if variable == 'pr':
+			metric = 'mean_total'
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, season, decade ]) + ext
 		out_fn = os.path.join( dirname.replace( 'annual_seasonals', 'decadal_annual_seasonals' ), new_basename )
 		arr = np.rint( arr )
@@ -118,12 +121,16 @@ if __name__ == '__main__':
 
 	# write it out
 	final = mp_map( lambda x: write_raster( *x ), args, nproc=32, **{'meta':meta} )
-	
 
-# TESTING STUFF
+
+# # TESTING STUFF
 # base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 # model = 'GFDL-CM3'
 # scenario = 'rcp60'
 # variable = 'pr'
 # begin = 2006
 # end = 2100
+# ncpus = 32
+# metric = 'mean'
+# project = 'ar5'
+
