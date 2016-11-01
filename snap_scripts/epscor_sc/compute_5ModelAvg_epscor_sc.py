@@ -68,24 +68,21 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
 	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
 	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="scenario name (exact)" )
 	args = parser.parse_args()
 	
 	# unpack
 	variable = args.variable
 	base_dir = args.base_dir
-
-	# # # # #TESTING
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'tas'
-	# # # # # # # # 
+	model = args.model
+	scenario = args.scenario
 
 	# some setup args
 	base_dir = os.path.join( base_dir, 'downscaled' )
-	variables = [ variable ] # ['pr','tas','tasmax', 'tasmin' ]
-	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	variables = [ variable ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
-	for variable, scenario in itertools.product( variables, scenarios ):
+	for variable in variables:
 		if scenario == 'historical':
 			begin = 1900
 			end = 2005
