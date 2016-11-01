@@ -64,25 +64,36 @@ if __name__ == '__main__':
 	from functools import partial
 	import argparse
 
-	# parse the commandline arguments
-	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="path to the directory where the downscaled modeled data are stored" )
-	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="model name (exact)" )
-	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="scenario name (exact)" )
-	parser.add_argument( "-p", "--project", action='store', dest='project', const=None, type=str, help="project name (exact)" )
-	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	parser.add_argument( "-am", "--agg_metric", action='store', dest='agg_metric', type=str, help="string name of the metric to compute the decadal summary - mean, max, min, total" )
-	parser.add_argument( "-nc", "--ncpus", action='store', dest='ncpus', type=int, help="number of cpus to use in multiprocessing" )	
-	args = parser.parse_args()
+	# # parse the commandline arguments
+	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	# parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="path to the directory where the downscaled modeled data are stored" )
+	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="model name (exact)" )
+	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="scenario name (exact)" )
+	# parser.add_argument( "-p", "--project", action='store', dest='project', const=None, type=str, help="project name (exact)" )
+	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	# parser.add_argument( "-am", "--agg_metric", action='store', dest='agg_metric', type=str, help="string name of the metric to compute the decadal summary - mean, max, min, total" )
+	# parser.add_argument( "-nc", "--ncpus", action='store', dest='ncpus', type=int, help="number of cpus to use in multiprocessing" )	
+	# args = parser.parse_args()
 
-	# unpack for cleaner var access:
-	base_dir = args.base_dir
-	model = args.model
-	scenario = args.scenario
-	project = args.project
-	variable = args.variable
-	metric = args.agg_metric
-	ncpus = args.ncpus
+	# # unpack for cleaner var access:
+	# base_dir = args.base_dir
+	# model = args.model
+	# scenario = args.scenario
+	# project = args.project
+	# variable = args.variable
+	# metric = args.agg_metric
+	# ncpus = args.ncpus
+	
+	# TESTING STUFF
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	model = 'GFDL-CM3'
+	scenario = 'rcp60'
+	variable = 'pr'
+	begin = 2006
+	end = 2100
+	ncpus = 32
+	metric = 'mean'
+	project = 'ar5'
 
 	files = glob.glob( os.path.join( base_dir, 'derived_grids','annual_seasonals', 
 						model, scenario, variable, '*.tif' ) )
@@ -111,11 +122,17 @@ if __name__ == '__main__':
 		dirname, basename = os.path.split( filenames[0] )
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, season, year = basename.split( '_' )
-		
-		if variable == 'pr':
+
+		if variable == 'pr' and metric == 'mean':
+			# handle pr mean_total
 			metric = 'mean_total'
+
+		new_basename = '_'.join([ variable, metric, units, project, model, scenario, decade ]) + ext
+
+		if metric == 'mean_total':
+			# handle pr mean_total
+			metric = 'mean'		
 		
-		new_basename = '_'.join([ variable, metric, units, project, model, scenario, season, decade ]) + ext
 		out_fn = os.path.join( dirname.replace( 'annual_seasonals', 'decadal_annual_seasonals' ), new_basename )
 		arr = np.rint( arr )
 		arr[ mask == 0 ] = meta['nodata']

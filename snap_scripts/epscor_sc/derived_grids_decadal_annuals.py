@@ -112,10 +112,16 @@ if __name__ == '__main__':
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, year = basename.split( '_' )
 		
-		if variable == 'pr':
+		if variable == 'pr' and metric == 'mean':
+			# handle pr mean_total
 			metric = 'mean_total'
 
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, decade ]) + ext
+
+		if metric == 'mean_total':
+			# handle pr mean_total
+			metric = 'mean'
+
 		out_fn = os.path.join( dirname.replace( 'annuals', 'decadal_annuals' ), new_basename )
 		arr = np.rint( arr )
 		arr[ mask == 0 ] = meta['nodata']

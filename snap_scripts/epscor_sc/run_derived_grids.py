@@ -93,7 +93,7 @@ if __name__ == '__main__':
 					decadal_swi = ' '.join([ 'python', os.path.join( scripts_directory, 'swi_calc_decadal_epscor_sc.py' ), \
 												'-b', monthly_decadals_path, '-o', output_path, '-m', model , '-s', scenario, '-p', project, '-v', variable ])
 					# add swi to command
-					command = '\n\n'.join([ decadals, annual_seasonals, decadal_seasonals, decadal_swi ]) + '\n'
+					command = '\n\n'.join([ annuals, annual_seasonals, decadal_monthlies, decadal_seasonals, decadal_annuals, decadal_swi ]) + '\n'
 
 				# run the command using slurm on ATLAS
 				run_model( fn, command )
