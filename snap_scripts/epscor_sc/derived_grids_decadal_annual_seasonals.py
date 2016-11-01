@@ -84,6 +84,18 @@ if __name__ == '__main__':
 	metric = args.agg_metric
 	ncpus = args.ncpus
 	
+	# # TESTING STUFF
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# variable = 'tas' # 'pr'
+	# begin = 2006
+	# end = 2100
+	# ncpus = 32
+	# metric = 'mean'
+	# project = 'ar5'
+
+	
 	files = glob.glob( os.path.join( base_dir, 'derived_grids','annual_seasonals', 
 						model, scenario, variable, '*.tif' ) )
 

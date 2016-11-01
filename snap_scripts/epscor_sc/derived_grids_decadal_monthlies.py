@@ -84,6 +84,18 @@ if __name__ == '__main__':
 	metric = args.agg_metric
 	ncpus = args.ncpus
 
+	# # TESTING STUFF
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# variable = 'tas' # 'pr'
+	# begin = 2006
+	# end = 2100
+	# ncpus = 32
+	# metric = 'mean'
+	# project = 'ar5'
+
+
 	files = glob.glob( os.path.join( base_dir, 'downscaled', model, scenario, variable, '*.tif' ) )
 
 	# split to decades
@@ -115,7 +127,7 @@ if __name__ == '__main__':
 			# handle pr mean_total
 			metric = 'mean_total'
 
-		new_basename = '_'.join([ variable, metric, units, project, model, scenario, decade ]) + ext
+		new_basename = '_'.join([ variable, metric, units, project, model, scenario, month, decade ]) + ext
 
 		if metric == 'mean_total':
 			# handle pr mean_total

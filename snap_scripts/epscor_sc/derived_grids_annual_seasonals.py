@@ -79,6 +79,17 @@ if __name__ == '__main__':
 	metric = args.agg_metric
 	ncpus = args.ncpus
 
+	# # TESTING STUFF
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# variable = 'tas' # 'pr'
+	# begin = 2006
+	# end = 2100
+	# ncpus = 32
+	# metric = 'mean' # 'total'
+	# project = 'ar5'
+
 	# switches to deal with different date groups.  Hardwired to CMIP5 and CRU TS323 currently.
 	cmip_switch = { 'historical':(1900,2005), 'rcp26':(2006,2100), 'rcp45':(2006,2100), 'rcp60':(2006,2100), 'rcp85':(2006,2100) }
 	cru_switch = { 'historical':(1901,2014) }
