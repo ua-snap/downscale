@@ -104,6 +104,10 @@ if __name__ == '__main__':
 		dirname, basename = os.path.split( filenames[1] )
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, month, year = basename.split( '_' )
+
+		if variable == 'pr':
+			metric = 'mean_total'
+
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, year ]) + ext
 		out_fn = os.path.join( dirname.replace( 'downscaled', 'derived_grids'+os.path.sep+'annuals' ), new_basename )
 		arr = np.rint( arr )
