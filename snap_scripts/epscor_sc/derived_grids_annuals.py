@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
 	# parse the commandline arguments
 	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	parser.add_argument( "-b", "--base_path", action='store', dest='base_path', type=str, help="path to the directory where the downscaled modeled data are stored" )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="path to the directory where the downscaled modeled data are stored" )
 	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="model name (exact)" )
 	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="scenario name (exact)" )
 	parser.add_argument( "-p", "--project", action='store', dest='project', const=None, type=str, help="project name (exact)" )
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	# unpack for cleaner var access:
-	base_path = args.base_path
+	base_dir = args.base_dir
 	model = args.model
 	scenario = args.scenario
 	project = args.project
