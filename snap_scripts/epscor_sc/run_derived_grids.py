@@ -25,8 +25,8 @@ if __name__ == '__main__':
 		
 	# # cmip5
 	project = 'ar5'
-	models = [ 'GFDL-CM3'] #,'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
-	scenarios = [ 'historical'] #, 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	models = [ 'GFDL-CM3','IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
+	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	agg_metric = 'mean'
 
 	# # cru

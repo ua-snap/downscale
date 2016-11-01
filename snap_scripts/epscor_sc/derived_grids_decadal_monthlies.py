@@ -46,6 +46,9 @@ def write_raster( arr, out_fn, meta ):
 		out.write( arr.astype( np.float32 ), 1)
 	return out_fn
 
+def _write_raster( x ):
+	return write_raster( *x )
+
 def aggregate( files_df, metric ):
 	''' aggregate to a np method metric passed '''
 	import numpy as np
@@ -134,9 +137,15 @@ if __name__ == '__main__':
 			metric = 'mean'		
 		
 		out_fn = os.path.join( dirname.replace( 'downscaled', 'derived_grids'+os.path.sep+'decadal_monthlies' ), new_basename )
-		arr = np.rint( arr )
+
+		# round the data 
+		if variable == 'pr':
+			arr = np.rint( arr )
+		if 'tas' in variable:
+			arr = np.round( arr, decimals=1 )
+
 		arr[ mask == 0 ] = meta['nodata']
 		args = args + [( arr, out_fn, meta )]
 
 	# write it out
-	final = mp_map( lambda x: write_raster( *x ), args, nproc=32, **{'meta':meta} )
+	final = mp_map( _write_raster, args, nproc=32 )
