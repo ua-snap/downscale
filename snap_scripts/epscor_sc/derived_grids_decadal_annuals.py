@@ -84,7 +84,7 @@ if __name__ == '__main__':
 	scenario = args.scenario
 	project = args.project
 	variable = args.variable
-	metric = args.agg_metric
+	agg_metric = args.agg_metric
 	ncpus = args.ncpus
 
 	# # TESTING STUFF
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 	# begin = 2006
 	# end = 2100
 	# ncpus = 32
-	# metric = 'mean'
+	# agg_metric = 'mean'
 	# project = 'ar5'
 
 	
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 	file_groups = [ sub_df for idx,sub_df in df.groupby( df.decades ) if len(sub_df.years.unique()) == 10 ]
 	
 	# compute
-	_aggregate = partial( aggregate, metric=metric )
+	_aggregate = partial( aggregate, metric=agg_metric )
 	agg_groups = mp_map( _aggregate, file_groups, nproc=ncpus )
 
 	# make some output metadata
@@ -127,16 +127,14 @@ if __name__ == '__main__':
 		basename, ext = os.path.splitext( basename )
 		variable, metric, units, project, model, scenario, year = basename.split( '_' )
 		
-		if variable == 'pr' and metric == 'mean':
+		if variable == 'pr' and agg_metric == 'mean':
 			# handle pr mean_total
-			metric = 'mean_total'
+			metric = 'mean_annual_total'
+		else:
+			metric = 'mean_annual_mean'
 
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, decade ]) + ext
 		out_fn = os.path.join( dirname.replace( 'annuals', 'decadal_annuals' ), new_basename )
-
-		if metric == 'mean_total':
-			# handle pr mean_total
-			metric = 'mean'
 
 		# round the data 
 		if variable == 'pr':
