@@ -132,13 +132,12 @@ if __name__ == '__main__':
 			metric = 'mean_total'
 
 		new_basename = '_'.join([ variable, metric, units, project, model, scenario, season, decade ]) + ext
+		out_fn = os.path.join( dirname.replace( 'annual_seasonals', 'decadal_annual_seasonals' ), new_basename )
 
 		if metric == 'mean_total':
 			# handle pr mean_total
-			metric = 'mean'	
+			metric = 'mean'
 		
-		out_fn = os.path.join( dirname.replace( 'annual_seasonals', 'decadal_annual_seasonals' ), new_basename )
-
 		# round the data 
 		if variable == 'pr':
 			arr = np.rint( arr )
