@@ -135,9 +135,9 @@ if __name__ == '__main__':
 
 		if variable == 'pr' and agg_metric == 'mean':
 			# handle pr mean_total
-			metric = 'mean_annual_total'
+			metric = 'mean_season_total'
 		else:
-			metric = 'mean_annual_mean'
+			metric = 'mean_season_mean'
 		
 		# round the data 
 		if variable == 'pr':
