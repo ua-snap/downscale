@@ -191,13 +191,14 @@ def run_decade( filenames ):
     with rasterio.open( fn ) as rst:
         meta = rst.meta
         meta.update( compress='lzw', count=3 )
+        _ = meta.pop( 'transform' )
 
     # write out file
     output_filename = os.path.join( new_dir, new_base + ext )
     with rasterio.open( output_filename, 'w', **meta ) as out:
         ind0, ind1 = np.where( mask == 0 )
         out_arr[ ..., ind0, ind1 ] = meta[ 'nodata' ]
-        out.write( out_arr )
+        out.write( out_arr.astype( np.float32 ) )
 
     return output_filename
 
@@ -222,9 +223,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     base_path = args.base_path
     model = args.model
-    
-    # base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/decadal_monthlies'
-    # model = ''
 
     # [ HARDWIRED ]
     # shp_fn = os.path.join( path, 'DOT_DOF_LOGS','sample_points','sample_points_testing.shp' )
@@ -242,84 +240,6 @@ if __name__ == '__main__':
     # decades = [ fn.split('.')[0].split('_')[-1] for fn in files ]
     # file_groups = [ j.tolist() for i,j in pd.Series( files ).groupby( decades ) ]
 
-    # NEW RUNNNER SON!
+    # NEW RUNNNER!
     done = mp_map( run_decade, file_groups, nproc=32 )
-
-    # out = {}
-    # for count, filenames in enumerate(file_groups):
-    #     # filenames = file_groups[0]
-    #     arr = np.array([ read_arr( fn )[0] for fn in filenames ])
-        
-    #     # set anything that we dont want to look at to np.nan
-    #     time_ind, lat_ind, lon_ind = np.where( arr == -3.39999995e+38 )
-    #     arr[ ..., lat_ind, lon_ind ] = np.nan
-        
-    #     # # which are NOT nan's
-    #     time_ind, lat_ind, lon_ind = np.where( ~np.isnan( arr ) )
-
-    #     # >>>> THIS IS ASININE
-    #     # extract all to arrays
-    #     data = [ arr[...,i,j].copy() for i,j in zip( lat_ind, lon_ind ) ]
-    #     data2 = np.array_split( data, len(data)/64 )
-    #     # <<<< END
-
-    #     # run it in chunks as it seems to run faster this way...
-    #     test = [ mp_map( tfg_days, d, nproc=64) for d in data2 ]
-    #     test = [ j for i in test for j in i ]
-    #     break
-    #     # out[ count ] = [ j for i in test for j in i ]
-
-    #     # # THIS IS THE NEW WAY WE ARE GOING TO USE TO OUTPUT THE FILES # # # 
-    #     # make an output array and fill it with the data extracted...
-    #     out_arr = arr[:3,...].copy()
-    #     for i,j,v in zip(ind[0], ind[1], test):
-    #         out_arr[ :, i, j ] = v
-
-    #     # filename work
-    #     fn = filenames[0]
-    #     dirname, basename = os.path.split( fn )
-    #     basename, ext = os.path.splitext( basename )
-    #     new_base = basename.replace( 'tas_mean_monthly_mean_C', 'dot_dof_grow_mean_decadal' ).replace( '_01_', '_' )
-    #     new_dir = dirname.replace( 'tas', 'dot_dof_grow' )
-
-    #     # build output directory if needed.
-    #     if not os.path.exists( new_dir ):
-    #         os.makedirs( new_dir )
-
-    #     # copy metadata
-    #     with rasterio.open( fn ) as rst:
-    #         meta = rst.meta
-    #         meta.update( compress='lzw', count=3 )
-
-    #     # write out file
-    #     output_filename = os.path.join( new_dir, new_base + ext )
-    #     with rasterio.open( output_filename, 'w', **meta ) as out:
-    #         out.write( out_arr )
-
-
-
-
-
-   #  # rows, cols = np.where( ~np.isnan( arr[0, ...] ) )
-   #  # r,c = [ m.ravel() for m in np.meshgrid( range( x.shape[1] ), range( x.shape[2] ) ) ]
-   #  time_ind, lat_ind, lon_ind = np.where( ~np.isnan( arr ) )
-   #  # out = [ tfg_days( x[ :, r, c ] ) for r,c in zip( lat_ind, lon_ind ) ]
-    
-   #  test = mp_map( lambda x: arr[:, x[0], x[1] ], zip( lat_ind, lon_ind ) , nproc=32 )
-
-   #  # TESTING
-   #  df = pd.DataFrame({ get_monyear(fn)[0]:rasterio.open(fn).read(1).ravel() for fn in j.tolist() } )
-   #  df = df.loc[(df != df.min()[0] ).any(axis=1), : ].T
-   #  args = [ np.array(df[ col ]) for col in df.columns ]
-   #  args_groups = np.array_split(np.array(args), 80000)
-   #  test = [ mp_map( tfg_days, args, nproc=50 ) for args in args_groups ]
-
-
-
-
-   #  test = [ mp_map( tfg_days, args, nproc=50 ) for args in args_groups ]
-
-   # test = mp_map( tfg_days, args, nproc=50 )
-
-   #  done = mp_map( run_tfg, files, nproc=32 )
 
