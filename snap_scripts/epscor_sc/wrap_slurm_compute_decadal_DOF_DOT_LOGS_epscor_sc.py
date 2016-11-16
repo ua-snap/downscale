@@ -30,9 +30,8 @@ if __name__ == '__main__':
 		os.chdir( path )
 
 		fn = os.path.join( path, 'dof_dot_logs_compute_decadal_grids_'+model+'.slurm' )
-		os.chdir( '/workspace/UA/malindgren/repos/downscale/snap_scripts' )
+		
 		command = ' '.join([ 'ipython', '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/dot_dof_logs_cmip5_decadals.py', '--', 
 							'-b', base_path, '-m ', model ])
 		
 		run_model( fn, command )
-

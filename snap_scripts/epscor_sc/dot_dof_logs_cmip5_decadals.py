@@ -196,9 +196,11 @@ def run_decade( filenames ):
     # write out file
     output_filename = os.path.join( new_dir, new_base + ext )
     with rasterio.open( output_filename, 'w', **meta ) as out:
+        # make it float32?
+        out_arr = out_arr.astype( np.float32 )
         ind0, ind1 = np.where( mask == 0 )
         out_arr[ ..., ind0, ind1 ] = meta[ 'nodata' ]
-        out.write( out_arr.astype( np.float32 ) )
+        out.write( out_arr )
 
     return output_filename
 
@@ -224,14 +226,16 @@ if __name__ == '__main__':
     base_path = args.base_path
     model = args.model
 
-    # [ HARDWIRED ]
-    # shp_fn = os.path.join( path, 'DOT_DOF_LOGS','sample_points','sample_points_testing.shp' )
+    # # TESTING STUFF 
+    # base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/decadal_monthlies'
+    # model = 'GFDL-CM3'
+    # # END TESTING
 
     # # list and sort the files from the directory
     # files = sorted( glob.glob( os.path.join( path, model, scenario, variable, '*.tif' ) ) )
 
     # TEST NEW GROUPBY -- RUN ALL SCENARIOS IN A SINGLE NODE PASS USING ALL CORES -- 50 workers 32 CPUs
-    files = [ os.path.join( r, f ) for r,s,files in os.walk( base_path ) for f in files if f.endswith('.tif') and 'tas_' in f and model in f and 'rcp26' not in f ]
+    files = [ os.path.join( r, f ) for r,s,files in os.walk( base_path ) for f in files if f.endswith('.tif') and 'tas_' in f and model in f ] # and 'rcp26' in f ]
     scenarios = [ get_scenario(fn) for fn in files ]
     file_groups = [ [ sorted( y.tolist() ) for x,y in j.groupby( [ fn.split('.')[0].split('_')[-1] for fn in j ] )] for i,j in pd.Series( files ).groupby( scenarios ) ]
     file_groups = [ j for i in file_groups for j in i ]
