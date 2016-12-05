@@ -82,7 +82,7 @@ class Mask( object ):
 
 class Dataset( object ):
 	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, 
-					interp=False, ncpus=32,	method='linear', begin=None, end=None, *args, **kwargs ):
+					interp=False, ncpus=32,	method='linear', begin=None, end=None, level=None, level_name=None, *args, **kwargs ):
 		'''
 		build a dataset object to store the NetCDF low-res data for downscaling.
 		
@@ -111,7 +111,9 @@ class Dataset( object ):
 		self.scenario = scenario
 		self.begin = begin # year begin
 		self.end = end # year end
-		
+		self.level = level
+		self.level_name = level_name
+
 		if units:
 			self.units = units
 		else:
@@ -127,12 +129,20 @@ class Dataset( object ):
 		else:
 			self.metric = 'metric'
 
+
+		# slice to the years AND level we want if given
+		if self.begin is not None and self.end is not None:
+			if level is not None and level_name is not None:
+				levidx, = np.where( ds[ self.level_name ] == self.level )
+				ds = self.ds[ self.variable ][ :, int(levidx), ... ]
+				self.ds = self.sel( time=slice( str( self.begin ), str( self.end ) ) )
+			else:
+				self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
+		else:
+			# just slice out the variable we want.
+			self.ds = self.ds[ self.variable ]
 		# update the lats and data to be NorthUp if necessary
 		self._northup()
-
-		# slice to the years we want if given
-		if self.begin != None and self.end != None:
-			self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 
 		self.interp = interp
 		self.ncpus = ncpus
@@ -150,5 +160,5 @@ class Dataset( object ):
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
 			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
 			# flip each slice of the array and make a new one
-			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
-			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
+			flipped = np.array( [ np.flipud( arr ) for arr in self.ds.data ] )
+			self.ds = (('time', 'lat', 'lon' ), flipped )

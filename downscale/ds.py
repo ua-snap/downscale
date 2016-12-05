@@ -15,11 +15,11 @@ from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
-				downscaling_operation='add', level=None, level_name=None, 
-				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
-				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
-				varname=None, modelname=None, anom=False, resample_type='bilinear', 
-				fix_clim=False, interp=False, find_bounds=False, aoi_mask=None, *args, **kwargs ):
+				downscaling_operation='add', mask=None, mask_value=0, ncpus=32, 
+				src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None, 
+				post_downscale_function=None, varname=None, modelname=None, anom=False, 
+				resample_type='bilinear', fix_clim=False, interp=False, find_bounds=False, 
+				aoi_mask=None, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
@@ -32,8 +32,7 @@ class DeltaDownscale( object ):
 		clim_end = []
 		historical = []
 		future = []
-		level = []
-		level_name = []
+		...MORE...
 		
 		Returns:
 		--------
@@ -45,8 +44,8 @@ class DeltaDownscale( object ):
 		self.clim_begin = clim_begin
 		self.clim_end = clim_end
 		self.downscaling_operation = downscaling_operation
-		self.level = level
-		self.level_name = level_name
+		self.level = self.historical.level
+		self.level_name = self.historical.level_name
 		self.mask = mask
 		self.mask_value = mask_value
 		self.ncpus = ncpus
@@ -129,12 +128,12 @@ class DeltaDownscale( object ):
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
 		else:
 			ds = self.historical.ds
-		ds = ds[ self.historical.variable ]
-		if self.level:
-			# levidx, = np.where( ds[ self.level_name ] == self.level )
-			# ds = ds[ :, levidx[0], ... ]
-			ds = ds[ :, self.level, ... ]
-		self.ds = ds
+		self.ds = ds[ self.historical.variable ]
+		# if self.level:
+		# 	# levidx, = np.where( ds[ self.level_name ] == self.level )
+		# 	# ds = ds[ :, levidx[0], ... ]
+		# 	ds = ds[ :, self.level, ... ] # LEVEL is the index number of the level to use...
+		# self.ds = ds
 	def _calc_climatolgy( self ):
 		'''slice / aggregate to climatology using mean'''
 		try:
@@ -302,7 +301,7 @@ class DeltaDownscale( object ):
 			self._rotated = False # reset it now that its back
 				
 		# place back into a new xarray.Dataset object for further processing
-		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )		
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
 		
 		self.climatology.data = dat
 		print( 'ds interpolated updated into self.ds' )
