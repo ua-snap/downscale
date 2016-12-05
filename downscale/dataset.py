@@ -133,7 +133,7 @@ class Dataset( object ):
 		# slice to the years AND level we want if given
 		if self.begin is not None and self.end is not None:
 			if level is not None and level_name is not None:
-				levidx, = np.where( ds[ self.level_name ] == self.level )
+				levidx, = np.where( self.ds[ self.level_name ] == self.level )
 				ds = self.ds[ self.variable ][ :, int(levidx), ... ]
 				self.ds = self.sel( time=slice( str( self.begin ), str( self.end ) ) )
 			else:
