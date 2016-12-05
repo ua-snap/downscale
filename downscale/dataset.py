@@ -135,7 +135,7 @@ class Dataset( object ):
 			if level is not None and level_name is not None:
 				levidx, = np.where( self.ds[ self.level_name ] == self.level )
 				ds = self.ds[ self.variable ][ :, int(levidx), ... ]
-				self.ds = self.sel( time=slice( str( self.begin ), str( self.end ) ) )
+				self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 			else:
 				self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
 		else:
