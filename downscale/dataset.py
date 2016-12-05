@@ -160,5 +160,5 @@ class Dataset( object ):
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
 			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
 			# flip each slice of the array and make a new one
-			flipped = np.array( [ np.flipud( arr ) for arr in self.ds.data ] )
+			flipped = np.array( [ np.flipud( arr ) for arr in self.ds ] )
 			self.ds = (('time', 'lat', 'lon' ), flipped )
