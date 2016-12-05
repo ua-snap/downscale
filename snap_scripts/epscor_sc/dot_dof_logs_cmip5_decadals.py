@@ -112,14 +112,15 @@ def tfg_days( x, err='off' ):
 
 def read_arr( fn, band=1 ):
     ''' 
-        read the array from a GTiff using rasterio without mem leaks 
-        and return a tuple of (arr, meta)
-        where `meta` is the file metadata 
+    read the array from a GTiff using rasterio without mem leaks 
+    and return a tuple of (arr, meta)
+    where `meta` is the file metadata 
     '''
     with rasterio.open( fn ) as rst:
         arr = rst.read( band )
         meta = rst.meta
     return (arr, meta)
+
 def rasterize_shp( shp_fn, arr, affine, fill=0 ):
     '''
     convert a shapefile into a raster using a template arr and
@@ -231,11 +232,16 @@ if __name__ == '__main__':
     # model = 'GFDL-CM3'
     # # END TESTING
 
-    # # list and sort the files from the directory
-    # files = sorted( glob.glob( os.path.join( path, model, scenario, variable, '*.tif' ) ) )
+    # # # # TESTING MATTS STUFF
+    # base_path = '/Data/Base_Data/Climate/AK_CAN_2km/projected/AR5_CMIP5_models/rcp60/IPSL-CM5A-LR/derived/tas/decadal_mean'
+    # model = 'IPSL-CM5A-LR'
 
-    # TEST NEW GROUPBY -- RUN ALL SCENARIOS IN A SINGLE NODE PASS USING ALL CORES -- 50 workers 32 CPUs
-    files = [ os.path.join( r, f ) for r,s,files in os.walk( base_path ) for f in files if f.endswith('.tif') and 'tas_' in f and model in f ] # and 'rcp26' in f ]
+    # RUN ALL SCENARIOS IN A SINGLE NODE FOR SINGLE MODEL
+    # # list and sort the files from the directory
+    files = [ os.path.join( r, f ) for r,s,files in os.walk( base_path ) for f in files if f.endswith('.tif') and 'tas_' in f and model in f ]
+    # # TESTING ONE BELOW
+    # files = [ os.path.join( r, f ) for r,s,files in os.walk( base_path ) for f in files if f.endswith('.tif') and 'tas_' in f and model in f and 'rcp60' in f and '_201' in f]
+    # # END TESTING
     scenarios = [ get_scenario(fn) for fn in files ]
     file_groups = [ [ sorted( y.tolist() ) for x,y in j.groupby( [ fn.split('.')[0].split('_')[-1] for fn in j ] )] for i,j in pd.Series( files ).groupby( scenarios ) ]
     file_groups = [ j for i in file_groups for j in i ]
