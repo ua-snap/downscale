@@ -104,6 +104,8 @@ class Dataset( object ):
 
 		'''
 		import xarray as xr
+		import ast
+
 		self.fn = fn
 		self.ds = xr.open_dataset( self.fn )
 		self.variable = variable
@@ -145,6 +147,8 @@ class Dataset( object ):
 
 		if self.begin is not None and self.end is not None:
 			if level is not None and level_name is not None:
+				# THIS IS DANGEROUS! BUT WOULD BE HARD TO EXPLOIT DUE TO THE STRUCTURE
+				# OF THE QUERY BEING WITHIN THIS MODULE...  Famous last words...
 				ds = eval( 'self.ds.sel({}={})'.format( self.level_name, self.level ) )
 				# levidx, = np.where( self.ds[ self.level_name ] == self.level )
 				# ds = self.ds[ self.variable ][ :, int(levidx), ... ]
@@ -157,7 +161,7 @@ class Dataset( object ):
 			self.ds = self.ds[ self.variable ]
 		
 		# update the lats and data to be NorthUp if necessary
-		# self._northup()
+		self._northup()
 
 		self.interp = interp
 		self.ncpus = ncpus
