@@ -128,21 +128,36 @@ class Dataset( object ):
 			self.metric = metric
 		else:
 			self.metric = 'metric'
-
-
+		
+		# THIS IS WHERE EVERYTHING HAS GONE HAYWIRE....
+		# ---------------------------------------------
 		# slice to the years AND level we want if given
+		# if self.begin is not None and self.end is not None:
+		# 	if level is not None and level_name is not None:
+		# 		levidx, = np.where( self.ds[ self.level_name ] == self.level )
+		# 		ds = self.ds[ self.variable ][ :, int(levidx), ... ]
+		# 		self.ds = ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+		# 	else:
+		# 		self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
+		# else:
+		# 	# just slice out the variable we want.
+		# 	self.ds = self.ds[ self.variable ]
+
 		if self.begin is not None and self.end is not None:
 			if level is not None and level_name is not None:
-				levidx, = np.where( self.ds[ self.level_name ] == self.level )
-				ds = self.ds[ self.variable ][ :, int(levidx), ... ]
-				self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+				ds = eval( 'self.ds.sel({}={})'.format( self.level_name, self.level ) )
+				# levidx, = np.where( self.ds[ self.level_name ] == self.level )
+				# ds = self.ds[ self.variable ][ :, int(levidx), ... ]
+				self.ds = ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+				del ds
 			else:
 				self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
 		else:
 			# just slice out the variable we want.
 			self.ds = self.ds[ self.variable ]
+		
 		# update the lats and data to be NorthUp if necessary
-		self._northup()
+		# self._northup()
 
 		self.interp = interp
 		self.ncpus = ncpus
@@ -160,5 +175,5 @@ class Dataset( object ):
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
 			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
 			# flip each slice of the array and make a new one
-			flipped = np.array( [ np.flipud( arr ) for arr in self.ds ] )
-			self.ds = (('time', 'lat', 'lon' ), flipped )
+			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ] ] )
+			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
