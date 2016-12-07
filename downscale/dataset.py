@@ -146,7 +146,9 @@ class Dataset( object ):
 		# 	self.ds = self.ds[ self.variable ]
 
 		if self.begin is not None and self.end is not None:
-			if level is not None and level_name is not None:
+			print('1')
+			if self.level is not None and self.level_name is not None:
+				print('2')
 				# THIS IS DANGEROUS! BUT WOULD BE HARD TO EXPLOIT DUE TO THE STRUCTURE
 				# OF THE QUERY BEING WITHIN THIS MODULE...  Famous last words...
 				ds = eval( 'self.ds.sel({}={})'.format( self.level_name, self.level ) )
@@ -155,10 +157,11 @@ class Dataset( object ):
 				self.ds = ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 				del ds
 			else:
-				self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
+				print('3')
+				self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
 		else:
-			# just slice out the variable we want.
-			self.ds = self.ds[ self.variable ]
+			print('4')
+			self.ds = self.ds
 		
 		# update the lats and data to be NorthUp if necessary
 		self._northup()
