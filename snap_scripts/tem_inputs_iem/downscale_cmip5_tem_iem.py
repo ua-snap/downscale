@@ -37,7 +37,7 @@ if __name__ == '__main__':
 	find_bounds = False
 	fix_clim = False
 	aoi_mask = None
-
+	anom = False # write out anoms (True) or not (False)
 	
 	# # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
@@ -49,15 +49,13 @@ if __name__ == '__main__':
 	# level = 1000 # mb / Pa
 	# level_name = 'plev'
 
-
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
 	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
-
+	
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
 	all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ] # temp for distributed run
