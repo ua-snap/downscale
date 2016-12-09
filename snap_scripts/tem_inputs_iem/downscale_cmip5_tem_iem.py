@@ -88,7 +88,8 @@ if __name__ == '__main__':
 		fn, = glob.glob( os.path.join( input_path, '*.nc' ) )
 
 		if 'historical' in scenario:
-			historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=1900, end=2005 )
+			historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, 
+							metric=metric, begin=1900, end=2005, level_name=level_name, level=level )
 			future = None
 		else:
 			# get the historical data for anomalies
