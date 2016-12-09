@@ -36,13 +36,13 @@ if __name__ == '__main__':
 	interp = False
 	find_bounds = False
 	fix_clim = False
-	aoi_mask = None
+	aoi_mask = None # for precip data only
 	anom = False # write out anoms (True) or not (False)
 	
 	# # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
 	# variable = 'hur'
-	# scenario = 'rcp85'
+	# scenario = 'historical'
 	# model = 'MRI-CGCM3'
 	# units = 'pct'
 	# metric = 'mean'
@@ -129,13 +129,20 @@ if __name__ == '__main__':
 
 		round_data = partial( round_it, mask=( mask==0 ) )
 
-		def round_data_clamp( x ):
+		def round_data_clamp_hur( x ):
 			x[ x < 0.0 ] = 0.0
 			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
 			return round_data( x )
 
-		if variable == 'hur' or variable == 'clt':
-			post_downscale_function = round_data_clamp
+		def round_data_clamp_clt( x ):
+			x[ x < 0.0 ] = 0.0
+			x[ x > 100.0 ] = 100.0 # per Stephanie McAfee
+			return round_data( x )
+
+		if variable == 'hur':
+			post_downscale_function = round_data_clamp_hur
+		if variable == 'clt':
+			post_downscale_function = round_data_clamp_clt
 		else:
 			post_downscale_function = round_data
 
