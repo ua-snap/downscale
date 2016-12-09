@@ -28,7 +28,7 @@ if __name__ == '__main__':
 	units = args.units
 	metric = args.metric
 	base_dir = args.base_dir
-	level = args.level
+	level = float( args.level ) # watch this
 	level_name = args.level_name
 
 	# hardwired ARGS -- CMIP5
