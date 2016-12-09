@@ -28,8 +28,11 @@ if __name__ == '__main__':
 	units = args.units
 	metric = args.metric
 	base_dir = args.base_dir
-	level = float( args.level ) # watch this
+	level = args.level
 	level_name = args.level_name
+
+	if level is not None:
+		level = float( level )
 
 	# hardwired ARGS -- CMIP5
 	project = 'ar5'
