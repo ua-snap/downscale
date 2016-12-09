@@ -8,28 +8,28 @@ if __name__ == '__main__':
 	import numpy as np
 	import argparse
 
-	# # # parse the commandline arguments
-	# parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
-	# parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
-	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
-	# parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
-	# parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
-	# parser.add_argument( "-lev", "--level", action='store', dest='level', type=int, help="optional level to extract for downscaling" )
-	# parser.add_argument( "-levn", "--level_name", action='store', dest='level_name', type=str, help="name of level variable" )
+	# # parse the commandline arguments
+	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
+	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	parser.add_argument( "-u", "--units", action='store', dest='units', type=str, help="cmip5 units name (exact)" )
+	parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="cmip5 metric name (exact)" )
+	parser.add_argument( "-lev", "--level", action='store', dest='level', type=int, help="optional level to extract for downscaling" )
+	parser.add_argument( "-levn", "--level_name", action='store', dest='level_name', type=str, help="name of level variable" )
 	
-	# args = parser.parse_args()
+	args = parser.parse_args()
 
-	# # unpack the args
-	# variable = args.variable
-	# scenario = args.scenario
-	# model = args.model
-	# units = args.units
-	# metric = args.metric
-	# base_dir = args.base_dir
-	# level = args.level
-	# level_name = args.level_name
+	# unpack the args
+	variable = args.variable
+	scenario = args.scenario
+	model = args.model
+	units = args.units
+	metric = args.metric
+	base_dir = args.base_dir
+	level = args.level
+	level_name = args.level_name
 
 	# hardwired ARGS -- CMIP5
 	project = 'ar5'
@@ -39,15 +39,15 @@ if __name__ == '__main__':
 	aoi_mask = None
 
 	
-	# # FOR TESTING # # # 
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
-	variable = 'hur'
-	scenario = 'rcp85'
-	model = 'MRI-CGCM3'
-	units = 'pct'
-	metric = 'mean'
-	level = 1000 # mb / Pa
-	level_name = 'plev'
+	# # # FOR TESTING # # # 
+	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	# variable = 'hur'
+	# scenario = 'rcp85'
+	# model = 'MRI-CGCM3'
+	# units = 'pct'
+	# metric = 'mean'
+	# level = 1000 # mb / Pa
+	# level_name = 'plev'
 
 
 	# some setup args
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
 		def round_data_clamp( x ):
 			x[ x < 0.0 ] = 0.0
-			x[ x > 100.0 ] = 100.0
+			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
 			return round_data( x )
 
 		if variable == 'hur' or variable == 'clt':
