@@ -5,7 +5,6 @@
 # 4. Interpolate %RH to 1km
 # 5. Calculate vapor pressure at 1km resolution from interpolated RH and 1km temperature
 
-
 def convert_to_hur( tas_arr, vap_arr ):
 	esa_arr = 6.112 * np.exp( 17.62 * tas_arr/ (243.12 + tas_arr) )
 	# esa_arr = 6.112 * np.exp( 22.46 * tas_arr / (272.62 + tas_arr) )

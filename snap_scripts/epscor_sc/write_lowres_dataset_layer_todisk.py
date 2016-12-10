@@ -18,9 +18,9 @@ class WriteDataset( object ):
 		if self.northup == True:
 			self._northup( latitude = self.lat )
 
-	def ds( self ):	
+	def ds( self ):
 		ds = xr.open_dataset( self.fn )
-		return ds[self.variable]	
+		return ds
 	def _northup( self, latitude='lat' ):
 		''' this works only for global grids to be downscaled flips it northup '''
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
@@ -51,8 +51,8 @@ class WriteDataset( object ):
 	def to_gtiff( self, output_filename, layers=[0] ):
 		''' write the mask to geotiff given an output_filename '''
 		meta = {'compress':'lzw'}
-		count, height, width = self.ds.shape
-		arr = np.array([ self.ds[layer].data for layer in layers ])
+		arr = np.array([ self.ds[self.variable][layer].data for layer in layers ])
+		count, height, width = arr.shape
 		meta.update( affine=self.affine, height=height, width=width, 
 					count=arr.shape[0], dtype='float32', driver='GTiff' )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
