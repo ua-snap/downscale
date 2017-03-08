@@ -12,7 +12,7 @@ def run_model( fn, base_dir, variable, scenario ):
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_v2/compute_5ModelAvg_epscor_sc.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_v2/compute_5ModelAvg_tem_iem.py'
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path, '--', '-b', base_dir, '-v', variable, '-s', scenario ])
 		f.writelines( head + "\n" + command + '\n' )
