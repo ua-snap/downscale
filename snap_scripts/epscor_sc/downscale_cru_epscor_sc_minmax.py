@@ -45,7 +45,7 @@ if __name__ ==	'__main__':
 	clim_end = '12-1990'
 	scenario = 'historical'
 	project = 'cru'
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 	interp = True
 
 	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
