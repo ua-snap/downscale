@@ -43,8 +43,11 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 	from functools import partial
 
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled' 
-	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled'
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled' 
+	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled'
+
+	base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled'
+	output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
 
 	# list the data
 	files = list_all_data( base_path )

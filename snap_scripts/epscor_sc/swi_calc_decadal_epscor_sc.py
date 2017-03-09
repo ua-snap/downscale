@@ -87,7 +87,6 @@ if __name__ == '__main__':
 	# project = 'ar5'
 	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/decadal_monthlies'
 	
-
 	# # for testing
 	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/monthly_decadals'
 	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/swi_decadals'

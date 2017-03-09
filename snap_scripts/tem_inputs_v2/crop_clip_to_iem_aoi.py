@@ -38,10 +38,10 @@ if __name__ == '__main__':
 	# list up all the args we want to run through the multicore clipping
 	args_list = []
 	for root, subs, files in os.walk( base_path ):
-		tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'tas_' in fn ]
+		# tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'tas_' in fn ]
 		# tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'pr_' in fn ]
 		# tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'vap_' in fn ]
-		# tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'rsds_' in fn ]
+		tif_files = [ fn for fn in files if fn.endswith( '.tif' ) and 'rsds_' in fn ]
 		
 		if len( tif_files ) > 0:
 			args_list = args_list + [ ( subdomain_fn, os.path.join( root, fn ), os.path.join( root, fn ).replace( base_path, output_path ) ) for fn in tif_files ]

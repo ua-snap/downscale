@@ -52,8 +52,10 @@ if __name__ == '__main__':
 
 	# list the cloud files for a series
 	models =  [ 'IPSL-CM5A-LR', 'GISS-E2-R', 'MRI-CGCM3', 'NCAR-CCSM4', 'GFDL-CM3' ]
-	variables = ['clt'] 
+	# models = [ 'CRU_TS323' ]
+	variables = ['clt']
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	# scenarios = [ 'historical' ]
 	path_list = [ os.path.join( base_path, 'downscaled', model, scenario, variable, '*.tif' ) for model in models for variable in variables for scenario in scenarios ]
 
 	for path in path_list:

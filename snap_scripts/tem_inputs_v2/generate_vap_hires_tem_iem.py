@@ -18,6 +18,7 @@ def make_vap( hur_fn, tas_fn ):
 	with np.errstate( all='ignore' ):
 		mask = hur.read_masks( 1 )
 		vap_arr = convert_to_vap( tas_arr, hur_arr )
+		
 	vap_arr[ mask == 0 ] = hur_arr.min()
 	vap_arr = np.around( vap_arr, 1 ) # roundit
 	vap_arr[ mask == 0 ] = hur_arr.min() # reset mask
