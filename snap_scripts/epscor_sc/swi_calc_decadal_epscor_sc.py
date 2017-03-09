@@ -26,7 +26,7 @@ def swi( files, output_path ):
 	arr[ arr < 0 ] = 0
 	arr = np.sum( arr, axis=0 )
 	
-	variable, metric1, metric2, metric3, units, project, model, \
+	variable, metric, units, project, model, \
 		scenario, month, year = \
 			os.path.basename( files[0] ).split( '.' )[0].split( '_' )
 
