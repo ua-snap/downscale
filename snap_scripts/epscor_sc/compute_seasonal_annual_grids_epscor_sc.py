@@ -211,7 +211,7 @@ if __name__ == '__main__':
 					FILES
 	'''
 
-	parse the commandline arguments
+	# parse the commandline arguments
 	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
 	parser.add_argument( "-b", "--base_path", action='store', dest='base_path', type=str, help="path to the directory where the downscaled modeled data are stored" )
 	parser.add_argument( "-o", "--output_path", action='store', dest='output_path', type=str, help="path to the output directory" )
