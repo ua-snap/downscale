@@ -172,8 +172,8 @@ if __name__ == '__main__':
 	from pathos import multiprocessing as mp
 
 	# setup args
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_NOV2016/downscaled'
-	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_NOV2016/derived/tabular'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled'
+	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/derived/tabular'
 	ncpus = 32
 	project = 'cmip5'
 	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	begin_out = 1900
 	end_out = 2100
-	template_rst = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_NOV2016/downscaled/NCAR-CCSM4/historical/tasmax/tasmax_mean_C_ar5_NCAR-CCSM4_historical_01_1901.tif'
+	template_rst = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled/NCAR-CCSM4/historical/tasmax/tasmax_mean_C_ar5_NCAR-CCSM4_historical_01_1901.tif'
 	rst = rasterio.open( template_rst )
 	# subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/SCTC_watersheds.shp'

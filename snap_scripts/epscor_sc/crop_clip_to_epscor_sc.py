@@ -29,10 +29,10 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 
 	# setup args
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_NOVEMBER_FINAL'
-	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_NOVEMBER_FINAL'
-	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_NOVEMBER_FINAL/downscaled'
-	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_NOVEMBER_FINAL/derived/grids'
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
+	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled'
+	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/derived/grids'
 	ncpus = 32
 	subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 
