@@ -23,6 +23,8 @@ if __name__ ==	'__main__':
 	parser.add_argument( "-met", "--metric", action='store', dest='metric', type=str, help="string name of the metric data are in" )	
 	parser.add_argument( "-nc", "--ncpus", action='store', dest='ncpus', type=int, help="number of cpus to use in multiprocessing" )
 	parser.add_argument( "-ov", "--out_varname", action='store', dest='out_varname', type=str, help="string name of output name to use instead of variable in file" )
+	parser.add_argument( "-b", "--begin", action='store', dest='begin', type=int, help="4 digit beginning year (i.e. 1901)" )
+	parser.add_argument( "-e", "--end", action='store', dest='end', type=int, help="4 digit ending year (i.e. 2015)" )
 	args = parser.parse_args()
 
 	# unpack args
@@ -37,8 +39,10 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 	mean_variable_cru = args.mean_variable_cru
 	mean_variable_out = args.mean_variable_out
-	begin = 1901
-	end = 2014
+	begin = args.begin
+	end = args.end
+	# begin = 1901
+	# end = 2014
 
 	# standard args
 	clim_begin = '01-1961'
@@ -51,7 +55,8 @@ if __name__ ==	'__main__':
 	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 	# sort these files
-	filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
+	# filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
+	filelist = utils.sort_files( filelist ) # [CHECK] this changed to remove begin/end vars...  not needed...
 	baseline = downscale.Baseline( filelist )
 
 	# DOWNSCALE
