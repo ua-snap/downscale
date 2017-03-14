@@ -55,8 +55,7 @@ if __name__ ==	'__main__':
 	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 	# sort these files
-	# filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
-	filelist = utils.sort_files( filelist ) # [CHECK] this changed to remove begin/end vars...  not needed...
+	filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
 	baseline = downscale.Baseline( filelist )
 
 	# DOWNSCALE
