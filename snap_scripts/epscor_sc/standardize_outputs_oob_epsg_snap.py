@@ -6,6 +6,7 @@ def list_all_data( base_path ):
 def fix_naming( fn ):
 	dirname, basename = os.path.split( fn )
 	basename = basename.replace( 'cru_ts323', 'CRU_TS323' ).replace( 'cru_TS323', 'CRU_TS323' )
+	basename = basename.replace( 'cru_ts40', 'CRU_TS40' ).replace( 'cru_TS40', 'CRU_TS40' )
 	basename = basename.replace( '5MODELAVG', '5ModelAvg' )
 	return os.path.join( dirname, basename )
 
@@ -35,6 +36,12 @@ def update_crs_oob( fn, base_path, output_path ):
 	with rasterio.open( output_filename, 'w', **meta ) as out:
 		arr[ arr == -3.39999995e+38 ] = -9999.0
 		out.write( arr, 1 )
+
+	# cleanup old file if new file placed in the same path, but not already the same
+	# which would mean it would be an overwrite and thus without issues.
+	if base_path == output_path and fn != output_filename:
+		os.unlink( fn )
+
 	return output_filename
 
 if __name__ == '__main__':
@@ -46,8 +53,12 @@ if __name__ == '__main__':
 	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled' 
 	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled'
 
-	base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled'
-	output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
+	# base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled'
+	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
+
+	# can be the same directory with an overwrite...
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/hur'
+	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/hur'
 
 	# list the data
 	files = list_all_data( base_path )
