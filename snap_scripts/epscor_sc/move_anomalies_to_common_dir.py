@@ -7,7 +7,7 @@ def move( fn, new_fn, *args ):
 	if not os.path.exists( dirname ):
 		os.makedirs( dirname )
 
-	return shutil.move( fn, new_fn )
+	return os.rename( fn, new_fn )
 
 def make_args( fn ):
 	dirname, basename = os.path.split( fn )

@@ -19,13 +19,11 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 
 	# directories
-	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled'
 	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_1km'
 
 	# list the data
-	files = [os.path.join(root, fn) for root, subs, files in os.walk( base_path ) for fn in files if fn.endswith( '.tif' )]
-	# files = [os.path.join(root, fn) for root, subs, files in os.walk( base_path ) for fn in files if fn.endswith( '.tif' ) and 'tas_' in fn or 'pr_' in fn ]
-	# files = [os.path.join(root, fn) for root, subs, files in os.walk( base_path ) for fn in files if fn.endswith( '.tif' ) and '5ModelAvg' in fn and ('vap_' in fn or 'rsds_' in fn) ]
+	files = [os.path.join(root, fn) for root, subs, files in os.walk( base_path ) for fn in files if fn.endswith( '.tif' ) and 'anom' not in fn ]
 	out_files = [ fn.replace( base_path, output_path ) for fn in files ]
 
 	# run it in parallel

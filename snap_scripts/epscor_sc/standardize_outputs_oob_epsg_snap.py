@@ -21,27 +21,28 @@ def update_crs_oob( fn, base_path, output_path ):
 		meta.update( compress='lzw', count=1, nodata=-9999, crs={'init':'EPSG:3338'} )
 		old_nodata = rst.nodata
 		
-		if 'transform' in meta.keys():
-			_ = meta.pop( 'transform' )
+	if 'transform' in meta.keys():
+		_ = meta.pop( 'transform' )
 
-	output_filename = fix_naming( fn.replace(base_path, output_path) )
+
+	# overwrite the existing file...
+	with rasterio.open( fn, 'w', **meta ) as out:
+		arr[ arr == -3.39999995e+38 ] = -9999.0
+		out.write( arr, 1 )
+
+	# rename the existing file to the proper naming convention
+	output_filename = fix_naming( fn.replace( base_path, output_path ) )
+
+	# make sure the new directory actually exists
 	dirname, basename = os.path.split( output_filename )
-	
 	try:
 		if not os.path.exists( dirname ):
 			os.makedirs( dirname )
 	except:
 		pass
-
-	with rasterio.open( output_filename, 'w', **meta ) as out:
-		arr[ arr == -3.39999995e+38 ] = -9999.0
-		out.write( arr, 1 )
-
-	# cleanup old file if new file placed in the same path, but not already the same
-	# which would mean it would be an overwrite and thus without issues.
-	if base_path == output_path and fn != output_filename:
-		os.unlink( fn )
-
+	
+	# rename the newly generated and closed file
+	os.rename( fn, output_filename )
 	return output_filename
 
 if __name__ == '__main__':
@@ -57,8 +58,8 @@ if __name__ == '__main__':
 	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
 
 	# can be the same directory with an overwrite...
-	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/hur'
-	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/hur'
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/clt'
+	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/clt'
 
 	# list the data
 	files = list_all_data( base_path )
