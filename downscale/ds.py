@@ -371,6 +371,8 @@ class DeltaDownscale( object ):
 
 		args = zip( self.anomalies_rot, rstlist, output_filenames )
 
+		print('post_downscale_function: {}'.format( self.post_downscale_function ))
+		
 		args = [{'anom':i, 'base':j, 'output_filename':k,\
 				'downscaling_operation':self.downscaling_operation, \
 				'post_downscale_function':self.post_downscale_function,\
