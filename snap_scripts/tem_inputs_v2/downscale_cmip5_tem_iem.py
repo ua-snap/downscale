@@ -31,6 +31,7 @@ if __name__ == '__main__':
 	level = args.level
 	level_name = args.level_name
 
+
 	if level is not None:
 		level = float( level )
 
@@ -43,7 +44,7 @@ if __name__ == '__main__':
 	anom = True # write out anoms (True) or not (False)
 	
 	# # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# variable = 'hur'
 	# scenario = 'historical'
 	# model = 'MRI-CGCM3'
@@ -51,10 +52,24 @@ if __name__ == '__main__':
 	# metric = 'mean'
 	# level = 1000 # mb / Pa
 	# level_name = 'plev'
+	# if level is not None:
+	# 	level = float( level )
+	# # # # # # END TESTING # # # 
+	
+	# # # #SOME TESTING PRINTING...# # # 
+	'variable: {}'.format( variable )
+	'scenario: {}'.format( scenario )
+	'model: {}'.format( model )
+	'units: {}'.format( units )
+	'metric: {}'.format( metric )
+	'base_dir: {}'.format( base_dir )
+	'level: {}'.format( level )
+	'level_name: {}'.format( level_name )
+	# # # #END PRINT TESTING # # # # 
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_v2' )
+	output_dir = os.path.join( base_dir, 'downscaled_testing_hur' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -134,14 +149,16 @@ if __name__ == '__main__':
 		round_data = partial( round_it, mask=( mask==0 ) )
 
 		def round_data_clamp_hur( x ):
+			x = round_data( x )
 			x[ x < 0.0 ] = 0.0
 			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
-			return round_data( x )
+			return x
 
 		def round_data_clamp_clt( x ):
+			x = round_data( x )
 			x[ x < 0.0 ] = 0.0
 			x[ x > 100.0 ] = 100.0 # per Stephanie McAfee
-			return round_data( x )
+			return x
 
 		if variable == 'hur':
 			post_downscale_function = round_data_clamp_hur
