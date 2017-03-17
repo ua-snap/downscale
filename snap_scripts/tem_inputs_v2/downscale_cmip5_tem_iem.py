@@ -31,7 +31,6 @@ if __name__ == '__main__':
 	level = args.level
 	level_name = args.level_name
 
-
 	if level is not None:
 		level = float( level )
 
@@ -52,24 +51,14 @@ if __name__ == '__main__':
 	# metric = 'mean'
 	# level = 1000 # mb / Pa
 	# level_name = 'plev'
+
 	# if level is not None:
 	# 	level = float( level )
 	# # # # # # END TESTING # # # 
 	
-	# # # #SOME TESTING PRINTING...# # # 
-	print( 'variable: {}'.format( variable ) )
-	print( 'scenario: {}'.format( scenario ) )
-	print( 'model: {}'.format( model ) )
-	print( 'units: {}'.format( units ) )
-	print( 'metric: {}'.format( metric ) )
-	print( 'base_dir: {}'.format( base_dir ) )
-	print( 'level: {}'.format( level ) )
-	print( 'level_name: {}'.format( level_name ) )
-	# # # #END PRINT TESTING # # # # 
-
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_testing_hur' )
+	output_dir = os.path.join( base_dir, 'downscaled_v2' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -162,7 +151,7 @@ if __name__ == '__main__':
 
 		if variable == 'hur':
 			post_downscale_function = round_data_clamp_hur
-		if variable == 'clt':
+		elif variable == 'clt':
 			post_downscale_function = round_data_clamp_clt
 		else:
 			post_downscale_function = round_data

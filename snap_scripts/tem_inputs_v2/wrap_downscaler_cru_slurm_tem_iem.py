@@ -19,14 +19,14 @@ if __name__ == '__main__':
 	import os, subprocess
 
 	# # args setup
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
 	variables = ['hur','cld'] #['tmp','hur','pre','cld']
 	out_varnames = ['hur','clt'] #['tas','hur','pr','clt']
 	
-	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled_v2','slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 			units = 'pct'
 
 		clim_path = os.path.join( base_dir, 'cru', 'cru_cl20', out_varname )
-		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
+		output_path = os.path.join( os.path.join( base_dir, 'downscaled_v2', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )

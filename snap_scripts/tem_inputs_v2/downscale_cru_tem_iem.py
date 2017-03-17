@@ -111,7 +111,7 @@ if __name__ ==	'__main__':
 
 	if variable == 'hur':
 		post_downscale_function = round_data_clamp_hur
-	if variable == 'clt':
+	elif variable == 'clt':
 		post_downscale_function = round_data_clamp_clt
 	else:
 		post_downscale_function = round_data

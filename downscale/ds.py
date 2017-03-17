@@ -351,13 +351,13 @@ class DeltaDownscale( object ):
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			print( 'anomalies NOT rotated!' )
+			# print( 'anomalies NOT rotated!' )
 		else:
 			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			print( src_transform )
-			print( 'anomalies rotated!' )
+			# print( 'anomalies rotated!' )
 
 		# run and output
 		rstlist = self.baseline.repeat( n=self.anomalies_rot.shape[0] / 12 ) # months
@@ -371,8 +371,6 @@ class DeltaDownscale( object ):
 
 		args = zip( self.anomalies_rot, rstlist, output_filenames )
 
-		print('post_downscale_function: {}'.format( self.post_downscale_function ))
-		
 		args = [{'anom':i, 'base':j, 'output_filename':k,\
 				'downscaling_operation':self.downscaling_operation, \
 				'post_downscale_function':self.post_downscale_function,\

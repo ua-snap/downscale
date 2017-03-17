@@ -24,18 +24,19 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, level=Non
 								 '-u', units, '-met', metric ])
 
 		f.writelines( head + "\n" + command + '\n' )
-	subprocess.call([ 'sbatch', fn ])
+	# subprocess.call([ 'sbatch', fn ])
 	return 1
 
 if __name__ == '__main__':
 	import os, glob, itertools, subprocess
 
-	base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
+	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
 	variables = [ 'hur','clt' ] # ,'tas','pr'
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	path = os.path.join( base_dir,'downscaled','slurm_log' )
+	path = os.path.join( base_dir,'downscaled_v2','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
 	
@@ -62,6 +63,6 @@ if __name__ == '__main__':
 			level = None
 			level_name = None
 
-
 		fn = os.path.join( path, 'slurm_run_downscaler_'+'_'.join([variable, model, scenario])+'.slurm' )
 		_ = run_model( fn, base_dir, variable, model, scenario, units, metric, level, level_name )
+		break
