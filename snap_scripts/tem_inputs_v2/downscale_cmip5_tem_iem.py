@@ -57,14 +57,14 @@ if __name__ == '__main__':
 	# # # # # # END TESTING # # # 
 	
 	# # # #SOME TESTING PRINTING...# # # 
-	'variable: {}'.format( variable )
-	'scenario: {}'.format( scenario )
-	'model: {}'.format( model )
-	'units: {}'.format( units )
-	'metric: {}'.format( metric )
-	'base_dir: {}'.format( base_dir )
-	'level: {}'.format( level )
-	'level_name: {}'.format( level_name )
+	print( 'variable: {}'.format( variable ) )
+	print( 'scenario: {}'.format( scenario ) )
+	print( 'model: {}'.format( model ) )
+	print( 'units: {}'.format( units ) )
+	print( 'metric: {}'.format( metric ) )
+	print( 'base_dir: {}'.format( base_dir ) )
+	print( 'level: {}'.format( level ) )
+	print( 'level_name: {}'.format( level_name ) )
 	# # # #END PRINT TESTING # # # # 
 
 	# some setup args
