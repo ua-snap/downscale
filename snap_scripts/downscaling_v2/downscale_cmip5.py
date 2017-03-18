@@ -49,7 +49,7 @@ if __name__ == '__main__':
 	find_bounds = False
 
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
-	# used in querying the file which is the models list variable
+	# used in querying the file which is the all_models list variable
 	all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ]
 	modelnames = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
