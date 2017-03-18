@@ -12,7 +12,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric ):
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/epscor_sc/downscale_cmip5_epscor_sc.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/downscale_cmip5.py'
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path,\
 							 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, '-u', units, '-met', metric ])
@@ -23,7 +23,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric ):
 if __name__ == '__main__':
 	import os, glob, itertools, subprocess
 
-	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
 	variables = [ 'tas','pr' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]

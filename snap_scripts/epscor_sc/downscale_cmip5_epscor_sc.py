@@ -27,7 +27,7 @@ if __name__ == '__main__':
 	base_dir = args.base_dir
 
 	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 

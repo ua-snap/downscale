@@ -58,8 +58,8 @@ if __name__ == '__main__':
 	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
 
 	# can be the same directory with an overwrite...
-	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/clt'
-	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled/ts40/historical/clt'
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_v2'
+	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_v2'
 
 	# list the data
 	files = list_all_data( base_path )
