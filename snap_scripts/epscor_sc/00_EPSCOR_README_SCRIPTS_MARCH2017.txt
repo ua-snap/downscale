@@ -58,3 +58,13 @@ os.chdir( scripts_dir )
 		# rename the dirs
 		[ os.rename( root, root.replace('/ts323', '/CRU_TS323') ) for root in root_list ]
 	```
+
+#### THESE STEPS INVOLVE PROCESSING TO 1KM cellsizes, and clip/crop to IEM Extent
+# here we standardize the epsg code and oob to 3338 / -9999 respectively at the 2km resolution.
+	`standardize_outputs_oob_epsg_snap.py`
+
+# Now we want to resample the data to 1km from 2km.  we will use gdalwarp.  this is a solid and universal opensource standard.
+
+
+
+
