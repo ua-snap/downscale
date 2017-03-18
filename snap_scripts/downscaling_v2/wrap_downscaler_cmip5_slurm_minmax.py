@@ -36,13 +36,6 @@ if __name__ == '__main__':
 	mean_variable = 'tas'
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	# change the CCSM4 naming to NCAR-CCSM4 (if needed)
-	ccsm4_path = os.path.join( base_dir, 'downscaled', 'CCSM4' )
-	if os.path.exists( ccsm4_path ):
-		_ = subprocess.call([ 'mv', path, path.replace( 'CCSM4', 'NCAR-CCSM4' ) ])
-		print( 'changed CCSM4 error to NCAR-CCSM4 for proper min/max handling' )
-	del ccsm4_path	# end naming change
-
 	path = os.path.join( base_dir,'downscaled','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
