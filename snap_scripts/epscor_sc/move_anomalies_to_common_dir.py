@@ -21,7 +21,7 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 
 	# base path 
-	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_40/downscaled'
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_v2'
 
 	# list the dirs we want to move
 	args = [ make_args( os.path.join( root, fn ) ) for root,s,files in os.walk( base_path ) if 'anom' in root for fn in files ]

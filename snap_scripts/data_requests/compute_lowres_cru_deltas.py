@@ -23,8 +23,8 @@ def output_deltas( fn, varname, clim_begin, clim_end, method, output_dir ):
 		anomalies = ds.groupby( 'time.month' ) / climatology
 	else:
 		NameError( 'must be one of "absolute", "relative"' )
-
-	out_fn = os.path.join( output_dir, os.path.basename( fn ) )
+	basename, ext = os.path.splitext( os.path.basename( fn ) )
+	out_fn = os.path.join( output_dir, '{}_anomalies{}'.format(basename, ext) )
 	anom_ds = anomalies.to_dataset( name='{}_anomalies'.format( varname ) )
 	anom_ds.to_netcdf( out_fn )
 	return out_fn
@@ -44,13 +44,14 @@ if __name__ == '__main__':
 
 	out = []
 	for fn, varname in zip( l, varnames ):
-		print( 'working on: {}'.format( varname ) )
-		if varname in [ 'clt', 'hur', 'pre' ]:
-			method = 'relative'
-		else:
-			method = 'absolute'
-		
-		out + [output_deltas( fn, varname, clim_begin, clim_end, method, output_dir )]
+		if varname != 'wet':
+			print( 'working on: {}'.format( varname ) )
+			if varname in [ 'clt', 'hur', 'pre' ]:
+				method = 'relative'
+			else:
+				method = 'absolute'
+			
+			out + [ output_deltas( fn, varname, clim_begin, clim_end, method, output_dir ) ]
 
 
 
