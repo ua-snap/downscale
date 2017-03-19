@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
 	# unpack cli vars
 	base_dir = args.base_dir
-	output_dir = output_dir
+	output_dir = args.output_dir
 
 	# list the data
 	files = list_all_data( base_dir )
