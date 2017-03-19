@@ -1,7 +1,7 @@
 # standardize the SNAP data to the new standard
 # oob = -9999 crs = 3338 change cru namings...
-def list_all_data( base_path ):
-	return [os.path.join(root, fn) for root, subs, files in os.walk( base_path ) for fn in files if fn.endswith( '.tif' ) ]
+def list_all_data( base_dir ):
+	return [os.path.join(root, fn) for root, subs, files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) ]
 
 def fix_naming( fn ):
 	dirname, basename = os.path.split( fn )
@@ -10,7 +10,7 @@ def fix_naming( fn ):
 	basename = basename.replace( '5MODELAVG', '5ModelAvg' )
 	return os.path.join( dirname, basename )
 
-def update_crs_oob( fn, base_path, output_path ):
+def update_crs_oob( fn, base_dir, output_dir ):
 	# reproject to 3338, update nodata value and make sure its compressed
 	# I have chosen not to do this since it is off by a precision we cannot even be certain of given our
 	# data constraints.  I am just going to set it to 3338 without a reproject
@@ -31,7 +31,7 @@ def update_crs_oob( fn, base_path, output_path ):
 		out.write( arr, 1 )
 
 	# rename the existing file to the proper naming convention
-	output_filename = fix_naming( fn.replace( base_path, output_path ) )
+	output_filename = fix_naming( fn.replace( base_dir, output_dir ) )
 
 	# make sure the new directory actually exists
 	dirname, basename = os.path.split( output_filename )
@@ -50,18 +50,18 @@ if __name__ == '__main__':
 	import rasterio, os
 	from pathos.mp_map import mp_map
 	from functools import partial
+	import argparse
 
-	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled' 
-	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids' # downscaled'
+	parser = argparse.ArgumentParser( description='standardize a folder of GeoTiff files (recursive) that need standardizing to SNAP data standard.' )
+	parser.add_argument( "-b", "--base_dir", action='store', dest='base_dir', type=str, help="base directory where data is stored in structured folders" )
+	parser.add_argument( "-o", "--output_dir", action='store', dest='output_dir', type=str, help="output base directory where data will be output - can be same as input" )
+	args = parser.parse_args()
 
-	# base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled'
-	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscaled' 
-
-	# can be the same directory with an overwrite...
-	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
-	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
+	# unpack cli vars
+	base_dir = args.base_dir
+	output_dir = output_dir
 
 	# list the data
-	files = list_all_data( base_path )
-	f = partial( update_crs_oob, base_path=base_path, output_path=output_path )
+	files = list_all_data( base_dir )
+	f = partial( update_crs_oob, base_dir=base_dir, output_dir=output_dir )
 	done = mp_map( f, files, nproc=32 )
