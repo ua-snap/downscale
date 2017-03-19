@@ -29,6 +29,8 @@ if __name__ == '__main__':
 	
 	# get list of directories to standardize
 	root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'downscaled' ) ) if os.path.split(root)[1] in variables ]
+	# test first...
+	# root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'REMOVE','downscaled_v1' ) ) if os.path.split(root)[1] in variables and 'anom' not in root ][:1]
 
 	slurm_path = os.path.join( base_dir, 'downscaled', 'slurm_log' )
 	if not os.path.exists( slurm_path ):
