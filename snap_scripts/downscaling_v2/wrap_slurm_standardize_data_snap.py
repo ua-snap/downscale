@@ -28,16 +28,17 @@ if __name__ == '__main__':
 	# scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	
 	# get list of directories to standardize
-	root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'downscaled' ) ) if os.path.split(root)[1] in variables ]
+	root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'downscaled' ) ) if os.path.split(root)[1] in variables and 'anom' not in root ]
 	# test first...
 	# root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'REMOVE','downscaled_v1' ) ) if os.path.split(root)[1] in variables and 'anom' not in root ][:1]
 
 	slurm_path = os.path.join( base_dir, 'downscaled', 'slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
+	
 	os.chdir( slurm_path )
 	
 	# launch
 	for root in root_list:
-		fn = os.path.join( slurm_path, 'slurm_run_standardize_data_snap_'+'_'.join( root.split( '/' )[-2:] )+'.slurm' )
+		fn = os.path.join( slurm_path, 'slurm_run_standardize_data_snap_'+'_'.join( root.split( '/' )[-3:] )+'.slurm' )
 		_ = run_model( fn, root, root )
