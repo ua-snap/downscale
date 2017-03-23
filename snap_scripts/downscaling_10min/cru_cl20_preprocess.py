@@ -127,7 +127,7 @@ if __name__ == '__main__':
 	template_raster = rasterio.open( template_raster_fn )
 	resolution = template_raster.res
 	template_meta = template_raster.meta
-	template_meta.update( compress='lzw' )
+	template_meta.update( compress='lzw', dtype='float32' )
 	a,b,c,d = template_raster.bounds
 	
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
