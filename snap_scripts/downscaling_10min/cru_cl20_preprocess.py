@@ -132,7 +132,7 @@ if __name__ == '__main__':
 	
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
 	for fn in out_paths:
-		os.system( 'gdalwarp -overwrite -dstnodata -9999 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
+		os.system( 'gdalwarp -q -overwrite -dstnodata -9999 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
 		final_fn = fn.replace( '_PCLL', '' )
 		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
@@ -143,7 +143,7 @@ if __name__ == '__main__':
 		with rasterio.open( final_fn, 'w', **template_meta ) as out:
 			out.write( np.empty_like( mask ), 1 )
 
-		os.system( 'gdalwarp -wo SOURCE_EXTRA=100 -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
+		os.system( 'gdalwarp -q -wo SOURCE_EXTRA=100 -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		with rasterio.open( final_fn, 'r+' ) as rst:
 			arr = rst.read( 1 )
