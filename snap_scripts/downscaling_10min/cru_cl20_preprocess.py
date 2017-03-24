@@ -56,10 +56,10 @@ if __name__ == '__main__':
 	template_raster_fn = args.template_raster_fn
 
 	# # # # FOR TESTING # # # #
-	# base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru'
+	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_ts20'
 	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
 	# variable = 'sunp'
-	# template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
+	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaling_10min/template_extent_10min_CL20.tif'
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
@@ -127,24 +127,29 @@ if __name__ == '__main__':
 	template_raster = rasterio.open( template_raster_fn )
 	resolution = template_raster.res
 	template_meta = template_raster.meta
-	template_meta.update( compress='lzw', dtype='float32' )
+	template_meta.update( compress='lzw', dtype='float32', crs={'init':'epsg:3338'}, nodata=-9999 ) # update some output meta for the new GTiffs
+	if 'transform' in template_meta.keys():
+		template_meta.pop( 'transform' )
 	a,b,c,d = template_raster.bounds
 	
-	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
+	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 10min...
 	for fn in out_paths:
-		os.system( 'gdalwarp -q -overwrite -dstnodata -9999 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
+		# back to greenwich LL
+		os.system( 'gdalwarp -q -overwrite -srcnodata -9999 -dstnodata -9999 -multi -wo SOURCE_EXTRA=100 -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
+		# setup the output filename and pathing
 		final_fn = fn.replace( '_PCLL', '' )
 		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
 		if os.path.exists( final_fn ):
 			os.remove( final_fn )
 
+		# make a new file with the final name that is empty but the same as the template_raster
 		mask = template_raster.read_masks( 1 ).astype( np.float32 )
 		with rasterio.open( final_fn, 'w', **template_meta ) as out:
 			out.write( np.empty_like( mask ), 1 )
 
+		# warp to this new empty dataset
 		os.system( 'gdalwarp -q -wo SOURCE_EXTRA=100 -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
-		# os.system( 'gdalwarp -overwrite -t_srs EPSG:3338 -co COMPRESS=LZW -wo SOURCE_EXTRA=100 -multi -srcnodata {} -dstnodata {} {} {}'.format( -3.4e+38, -3.4e+38, fn.replace( 'PCLL', 'LL' ), final_fn ) )
 		with rasterio.open( final_fn, 'r+' ) as rst:
 			arr = rst.read( 1 )
 			arr[ mask == 0 ] = -9999
@@ -165,7 +170,7 @@ if __name__ == '__main__':
 # os.chdir( script_path )
 # base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_ts20'
 # cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
-# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaling_10min/template_extent_10min.tif'
+# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaling_10min/template_extent_10min_CL20.tif'
 # for cru_filename in cru_filenames:
 # 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
 # 	variable = os.path.basename( cru_filename ).split( '_' )[-1].split('.')[0]
