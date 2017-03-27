@@ -1,0 +1,45 @@
+# # # # # # #
+# WAY TO MAKE THE NECESSARY AOI DOMAIN SHAPEFILE FOR THE 10MIN DATA RUN
+# # # # # # #
+
+# copy a file from the climatology set to use to make the domain.
+cp /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_ts20/cru_cl20/sunp/sunp_cru_cl20_akcan_01_1961-1990.tif /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990.tif
+
+# now lets reproject to the wgs84 LL greenwich.
+gdalwarp -overwrite -multi -co COMPRESS=LZW -dstnodata -9999 -t_srs EPSG:4326 /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990.tif /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_GCLL.tif
+
+
+R 
+
+require(raster)
+
+fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_GCLL.tif'
+
+r <- raster( fn )
+r2 <- trim(r)
+
+writeRaster( r2, '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_GCLL_trim.tif' )
+
+quit()
+n
+
+
+gdalwarp -overwrite -multi -co COMPRESS=LZW -t_srs EPSG:4326 -wo SOURCE_EXTRA=100 -dstnodata -9999 --config CENTER_LONG 180 /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_GCLL_trim.tif /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_PCLL_trim.tif
+
+gdalwarp -overwrite -multi -co COMPRESS=LZW -t_srs EPSG:3338 -wo SOURCE=100 -dstnodata -9999 /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_GCLL_trim.tif /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_akalbers.tif
+
+R 
+
+require(raster)
+
+fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_akalbers.tif'
+
+r <- raster( fn )
+r2 <- trim( r, 0 )
+
+writeRaster( r2, '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_akalbers_trim.tif', overwrite=TRUE )
+
+quit()
+n
+
+
