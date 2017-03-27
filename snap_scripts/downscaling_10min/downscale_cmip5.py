@@ -1,5 +1,5 @@
 # downscale the prepped cmip5 data downloaded using SYNDA @ 10min
-# author: Michael Lindgren -- 2017
+# author: Michael Lindgren -- 2017 TAS/PR DATA RUN...
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
@@ -32,7 +32,7 @@ if __name__ == '__main__':
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# variable = 'pr'
 	# scenario = 'rcp60'
 	# model = 'GFDL-CM3'
@@ -71,9 +71,9 @@ if __name__ == '__main__':
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
 		# clim_path = os.path.join( base_dir, 'prism', variable )
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable )
+		variable_lookup_cru = {'pr':'pre', 'tas':'tmp'} # only ready for tas / pr currently
+		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable_lookup_cru[ variable ] )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
-		# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
 		
 		input_path = os.path.join( base_path, model, scenario, variable )

@@ -38,7 +38,7 @@ class ExtentToShapefile( object ):
 		pol = self.extent_to_polygon( ext )
 
 		# make shapefile
-		df = gpd.GeoDataFrame.from_dict( {1:{ 'id':1, 'geometry':pol } }, orient='index' )
+		df = gpd.GeoDataFrame.from_dict( { 1:{ 'id':1, 'geometry':pol } }, orient='index' )
 		gdf = gpd.GeoDataFrame( df, crs=rst.crs, geometry='geometry' )
 
 		# cleanup
@@ -54,6 +54,5 @@ if __name__ == '__main__':
 
 # # # # CLI EXAMPLE -- FIRE is COOOL! # # # # #
 # python raster_extent_to_shapefile.py extent_to_shapefile 
-# 		--fn /Users/malindgren/Documents/downscale_epscor/TEMPORARY/sunp_cru_cl20_akcan_01_1961-1990_GCLL_trim.tif 
-# 		--output_filename /Users/malindgren/Documents/downscale_epscor/TEMPORARY/sunp_cru_cl20_akcan_01_1961-1990_GCLL_trim.shp
-
+# 		--fn /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_PCLL_trim.tif 
+# 		--output_filename /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_PCLL_trim.shp
