@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
 	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
 	# aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_PCLL_trim.tif'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/sunp_cru_cl20_akcan_01_1961-1990_PCLL_trim.shp'
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
@@ -70,9 +70,10 @@ if __name__ == '__main__':
 		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		clim_path = os.path.join( base_dir, 'prism', variable )
+		# clim_path = os.path.join( base_dir, 'prism', variable )
+		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
-		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
+		# filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
 		
 		input_path = os.path.join( base_path, model, scenario, variable )
