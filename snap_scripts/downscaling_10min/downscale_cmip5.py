@@ -70,7 +70,6 @@ if __name__ == '__main__':
 		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		# clim_path = os.path.join( base_dir, 'prism', variable )
 		variable_lookup_cru = {'pr':'pre', 'tas':'tmp'} # only ready for tas / pr currently
 		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable_lookup_cru[ variable ] )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
