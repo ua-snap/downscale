@@ -56,14 +56,14 @@ if __name__ == '__main__':
 	template_raster_fn = args.template_raster_fn
 
 	# # # # FOR TESTING # # # #
-	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_ts20'
+	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
 	# variable = 'sunp'
-	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaling_10min/template_extent_10min_CL20.tif'
+	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
-	cru_path = os.path.join( base_path, 'cru_cl20', variable )
+	cru_path = os.path.join( base_path, 'cru', 'akcan_10min_extent', 'cru_cl20', variable )
 
 	if not os.path.exists( cru_path ):
 		os.makedirs( cru_path )
@@ -168,9 +168,9 @@ if __name__ == '__main__':
 
 # script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min'
 # os.chdir( script_path )
-# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_ts20'
+# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 # cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
-# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaling_10min/template_extent_10min_CL20.tif'
+# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
 # for cru_filename in cru_filenames:
 # 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
 # 	variable = os.path.basename( cru_filename ).split( '_' )[-1].split('.')[0]
