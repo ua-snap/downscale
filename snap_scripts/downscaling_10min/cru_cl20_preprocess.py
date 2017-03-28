@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
 	# set bounds to interpolate over
 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
-	xmin, ymin, xmax, ymax = (160, 0, 300, 90)
+	xmin, ymin, xmax, ymax = (130, 0, 360, 90)
 
 	# multiply arcminutes in degree by 360(180) for 10' resolution
 	rows = 60 * ( ymax - ymin )
