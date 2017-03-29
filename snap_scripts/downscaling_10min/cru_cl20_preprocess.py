@@ -1,5 +1,5 @@
 # # # PREPROCESS CRU CL20 1961-1990 CLIMATOLOGY DATA (http://www.cru.uea.ac.uk/cru/data/hrg/tmc)
-# # author: Michael Lindgren (malindgren@alaska.edu) -- Sept. 2016
+# # author: Michael Lindgren (malindgren@alaska.edu) -- March 2017
 # # # #
 
 import numpy as np
@@ -57,8 +57,8 @@ if __name__ == '__main__':
 
 	# # # # FOR TESTING # # # #
 	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
-	# variable = 'sunp'
+	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_tmp.dat.gz'
+	# variable = 'tmp'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
 	# # # # # # # # # # # # # #
 
@@ -79,9 +79,19 @@ if __name__ == '__main__':
 	cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
 	cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
 
+	# to deal with a funny issue in the far North regions using the irregular grid distributed by
+	# CRU as XYZ points, it is necessary to add an additional 'dummy' point a couple of degrees 
+	# north of the highest points in the map.  These will aid in a proper interpolation envelope over 
+	# these regions which will be masked and the dummy data discarded.  The idea is to use the same value 
+	# as the point it came from.
+	max_df = cru_df[ cru_df.lat == cru_df.lat.max() ].copy()
+	new_upper_lat = 85.000
+	max_df[ 'lat' ] = new_upper_lat
+	cru_df = cru_df.append( max_df )
+
 	# set bounds to interpolate over
 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
-	xmin, ymin, xmax, ymax = (130, 0, 360, 90)
+	xmin, ymin, xmax, ymax = (0, 0, 360, 90)
 
 	# multiply arcminutes in degree by 360(180) for 10' resolution
 	rows = 60 * ( ymax - ymin )
@@ -135,7 +145,8 @@ if __name__ == '__main__':
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 10min...
 	for fn in out_paths:
 		# back to greenwich LL
-		os.system( 'gdalwarp -q -overwrite -srcnodata -9999 -dstnodata -9999 -multi -wo SOURCE_EXTRA=100 -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
+		# -180 0 180 90
+		os.system( 'gdalwarp -q -overwrite -srcnodata -9999 -dstnodata -9999 -multi -wo SOURCE_EXTRA=100 -t_srs EPSG:4326 -te {} {} {} {} {} {}'.format( xmin, ymin, xmax, ymax, fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
 		# setup the output filename and pathing
 		final_fn = fn.replace( '_PCLL', '' )
@@ -169,7 +180,7 @@ if __name__ == '__main__':
 # script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min'
 # os.chdir( script_path )
 # base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-# cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
+# cru_filenames = [ fn for fn in glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz') if 'tmp' in fn or 'pre' in fn ]
 # template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
 # for cru_filename in cru_filenames:
 # 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
