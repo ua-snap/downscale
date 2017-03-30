@@ -152,10 +152,10 @@ if __name__ == '__main__':
 	# polar coords for interpolation...
 	p_xmin, p_ymin, p_xmax, p_ymax = list( polar_template.bounds )
 
-	# flip it to polar stereo for interpolation
+	# flip it to polar stereo for bettter (not perfect) interpolation
 	cru_shp_polar = cru_shp.to_crs( epsg=3413 )
 
-	# HARDWIRED FROM A TEMPLATE EXTENT...
+	# HARDWIRED FROM TEMPLATE EXTENT...
 	rows, cols = polar_template.shape
 	
 	# build the output grid
@@ -196,7 +196,6 @@ if __name__ == '__main__':
 		out_paths = out_paths + [ output_filename ]
 
 	# template dataset for warping into 
-	# template_raster_fn = '/Users/malindgren/Documents/downscale_epscor/TEMPORARY/akcan_15k_template.tif'
 	template_raster = rasterio.open( template_raster_fn )
 	resolution = template_raster.res
 	template_meta = template_raster.meta
@@ -209,21 +208,23 @@ if __name__ == '__main__':
 	# now lets try to reproject it to 3338 using the template raster...
 	for fn in out_paths:
 		# FIRST REPROJECT THE 3413 DATA TO 4326 @~10'
-		# fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru/akcan_10min_extent/cru_cl20/tmp/intermediates/tmp_cru_cl20_akcan_12_1961-1990_POLARSTEREO.tif'
-		# output_filename = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru/akcan_10min_extent/cru_cl20/tmp/intermediates/tmp_cru_cl20_akcan_12_1961-1990_TEST_4326.tif'
 		print( fn )
-		out_fn = fn.replace( '_POLARSTEREO.tif', '_GCLL2.tif' )
-		command = 'gdalwarp -overwrite -multi -r near -s_srs EPSG:3413 -t_srs EPSG:4326 -tr 0.16667 0.16667 -te -180 20 180 90 {} {}'.format( fn, out_fn )
+		out_fn = fn.replace( '_POLARSTEREO.tif', '_GCLL.tif' )
+		command = 'gdalwarp -srcnodata -9999 -dstnodata -9999 -overwrite -wo SOURCE_EXTRA=10000 -wo NUM_THREADS=5 -multi -r cubic -s_srs EPSG:3413 -t_srs EPSG:4326 -tr 0.16667 0.16667 -te -180 20 180 90 {} {}'.format( fn, out_fn )
 		os.system( command )
 		
+		# # flip to PCLL? 
+		# out_fn_pcll = out_fn.replace('GCLL', 'PCLL')
+		# command = 'gdalwarp -multi -overwrite -wo SOURCE_EXTRA=1000 -wo NUM_THREADS=5 -t_srs WGS84 -te 0 20 360 90 {} {}'.format( out_fn, out_fn_pcll )
+		# os.system( command )
+
 		# make an empty layer with the same meta as template raster for warping into.
-		output_filename = out_fn.replace( '_GCLL2.tif', '_FINAL_TEST.tif' )
-		# output_filename = os.path.join( cru_path, os.path.basename( out_fn.replace( '_GCLL.tif', '.tif' ) ) )
+		output_filename = os.path.join( cru_path, os.path.basename( out_fn.replace( '_GCLL.tif', '.tif' ) ) )
 		with rasterio.open( output_filename, 'w', **template_meta ) as rst:
 			rst.write( np.empty_like( template_arr ), 1 )
 
-		# # reproject TO this new empty layer...
-		command = 'gdalwarp -r bilinear -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( out_fn, output_filename )
+		# # reproject TO this new empty layer... EPSG:3338
+		command = 'gdalwarp -r cubic -wo SOURCE_EXTRA=1000 -wo NUM_THREADS=5 -multi -srcnodata -9999 {} {}'.format( out_fn, output_filename )
 		os.system( command )
 
 		# mask it
@@ -233,7 +234,7 @@ if __name__ == '__main__':
 
 		with rasterio.open( output_filename, 'w', **template_meta ) as out:
 			out.write( out_arr, 1 )
-
+		break
 
 	print( 'completed run of {}'.format( variable ) )
 
