@@ -3,6 +3,64 @@
 # # # #
 
 import numpy as np
+def coordinates( fn=None, meta=None, numpy_array=None, input_crs=None, to_latlong=False ):
+	'''
+	take a raster file as input and return the centroid coords for each 
+	of the grid cells as a pair of numpy 2d arrays (longitude, latitude)
+	User must give either:
+		fn = path to the rasterio readable raster
+	OR
+		meta & numpy ndarray (usually obtained by rasterio.open(fn).read( 1 )) 
+		where:
+		meta = a rasterio style metadata dictionary ( rasterio.open(fn).meta )
+		numpy_array = 2d numpy array representing a raster described by the meta
+	input_crs = rasterio style proj4 dict, example: { 'init':'epsg:3338' }
+	to_latlong = boolean.  If True all coordinates will be returned as EPSG:4326
+						 If False all coordinates will be returned in input_crs
+	returns:
+		meshgrid of longitudes and latitudes
+	''' 
+	
+	import rasterio
+	import numpy as np
+	from affine import Affine
+	from pyproj import Proj, transform
+
+	if fn:
+		# Read raster
+		with rasterio.open( fn ) as r:
+			T0 = r.affine  # upper-left pixel corner affine transform
+			p1 = Proj( r.crs )
+			A = r.read( 1 )  # pixel values
+
+	elif (meta is not None) & (numpy_array is not None):
+		A = numpy_array
+		if input_crs != None:
+			p1 = Proj( input_crs )
+			T0 = meta[ 'affine' ]
+		else:
+			p1 = None
+			T0 = meta[ 'affine' ]
+	else:
+		BaseException( 'check inputs' )
+
+	# All rows and columns
+	cols, rows = np.meshgrid(np.arange(A.shape[1]), np.arange(A.shape[0]))
+	# Get affine transform for pixel centres
+	T1 = T0 * Affine.translation( 0.5, 0.5 )
+	# Function to convert pixel row/column index (from 0) to easting/northing at centre
+	rc2en = lambda r, c: ( c, r ) * T1
+	# All eastings and northings (there is probably a faster way to do this)
+	eastings, northings = np.vectorize(rc2en, otypes=[np.float, np.float])(rows, cols)
+
+	if to_latlong == False:
+		return eastings, northings
+	elif (to_latlong == True) & (input_crs != None):
+		# Project all longitudes, latitudes
+		longs, lats = transform(p1, p1.to_latlong(), eastings, northings)
+		return longs, lats
+	else:
+		BaseException( 'cant reproject to latlong without an input_crs' )
 
 def xyz_to_grid( x, y, z, xi, yi, method='linear', output_dtype=np.float32 ):
 	'''
@@ -60,7 +118,11 @@ if __name__ == '__main__':
 	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_tmp.dat.gz'
 	# variable = 'tmp'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
-	# # # # # # # # # # # # # #
+	# # # # # # # # # # # # #
+
+	# # # THIS IS HARDWIRED CURRENTLY...
+	polar_template = rasterio.open( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/polar_stereo_for_10min_interpolation_extent.tif' )
+	#####  ONLY USEFUL FOR 10MIN DATA INCLUDING NWT....
 
 	# build an output path to store the data generated with this script
 	cru_path = os.path.join( base_path, 'cru', 'akcan_10min_extent', 'cru_cl20', variable )
@@ -73,35 +135,36 @@ if __name__ == '__main__':
 	months_lookup = { count+1:month for count, month in enumerate( months ) }
 	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames )
 	
-	# manually flip to PCLL for interpolation
-	cru_df['lon'][ cru_df['lon'] < 0 ] = cru_df['lon'][ cru_df['lon'] < 0 ] + 360
-
-	cru_df['geometry'] = cru_df.apply( lambda x: Point( x.lon, x.lat), axis=1 )
-	cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
-
-	# to deal with a funny issue in the far North regions using the irregular grid distributed by
-	# CRU as XYZ points, it is necessary to add an additional 'dummy' point a couple of degrees 
-	# north of the highest points in the map.  These will aid in a proper interpolation envelope over 
-	# these regions which will be masked and the dummy data discarded.  The idea is to use the same value 
-	# as the point it came from.
-	max_df = cru_df[ cru_df.lat == cru_df.lat.max() ].copy()
-	new_upper_lat = 85.000
-	max_df[ 'lat' ] = new_upper_lat
-	cru_df = cru_df.append( max_df )
-
 	# set bounds to interpolate over
 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
-	xmin, ymin, xmax, ymax = (0, 0, 360, 90)
+	xmin, ymin, xmax, ymax = (0, 20, 360, 90)
 
-	# multiply arcminutes in degree by 360(180) for 10' resolution
-	rows = 60 * ( ymax - ymin )
-	cols = 60 * ( xmax - xmin )
+	# drop everything below the ymin...
+	# manually flip to PCLL for interpolation
+	cru_df = cru_df[ cru_df.lat >= ymin ]
 
+	# convert to a spatial data frame
+	xy = zip(cru_df['lon'].tolist(), cru_df['lat'].tolist())
+	points = mp_map( lambda i: Point(i), xy, nproc=50 )
+	cru_df[ 'geometry' ] = points
+	cru_shp = gpd.GeoDataFrame( cru_df, geometry='geometry', crs={'init':'EPSG:4326'} )
+
+	# polar coords for interpolation...
+	p_xmin, p_ymin, p_xmax, p_ymax = list( polar_template.bounds )
+
+	# flip it to polar stereo for interpolation
+	cru_shp_polar = cru_shp.to_crs( epsg=3413 )
+
+	# HARDWIRED FROM A TEMPLATE EXTENT...
+	rows, cols = polar_template.shape
+	
 	# build the output grid
-	x = np.linspace( xmin, xmax, cols )
-	y = np.linspace( ymin, ymax, rows )
-	xi, yi = np.meshgrid( x, y )
-	args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
+	xi, yi = coordinates( polar_template.name )
+
+	# build args to run in parallel
+	lons = [ geom.x for geom in cru_shp_polar.geometry ]
+	lats = [ geom.y for geom in cru_shp_polar.geometry ]
+	args_list = [ {'x':np.array(lons),'y':np.array(lats),'z':np.array(cru_shp_polar[month]),'xi':xi,'yi':yi} for month in months ]
 
 	# run interpolation in parallel
 	interped_grids = mp_map( regrid, args_list, nproc=12 )
@@ -109,11 +172,10 @@ if __name__ == '__main__':
 	# stack and give a proper nodata value
 	arr = np.array([ i.data for i in interped_grids ])
 	arr[ np.isnan(arr) ] = -9999
-	pcll_affine = transform_from_latlon( y, x )
 
-	meta = {'affine': pcll_affine,
+	meta = {'affine': polar_template.affine,
 			'count': 1,
-			'crs': {'init':'epsg:4326'},
+			'crs': {'init':'epsg:3413'},
 			'driver': u'GTiff',
 			'dtype': 'float32',
 			'height': rows,
@@ -128,12 +190,13 @@ if __name__ == '__main__':
 
 	out_paths = []
 	for i in range( arr.shape[0] ):
-		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_PCLL.tif'.format( variable, months_lookup[ i+1 ] ) )
+		output_filename = os.path.join( intermediate_path, '{}_cru_cl20_akcan_{}_1961-1990_POLARSTEREO.tif'.format( variable, months_lookup[ i+1 ] ) )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
 			out.write( arr[ i, ... ], 1 )
 		out_paths = out_paths + [ output_filename ]
 
-	# # template dataset
+	# template dataset for warping into 
+	# template_raster_fn = '/Users/malindgren/Documents/downscale_epscor/TEMPORARY/akcan_15k_template.tif'
 	template_raster = rasterio.open( template_raster_fn )
 	resolution = template_raster.res
 	template_meta = template_raster.meta
@@ -141,33 +204,38 @@ if __name__ == '__main__':
 	if 'transform' in template_meta.keys():
 		template_meta.pop( 'transform' )
 	a,b,c,d = template_raster.bounds
-	
-	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 10min...
+	template_arr = template_raster.read( 1 ).astype( np.float32 )
+
+	# now lets try to reproject it to 3338 using the template raster...
 	for fn in out_paths:
-		# back to greenwich LL
-		# -180 0 180 90
-		os.system( 'gdalwarp -q -overwrite -srcnodata -9999 -dstnodata -9999 -multi -wo SOURCE_EXTRA=100 -t_srs EPSG:4326 -te {} {} {} {} {} {}'.format( xmin, ymin, xmax, ymax, fn, fn.replace( 'PCLL', 'LL' ) ) )
+		# FIRST REPROJECT THE 3413 DATA TO 4326 @~10'
+		# fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru/akcan_10min_extent/cru_cl20/tmp/intermediates/tmp_cru_cl20_akcan_12_1961-1990_POLARSTEREO.tif'
+		# output_filename = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru/akcan_10min_extent/cru_cl20/tmp/intermediates/tmp_cru_cl20_akcan_12_1961-1990_TEST_4326.tif'
+		print( fn )
+		out_fn = fn.replace( '_POLARSTEREO.tif', '_GCLL2.tif' )
+		command = 'gdalwarp -overwrite -multi -r near -s_srs EPSG:3413 -t_srs EPSG:4326 -tr 0.16667 0.16667 -te -180 20 180 90 {} {}'.format( fn, out_fn )
+		os.system( command )
 		
-		# setup the output filename and pathing
-		final_fn = fn.replace( '_PCLL', '' )
-		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
-		if os.path.exists( final_fn ):
-			os.remove( final_fn )
+		# make an empty layer with the same meta as template raster for warping into.
+		output_filename = out_fn.replace( '_GCLL2.tif', '_FINAL_TEST.tif' )
+		# output_filename = os.path.join( cru_path, os.path.basename( out_fn.replace( '_GCLL.tif', '.tif' ) ) )
+		with rasterio.open( output_filename, 'w', **template_meta ) as rst:
+			rst.write( np.empty_like( template_arr ), 1 )
 
-		# make a new file with the final name that is empty but the same as the template_raster
-		mask = template_raster.read_masks( 1 ).astype( np.float32 )
-		with rasterio.open( final_fn, 'w', **template_meta ) as out:
-			out.write( np.empty_like( mask ), 1 )
+		# # reproject TO this new empty layer...
+		command = 'gdalwarp -r bilinear -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( out_fn, output_filename )
+		os.system( command )
 
-		# warp to this new empty dataset
-		os.system( 'gdalwarp -q -wo SOURCE_EXTRA=100 -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
-		with rasterio.open( final_fn, 'r+' ) as rst:
-			arr = rst.read( 1 )
-			arr[ mask == 0 ] = -9999
-			rst.write( arr, 1 )
+		# mask it
+		with rasterio.open( output_filename ) as rst:
+			out_arr = rst.read( 1 )
+			out_arr[ template_arr == 0 ] = -9999
+
+		with rasterio.open( output_filename, 'w', **template_meta ) as out:
+			out.write( out_arr, 1 )
+
 
 	print( 'completed run of {}'.format( variable ) )
-
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
