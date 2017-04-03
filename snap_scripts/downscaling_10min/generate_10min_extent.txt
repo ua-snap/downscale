@@ -7,7 +7,6 @@ cd /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_tem
 # use gdal rasterize to do the work for us...  quick and easy and industry standard...
 gdal_rasterize -a FIPS -tr 15000 15000 -co COMPRESS=LZW -ot Byte -at -init 0 -a_srs EPSG:3338 -a_nodata 0 merged_akcan.shp akcan_15k_template.tif
 
-
 # NOW IT IS IMPORTANT TO BUILD SOME OUTPUT EXTENTS IN DIFFERENT CRS FLAVORS FOR RUN...
 akcan_15k_template.tif
 make_template_extent_10min.txt -- see this for the 'how-to' here.

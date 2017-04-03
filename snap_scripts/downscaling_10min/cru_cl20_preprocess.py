@@ -115,8 +115,8 @@ if __name__ == '__main__':
 
 	# # # # FOR TESTING # # # #
 	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_tmp.dat.gz'
-	# variable = 'tmp'
+	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_pre.dat.gz'
+	# variable = 'pre'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_10min_template/akcan_15k_template.tif'
 	# # # # # # # # # # # # #
 
@@ -131,16 +131,20 @@ if __name__ == '__main__':
 		os.makedirs( cru_path )
 
 	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+	if variable == 'pre':
+		months = months + [ 'cv_'+m for m in months ]
 	colnames = [ 'lat', 'lon' ] + months
 	months_lookup = { count+1:month for count, month in enumerate( months ) }
 	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames )
+	
+	# reset months... if needed.
+	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
 	
 	# set bounds to interpolate over
 	# xmin, ymin, xmax, ymax = (0,-90, 360, 90)
 	xmin, ymin, xmax, ymax = (0, 20, 360, 90)
 
 	# drop everything below the ymin...
-	# manually flip to PCLL for interpolation
 	cru_df = cru_df[ cru_df.lat >= ymin ]
 
 	# convert to a spatial data frame
@@ -234,7 +238,6 @@ if __name__ == '__main__':
 
 		with rasterio.open( output_filename, 'w', **template_meta ) as out:
 			out.write( out_arr, 1 )
-		break
 
 	print( 'completed run of {}'.format( variable ) )
 
