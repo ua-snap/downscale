@@ -31,6 +31,19 @@ if __name__ ==	'__main__':
 	ncpus = args.ncpus
 	out_varname = args.out_varname
 
+	# # # TESTING
+	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.pre.dat.nc'
+	# clim_path =  '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru/akcan_10min_extent/cru_cl20/pre'
+	# output_path =  '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_10min/ts323/historical/pr'
+	# model =  'ts323'
+	# variable =  'pre'
+	# units =  'mm'
+	# metric =  'total'
+	# ncores =  '32'
+	# out_varname =  'pr'
+	# # # END TESTING
+
+
 	# standard args
 	clim_begin = '01-1961'
 	clim_end = '12-1990'
