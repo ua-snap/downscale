@@ -8,6 +8,7 @@
 import rasterio, os
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 from downscale import utils
 
 class Baseline( object ):
@@ -27,22 +28,84 @@ class Baseline( object ):
 		self.filelist = filelist
 		self.meta = rasterio.open( self.filelist[0] ).meta
 		self.arrlist = ( rasterio.open( fn ).read( 1 ) for fn in self.filelist )
+	def repeat( self, n ):
+		out = []
+		for i in range(n):
+			out = out + self.filelist
+		return out
+
+class Mask( object ):
+	def __init__( self, aoi, ds, mask_value=1, fill_value=0, *args, **kwargs ):
+		'''
+		make a mask from a shapefile which is already in the CRS and domain of the 
+		input ds.
+
+		ARGUMENTS:
+		---------
+		aoi = [str] full read path of a shapefile with .shp extension
+		ds = [downscale.Dataset] instance of file in a downscale.Dataset object
+		mask_value = [int] value to use for masked areas. default:1.
+		fill_value = [int] value to use for unmasked areas. default:0.
+
+		'''
+		self.aoi = aoi
+		self.ds = ds
+		self.mask_value = mask_value
+		self.fill_value = fill_value
+	@property
+	def mask( self, latitude='lat', longitude='lon', all_touched=True ):
+		''' make a mask from the aoi shapefile and the low-res input NetCDF '''
+		import geopandas as gpd
+		from downscale import utils
+
+		gdf = gpd.read_file( self.aoi )
+		shapes = [ (geom, self.mask_value) for geom in gdf.geometry ]
+		ds = self.ds.ds # grab the ds sub-object from the Dataset object
+		coords = ds.coords # get lats and lons as a coords dict from xarray
+		return utils.rasterize( shapes, coords=coords, latitude=latitude, longitude=longitude, fill=self.fill_value, **{'all_touched':all_touched} ).data
+	def to_gtiff( self, output_filename ):
+		''' write the mask to geotiff given an output_filename '''
+		meta = {'compress':'lzw'}
+		count, height, width = self.ds.ds[ self.ds.variable ].shape
+		affine = self.ds._calc_affine()
+		meta.update( affine=affine, height=height, width=width, count=1, dtype='int16', driver='GTiff' )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( self.mask.astype( np.int16 ), 1 )
+	def _dump_out_testfile( self, output_filename ):
+		''' hidden function to dump out a single representative raster from the NetCDF for comparison '''
+		meta = {'compress':'lzw'}
+		count, height, width = self.ds.ds[ self.ds.variable ].shape
+		affine = self.ds._calc_affine()
+		meta.update( affine=affine, height=height, width=width, count=1, dtype='float', driver='GTiff' )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( self.ds.ds[self.ds.variable][0], 1 )
 
 class Dataset( object ):
-	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, interp=False, ncpus=32, \
-					method='linear', begin=None, end=None, *args, **kwargs):
+	def __init__( self, fn, variable, model, scenario, project=None, units=None, metric=None, 
+					interp=False, ncpus=32,	method='linear', begin=None, end=None, level=None, level_name=None, *args, **kwargs ):
 		'''
+		build a dataset object to store the NetCDF low-res data for downscaling.
+		
+		ARGUMENTS:
+		----------
 		fn = [str] path to the xray supported dataset to be read in.
 		variable = [str] abbreviation of variable name to extract from file
 		model = [str] name of the model being read
 		scenario = [str] name of the scenario being read
+		project = [str] name of the project.  ex. 'ar5'
 		units = [str] abbreviation of the units of the variable
+		metric = [str] metric used to describe variable temporally. ex. 'mean', 'total'
 		interp = [bool] if True interpolate across NA's using a spline. 
 					if False (default) do nothing.interp=False, ncpus=32,
 		ncpus = [ int ] number of cores to use if interp=True. default:2.
-		northup = [bool] if True, flip the earth using np.flipud if False leave it alone
+		method = [ str ] type of interpolation to use. hardwired to 'linear' currently
+		begin = year series begins
+		end = year series ends
+
 		'''
 		import xarray as xr
+		import ast
+
 		self.fn = fn
 		self.ds = xr.open_dataset( self.fn )
 		self.variable = variable
@@ -50,151 +113,74 @@ class Dataset( object ):
 		self.scenario = scenario
 		self.begin = begin # year begin
 		self.end = end # year end
-		
-		if units != None:
+		self.level = level
+		self.level_name = level_name
+
+		if units:
 			self.units = units
 		else:
 			self.units = 'units'
 			
-		if project != None:
+		if project:
 			self.project = project
 		else:
 			self.project = 'project'
 
-		if metric != None:
+		if metric:
 			self.metric = metric
 		else:
 			self.metric = 'metric'
+		
+		# THIS IS WHERE EVERYTHING HAS GONE HAYWIRE....
+		# ---------------------------------------------
+		# slice to the years AND level we want if given
+		# if self.begin is not None and self.end is not None:
+		# 	if level is not None and level_name is not None:
+		# 		levidx, = np.where( self.ds[ self.level_name ] == self.level )
+		# 		ds = self.ds[ self.variable ][ :, int(levidx), ... ]
+		# 		self.ds = ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+		# 	else:
+		# 		self.ds = self.ds[ self.variable ].sel( time=slice( str( self.begin ), str( self.end ) ) )
+		# else:
+		# 	# just slice out the variable we want.
+		# 	self.ds = self.ds[ self.variable ]
 
+		if self.begin is not None and self.end is not None:
+			print('1')
+			if self.level is not None and self.level_name is not None:
+				print('2')
+				# THIS IS DANGEROUS! BUT WOULD BE HARD TO EXPLOIT DUE TO THE STRUCTURE
+				# OF THE QUERY BEING WITHIN THIS MODULE...  Famous last words...
+				ds = eval( 'self.ds.sel({}={})'.format( self.level_name, self.level ) )
+				# levidx, = np.where( self.ds[ self.level_name ] == self.level )
+				# ds = self.ds[ self.variable ][ :, int(levidx), ... ]
+				self.ds = ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+				del ds
+			else:
+				print('3')
+				self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
+		else:
+			print('4')
+			self.ds = self.ds
+		
 		# update the lats and data to be NorthUp if necessary
 		self._northup()
 
-		# slice to the years we want if given
-		if self.begin != None and self.end != None:
-			self.ds = self.ds.sel( time=slice( str( self.begin ), str( self.end ) ) )
-
 		self.interp = interp
 		self.ncpus = ncpus
-		self.method = method
-		self._rotated = False
-		self._lonpc = None
-		if interp:
-			print( 'running interpolation across NAs' )
-			_ = self.interp_na( )
-	
-	# @staticmethod
-	# def transform_from_latlon( lat, lon ):
-	# 	''' simple way to make an affine transform from lats and lons coords '''
-	# 	from affine import Affine
-	# 	lat = np.asarray( lat )
-	# 	lon = np.asarray( lon )
-	# 	trans = Affine.translation(lon[0], lat[0])
-	# 	scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
-	# 	return trans * scale
-	@staticmethod
-	def transform_from_latlon( lat, lon ):
-		''' simple way to make an affine transform from lats and lons coords '''
-		from affine import Affine
-		lat = np.asarray( lat )
-		lon = np.asarray( lon )
-		if (np.max( lat ) - 90) < np.abs( np.mean( np.diff( lat ) ) ):
-			lat_max = 90.0
-		else:
-			lat_max = np.max( lat )
+		self.method = 'linear'
+		self.transform_from_latlon = utils.transform_from_latlon
 
-		# set the lonmax to the corner. --> this can get you into trouble with non-global data
-		# but I am unsure how to make it more dynamic at the moment. [ML]
-		lon_arr = np.array([-180.0, 0.0 ])
-		idx = (np.abs(lon_arr - np.min( lon ) ) ).argmin()
-		lon_max = lon_arr[ idx ]
-
-		trans = Affine.translation(lon_max, lat_max)
-		scale = Affine.scale(lon[1] - lon[0], lat[1] - lat[0])
-		return trans * scale
 	def _calc_affine( self ):
+		''' 
+		calculate affine transform from lats / lons and snap to global extent
+		NOTE: only use for global data
+		'''
 		return self.transform_from_latlon( self.ds.lat, self.ds.lon )
 	def _northup( self, latitude='lat' ):
 		''' this works only for global grids to be downscaled flips it northup '''
 		if self.ds[ latitude ][0].data < 0: # meaning that south is north globally
 			self.ds[ latitude ] = np.flipud( self.ds[ latitude ] )
 			# flip each slice of the array and make a new one
-			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ].data ] )
+			flipped = np.array( [ np.flipud( arr ) for arr in self.ds[ self.variable ] ] )
 			self.ds[ self.variable ] = (('time', 'lat', 'lon' ), flipped )
-	@staticmethod
-	def rotate( dat, lons, to_pacific=False ):
-		'''rotate longitudes in WGS84 Global Extent'''
-		if to_pacific == True:
-			# to 0 - 360
-			dat, lons = utils.shiftgrid( 0., dat, lons )
-		elif to_pacific == False:
-			# to -180.0 - 180.0 
-			dat, lons = utils.shiftgrid( 180., dat, lons, start=False )
-		else:
-			raise AttributeError( 'to_pacific must be boolean True:False' )
-		return dat, lons
-	@staticmethod
-	def wrap( d ):
-		return utils.xyz_to_grid( **d )
-	def interp_na( self ):
-		'''
-		np.float32
-		method = [str] one of 'cubic', 'near', 'linear'
-
-		return a list of dicts to pass to the xyz_to_grid in parallel
-		'''
-		from copy import copy
-		import pandas as pd
-		import numpy as np
-		from pathos.mp_map import mp_map
-
-		# remove the darn scientific notation
-		np.set_printoptions( suppress=True )
-		output_dtype = np.float32
-		
-		# if 0-360 leave it alone
-		if ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.ds[ self.variable ].data, self.ds.lon
-			self._lonpc = lons
-		else:
-			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.rotate( self.ds[ self.variable ].values, self.ds.lon, to_pacific=True )
-			self._rotated = True # update the rotated attribute
-			self._lonpc = lons
-
-		# mesh the lons and lats and unravel them to 1-D
-		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
-		lo, la = [ i.ravel() for i in (xi,yi) ]
-
-		# setup args for multiprocessing
-		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
-
-		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
-				'grid':(xi,yi), 'method':self.method, 'output_dtype':output_dtype } for df in df_list ]
-		
-		# # # # USE MLAB's griddata which we _can_ parallelize
-		def wrap( d ):
-			''' simple wrapper around utils.xyz_to_grid for mp_map'''
-			x = np.array( d['x'] )
-			y = np.array( d['y'] )
-			z = np.array( d['z'] )
-			xi, yi = d['grid']
-			return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
-		# # # # 
-
-		try:
-			print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
-			dat_list = mp_map( wrap, args, nproc=self.ncpus )
-			dat_list = [ i.data for i in dat_list ] # drop the output mask
-			dat = np.array( dat_list )
-		except:
-			print( 'processing cru re-gridding in serial due to multiprocessing issues...' )
-			dat = np.array([ wrap( **i ) for i in args ])
-
-		lons = self._lonpc
-		if self._rotated == True: # rotate it back
-			dat, lons = self.rotate( dat, lons, to_pacific=False )
-				
-		# place back into a new xarray.Dataset object for further processing
-		self.ds = self.ds.update( { self.variable:( ['time','lat','lon'], dat ) } )
-		print( 'ds interpolated updated into self.ds' )
-		return 1

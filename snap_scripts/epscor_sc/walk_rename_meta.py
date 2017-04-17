@@ -90,10 +90,10 @@ if __name__ == '__main__':
 
 
 # # # TESTING STUFF BELOW # # # 
-# output_path = '/Users/malindgren/Documents/REA/export-full-1431113884388'
-# root_directory = '/Users/malindgren/Documents/REA/export-full-1431113884388'
+# output_path = '/Users/malindgren/Documents/downscale_epscor/nov_fix/metadata/meta_export'
+# root_directory = '/Users/malindgren/Documents/downscale_epscor/nov_fix/metadata/meta_export'
 
-# python /Volumes/malindgren/repos/downscale/snap_scripts/epscor_se/walk_rename_meta.py -root /Users/malindgren/Documents/downscale_epscor/metadata_export_epscor -out /Users/malindgren/Documents/downscale_epscor/metadata_export_epscor_fixed
+# python /Users/malindgren/Documents/repos/downscale/snap_scripts/epscor_sc/walk_rename_meta.py -root /Users/malindgren/Documents/downscale_epscor/nov_fix/metadata/meta_export -out /Users/malindgren/Documents/downscale_epscor/nov_fix/metadata
 # python walk_rename_meta.py --help
 # # # # # # # # # # # # # # # #
 

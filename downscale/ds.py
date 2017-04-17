@@ -9,29 +9,30 @@
 import rasterio, os, copy
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 import xarray as xr
 from downscale import utils
 
 class DeltaDownscale( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
-				downscaling_operation='add', level=None, level_name=None, 
-				mask=None, mask_value=0,ncpus=32, src_crs={'init':'epsg:4326'}, 
-				src_nodata=-9999.0, dst_nodata=None, post_downscale_function=None, 
-				varname=None, modelname=None, anom=False, resample_type='bilinear', 
-				*args, **kwargs ):
+				downscaling_operation='add', mask=None, mask_value=0, ncpus=32, 
+				src_crs={'init':'epsg:4326'}, src_nodata=-9999.0, dst_nodata=None, 
+				post_downscale_function=None, varname=None, modelname=None, anom=False, 
+				resample_type='bilinear', fix_clim=False, interp=False, find_bounds=False, 
+				aoi_mask=None, *args, **kwargs ):
 		
 		'''
 		simple delta downscaling
 		
 		Arguments:
+
 		----------
 		baseline = []
 		clim_begin = []
 		clim_end = []
 		historical = []
 		future = []
-		level = []
-		level_name = []
+		...MORE...
 		
 		Returns:
 		--------
@@ -43,8 +44,8 @@ class DeltaDownscale( object ):
 		self.clim_begin = clim_begin
 		self.clim_end = clim_end
 		self.downscaling_operation = downscaling_operation
-		self.level = level
-		self.level_name = level_name
+		self.level = self.historical.level
+		self.level_name = self.historical.level_name
 		self.mask = mask
 		self.mask_value = mask_value
 		self.ncpus = ncpus
@@ -57,12 +58,69 @@ class DeltaDownscale( object ):
 		self.src_nodata = src_nodata
 		self.dst_nodata = dst_nodata
 		self.post_downscale_function = post_downscale_function
-		
-		# calculate args
+		self.fix_clim = fix_clim
+		self.interp = interp
+		self.find_bounds = find_bounds
+		self.aoi_mask = aoi_mask
+		self.utils = utils
+
+		# interpolate across space GCLL/PCLL args
+		self._rotated = False
+		self._lonpc = None
+
+		# empty attributes to calculate
 		self.anomalies = None
+		self.climatology = None
 		self.ds = None
 		self._concat_nc()
-		self._calc_climatolgy()
+
+		# fix pr climatologies if desired
+		if fix_clim == True:
+			print( 'fixing high/low values -- {}...'.format( self.varname ) )
+			self.interp = True # force True 
+			
+			if self.aoi_mask is not None: # hairy
+				mask = self.aoi_mask.mask
+			else:
+				mask = None
+
+			self._calc_climatolgy()
+			print( 'climmin:{}'.format( np.nanmin( self.climatology.data ) ) )
+			print( 'climmax:{}'.format( np.nanmax( self.climatology.data ) ) )
+
+			self._fix_clim( aoi_mask=mask, find_bounds=self.find_bounds )
+			
+			# interpolate clims across space
+			self._interp_na_fix_clim()
+
+			# if there are still values <0.5 set them to 0.5
+			climatology = self.climatology.data
+			climatology[ climatology < 0.5 ] = 0.5
+			self.climatology.data = climatology
+			del climatology
+			
+			# fix the ds values -- will be interped below...
+			self._fix_ds( aoi_mask=mask, find_bounds=self.find_bounds )
+			print( 'dsmin:{}'.format( np.nanmin( self.ds.data ) ) )
+			print( 'dsmax:{}'.format( np.nanmax( self.ds.data ) ) )
+
+		if self.interp == True:
+			print( 'running interpolation across NAs -- base resolution' )
+			_ = self.interp_na( )
+
+
+		if fix_clim == True:
+			# if there are still values <0.5 set them to 0.5
+			dat = self.ds.data
+			dat[ dat < 0.5 ] = 0.5
+			self.ds.data = dat
+			del dat
+
+		# calculate climatology if fix_clim == False
+		if self.fix_clim == False:
+			self._calc_climatolgy()
+			
+		# calculate anomalies with the new climatology values
 		self._calc_anomalies()
 
 	def _concat_nc( self ):
@@ -70,12 +128,12 @@ class DeltaDownscale( object ):
 			ds = xr.concat([ self.historical.ds, self.future.ds ], dim='time' )
 		else:
 			ds = self.historical.ds
-		ds = ds[ self.historical.variable ]
-		if self.level:
-			# levidx, = np.where( ds[ self.level_name ] == self.level )
-			# ds = ds[ :, levidx[0], ... ]
-			ds = ds[ :, self.level, ... ]
-		self.ds = ds
+		self.ds = ds[ self.historical.variable ]
+		# if self.level:
+		# 	# levidx, = np.where( ds[ self.level_name ] == self.level )
+		# 	# ds = ds[ :, levidx[0], ... ]
+		# 	ds = ds[ :, self.level, ... ] # LEVEL is the index number of the level to use...
+		# self.ds = ds
 	def _calc_climatolgy( self ):
 		'''slice / aggregate to climatology using mean'''
 		try:
@@ -97,111 +155,157 @@ class DeltaDownscale( object ):
 			self.anomalies = anomalies.sel( time=self.future.ds.time )
 		else:
 			self.anomalies = anomalies.sel( time=self.historical.ds.time )
-	@staticmethod
-	def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
-		'''	
-		anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
-								Must also be representative of anomalies.
-		base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
-								baseline for combining with anomalies.
-		src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
-		resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
-		'''	
-		import rasterio
-		from rasterio.warp import reproject, RESAMPLING
+	def _fix_clim( self, aoi_mask, find_bounds=False ):
+		''' fix values in precip data '''
+		print( '_fix_clim' )
+		if find_bounds == True:
+			print('bounds')
+			bound_mask = find_boundary( self.climatology[ 0, ... ].data )
+			for idx in range( self.climatology.shape[0] ):
+				arr = self.climatology[ idx, ... ].data
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
+				self.climatology[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
 
-		resampling = {'average':RESAMPLING.average,
-					'cubic':RESAMPLING.cubic,
-					'lanczos':RESAMPLING.lanczos,
-					'bilinear':RESAMPLING.bilinear,
-					'cubic_spline':RESAMPLING.cubic_spline,
-					'mode':RESAMPLING.mode,
-					'count':RESAMPLING.count,
-					'index':RESAMPLING.index,
-					'nearest':RESAMPLING.nearest }
-		
-		base = rasterio.open( base )
-		baseline_arr = base.read( 1 )
-		baseline_meta = base.meta
-		baseline_meta.update( compress='lzw' )
-		output_arr = np.empty_like( baseline_arr )
-		
-		reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-				dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
-				dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
-		return output_arr
+		elif find_bounds == False:
+			for idx in range( self.climatology.shape[0] ):
+				arr = self.climatology[ idx, ... ].data
+				self.climatology[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
+		else:
+			ValueError( 'find_bounds arg is boolean only' )
+	def _fix_ds( self, aoi_mask, find_bounds=False ):
+		''' fix high/low values in precip data '''
+		print( '_fix_ds ' )
+		print( self.ds.shape[0] )
+		if find_bounds == True:
+			bound_mask = find_boundary( self.ds[ 0, ... ].data )
+			for idx in range( self.ds.shape[0] ):
+				arr = self.ds[ idx, ... ].data
+				arr = correct_boundary( arr, bound_mask, aoi_mask=aoi_mask )
+				self.ds[ idx, ... ].data = correct_inner( arr, bound_mask, aoi_mask=aoi_mask )
+
+		elif find_bounds == False:
+			for idx in range( self.ds.shape[0] ):
+				arr = self.ds[ idx, ... ].data
+				self.ds[ idx, ... ].data = correct_values( arr, aoi_mask=aoi_mask )
+		else:
+			ValueError( 'find_bounds arg is boolean only' )
 	@staticmethod
-	def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
+	def wrap( d ):
+		''' simple wrapper around utils.xyz_to_grid for mp_map '''
+		x = np.array( d['x'] )
+		y = np.array( d['y'] )
+		z = np.array( d['z'] )
+		xi, yi = d['grid']
+		return utils.xyz_to_grid( x, y, z, (xi,yi), interp='linear' )
+	def interp_na( self ):
 		'''
-		run the meat of downscaling with this runner function for parallel processing
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
 
-		ARGUMENTS:
-		----------
-		d = [dict] kwargs dict of args to pass to interpolation function
-		f = [ ]
-
-		RETURNS:
-		--------
-
+		return a list of dicts to pass to the xyz_to_grid in parallel
 		'''
-		import copy
-		post_downscale_function = d[ 'post_downscale_function' ]
-		interped = f( **d )
-		base = rasterio.open( d[ 'base' ] )
-		base_arr = base.read( 1 )
-		mask = base.read_masks( 1 )
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
 
-		# set up output file metadata.
-		meta = base.meta
-		meta.update( compress='lzw' )
-		if 'transform' in meta.keys():
-			meta.pop( 'transform' )
-
-		if anom == True:
-			# write out the anomalies
-			anom_filename = copy.copy( d[ 'output_filename' ] )
-			dirname, basename = os.path.split( anom_filename )
-			dirname = os.path.join( dirname, 'anom' )
-			basename = basename.replace( '.tif', '_anom.tif' )
-			try:
-				if not os.path.exists( dirname ):
-					os.makedirs( dirname )
-			except:
-				pass
-			anom_filename = os.path.join( dirname, basename )
-			with rasterio.open( anom_filename, 'w', **meta ) as anom:
-				anom.write( interped, 1 )
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
 		
-		# make sure the output dir exists and if not, create it
-		dirname = os.path.dirname( d[ 'output_filename' ] )
-		if not os.path.exists( dirname ):
-			os.makedirs( dirname )
+		# if 0-360 leave it alone
+		if ( self.ds.lon > 200.0 ).any() == True:
+			dat, lons = self.ds.data, self.ds.lon
+			self._lonpc = lons
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.utils.rotate( self.ds.values, self.ds.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
 
-		# operation switch
-		output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
 		
-		# post downscale it if func given
-		if post_downscale_function != None:
-			output_arr = post_downscale_function( output_arr )
-			# drop the mask if there is one
-			if hasattr( output_arr, 'mask'):
-				output_arr = output_arr.data
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
 
-		# make sure data is masked
-		output_arr[ mask == mask_value ] = meta[ 'nodata' ]
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
+				
+		# place back into a new xarray.Dataset object for further processing
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.ds.data = dat
+		print( 'ds interpolated updated into self.ds' )
+		return 1
+	def _interp_na_fix_clim( self ):
+		'''
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
 
-		# write it to disk.
-		with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
-			out.write( output_arr, 1 )
-		return d['output_filename']
-	@staticmethod
-	def add( base, anom ):
-		''' add anomalies to baseline '''
-		return base + anom
-	@staticmethod
-	def mult( base, anom ):
-		''' multiply anomalies to baseline '''
-		return base * anom
+		return a list of dicts to pass to the xyz_to_grid in parallel
+		'''
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
+
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
+		
+		# if 0-360 leave it alone
+		if ( self.ds.lon > 200.0 ).any() == True:
+			dat, lons = self.climatology.data, self.ds.lon
+			self._lonpc = lons
+			self._rotated = False
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.utils.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
+
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.ds.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+		# df_list = [ df[ df.z > 0.5 ] for df in df_list ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+		print( 'processing interpolation to convex hull in parallel using {} cpus. -- CLIMATOLOGY'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
+
+		# # add back only the cells that had NANs before and now have data
+		# dat[ np.isnan( dat )] = new_dat[ np.isnan( dat )]
+		# # set low vals to 0.5mm (the minimum acceptable value)
+		# dat[ (~np.isnan(dat)) and (dat < 0.5) ] = 0.5
+
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
+			self._rotated = False # reset it now that its back
+				
+		# place back into a new xarray.Dataset object for further processing
+		# self.ds = self.ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		
+		self.climatology.data = dat
+		print( 'ds interpolated updated into self.ds' )
+		return 1
 	def downscale( self, output_dir, prefix=None ):
 		import affine
 		from affine import Affine
@@ -209,7 +313,7 @@ class DeltaDownscale( object ):
 		from functools import partial
 		from pathos.mp_map import mp_map
 
-		operation_switch = { 'add':self.add, 'mult':self.mult }
+		operation_switch = { 'add':self.utils.add, 'mult':self.utils.mult }
 
 		def two_digit_month( x ):
 			''' make 1 digit month a standard 2-digit for output filenames '''
@@ -247,16 +351,16 @@ class DeltaDownscale( object ):
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			print( 'anomalies NOT rotated!' )
+			# print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			print( src_transform )
-			print( 'anomalies rotated!' )
+			# print( 'anomalies rotated!' )
 
-		# run and output
-		rstlist = self.baseline.filelist * (self.anomalies_rot.shape[0] / 12)
+		# run and output # this can get you if there are an incomplete number of monthly baseline rasters
+		rstlist = self.baseline.repeat( n=self.anomalies_rot.shape[0] / 12 ) # months
 		
 		if isinstance( self.anomalies_rot, xr.Dataset ):
 			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
@@ -273,11 +377,89 @@ class DeltaDownscale( object ):
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
 
 		# partial and wrapper
-		f = partial( self.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
+		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
 					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
 
-		run = partial( self._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
+		run = partial( self.utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 
 		# run it
 		out = mp_map( run, args, nproc=self.ncpus )
 		return output_dir
+
+
+# # # # # # # # # NEW FILL Dataset FOR A SPECIFIC SNAP ISSUE WITH pre DATA from CRU 
+# # # # # # # # # # and pr DATA from CMIP5 / CRU
+def find_boundary( arr ):
+	'''
+	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)
+	this is especially useful if the data are land-only.  As in the CRU TS3.x data.
+	'''
+	from skimage.segmentation import find_boundaries
+	bool_arr = np.copy( arr )
+	ind = np.isnan( bool_arr )
+	bool_arr[ ~ind ] = 1
+	bool_arr[ ind ] = 0
+	return find_boundaries( bool_arr, mode='inner' )
+
+def calc_percentile( arr, aoi_mask, percentile=95, fill_value=0, nodata=None ):
+	''' 
+	calculate the percentile value potentially over a masked domain, 
+	and avoiding nodata and np.nan AND return the nearest actual value to
+	the np.nanpercentile( arr, percentile )
+
+	arr = [numpy.ndarray] 2D array
+	aoi_mask = [numpy.ndarray] 2D mask array of 0 (nomask) or 1 (mask)
+
+	'''
+	if aoi_mask is not None:
+		# mask the background
+		arr = arr[ (aoi_mask != fill_value) ]
+
+	if nodata is not None:
+		arr = arr[ arr != nodata ]
+
+	upperthresh = np.nanpercentile( arr, percentile )
+	idx = (np.abs(arr - upperthresh)).argmin()
+	return arr[ idx ]
+
+def correct_boundary( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
+	''' correct the boundary pixels with non-acceptable values '''
+	
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+
+	# drop any masks
+	arr = np.array( arr )
+
+	ind = np.where( bound_mask == True )
+	vals = arr[ ind ]
+	vals[ vals < 0.5 ] = 0.5
+	vals[ vals > upperthresh ] = upperthresh
+	arr[ ind ] = vals
+	return arr
+
+def correct_inner( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
+	''' correct the inner pixels with non-acceptable values '''
+
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+	
+	# drop any masks
+	arr = np.array( arr )
+
+	ind = np.where( (arr > 0) & bound_mask != True )
+	vals = arr[ ind ]
+	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
+	vals[ vals > upperthresh ] = upperthresh
+	arr[ ind ] = vals
+	return arr 
+
+def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
+	''' correct the values for precip -- from @leonawicz'''
+
+	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+
+	# drop any masks
+	arr = np.array( arr )
+
+	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
+	arr[ arr > upperthresh ] = upperthresh
+	return arr

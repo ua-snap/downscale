@@ -21,7 +21,7 @@ def run( x ):
 	tas_arr = tas.read( 1 )
 	hur_arr = hur.read( 1 )
 	vap_arr = np.copy( tas_arr )
-	vap_arr[ mask ] = convert_to_vap( tas_arr[ mask], hur_arr[ mask ] )
+	vap_arr[ mask ] = convert_to_hur( tas_arr[ mask], hur_arr[ mask ] )
 
 	# filename-fu
 	output_filename = x[0].replace( 'tas', 'vap' ).replace( '_C_', '_hPa_' )

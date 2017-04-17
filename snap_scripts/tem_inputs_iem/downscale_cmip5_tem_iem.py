@@ -31,16 +31,25 @@ if __name__ == '__main__':
 	level = args.level
 	level_name = args.level_name
 
+	if level is not None:
+		level = float( level )
+
+	# hardwired ARGS -- CMIP5
 	project = 'ar5'
+	interp = False
+	find_bounds = False
+	fix_clim = False
+	aoi_mask = None # for precip data only
+	anom = False # write out anoms (True) or not (False)
 	
 	# # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016'
 	# variable = 'hur'
-	# scenario = 'rcp85'
+	# scenario = 'historical'
 	# model = 'MRI-CGCM3'
 	# units = 'pct'
 	# metric = 'mean'
-	# level = 16
+	# level = 1000 # mb / Pa
 	# level_name = 'plev'
 
 	# some setup args
@@ -49,8 +58,7 @@ if __name__ == '__main__':
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
-
+	
 	# modelnames is simply the string name to put in the output filenaming if that differs from the modelname
 	# used in querying the file which is the models list variable
 	all_models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'CCSM4' ] # temp for distributed run
@@ -83,13 +91,16 @@ if __name__ == '__main__':
 		fn, = glob.glob( os.path.join( input_path, '*.nc' ) )
 
 		if 'historical' in scenario:
-			historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=1900, end=2005 )
+			historical = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, 
+							metric=metric, begin=1900, end=2005, level_name=level_name, level=level )
 			future = None
 		else:
 			# get the historical data for anomalies
 			historical_fn, = glob.glob( os.path.join( os.path.dirname( fn ).replace( scenario, 'historical' ), '*.nc' ) )
-			historical = downscale.Dataset( historical_fn, variable, model, scenario, project=project, units=units, metric=metric, begin=1900, end=2005 )
-			future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=2006, end=2100 )
+			historical = downscale.Dataset( historical_fn, variable, model, scenario, project=project, units=units, 
+											metric=metric, begin=1900, end=2005, level_name=level_name, level=level )
+			future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, 
+											begin=2006, end=2100, level_name=level_name, level=level )
 
 		# convert from Kelvin to Celcius
 		if variable == 'tas':
@@ -122,21 +133,28 @@ if __name__ == '__main__':
 
 		round_data = partial( round_it, mask=( mask==0 ) )
 
-		def round_data_clamp( x ):
+		def round_data_clamp_hur( x ):
 			x[ x < 0.0 ] = 0.0
-			x[ x > 100.0 ] = 100.0
+			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
 			return round_data( x )
 
-		if variable == 'hur' or variable == 'clt':
-			post_downscale_function = round_data_clamp
+		def round_data_clamp_clt( x ):
+			x[ x < 0.0 ] = 0.0
+			x[ x > 100.0 ] = 100.0 # per Stephanie McAfee
+			return round_data( x )
+
+		if variable == 'hur':
+			post_downscale_function = round_data_clamp_hur
+		if variable == 'clt':
+			post_downscale_function = round_data_clamp_clt
 		else:
 			post_downscale_function = round_data
 
-		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
+		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future,
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=post_downscale_function, level=level, level_name=level_name, \
-				varname=variable, modelname=modelname, anom=anom )
+				post_downscale_function=post_downscale_function, varname=variable, modelname=modelname, 
+				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
 
 		ar5.downscale( output_dir=output_path )
 		

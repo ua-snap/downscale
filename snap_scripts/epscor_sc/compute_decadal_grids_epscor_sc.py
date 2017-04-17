@@ -56,65 +56,6 @@ def only_years( files, begin=1901, end=2100, split_on='_', elem_year=-1 ):
 	df_slice = df[ (df.year >= begin ) & (df.year <= end ) ]
 	return df_slice.fn.tolist()
 
-class SubDomains( object ):
-	'''
-	rasterize subdomains shapefile to ALFRESCO AOI of output set
-	'''
-	def __init__( self, subdomains_fn, rasterio_raster, id_field, name_field, background_value=0, *args, **kwargs ):
-		'''
-		initializer for the SubDomains object
-		The real magic here is that it will use a generator to loop through the 
-		unique ID's in the sub_domains raster map generated.
-		'''
-		import numpy as np
-		self.subdomains_fn = subdomains_fn
-		self.rasterio_raster = rasterio_raster
-		self.id_field = id_field
-		self.name_field = name_field
-		self.background_value = background_value
-		self._rasterize_subdomains( )
-		self._get_subdomains_dict( )
-
-	def _rasterize_subdomains( self ):
-		'''
-		rasterize a subdomains shapefile to the extent and resolution of 
-		a template raster file. The two must be in the same reference system 
-		or there will be potential issues. 
-		returns:
-			numpy.ndarray with the shape of the input raster and the shapefile
-			polygons burned in with the values of the id_field of the shapefile
-		gotchas:
-			currently the only supported data type is uint8 and all float values will be
-			coerced to integer for this purpose.  Another issue is that if there is a value
-			greater than 255, there could be some error-type issues.  This is something that 
-			the user needs to know for the time-being and will be fixed in subsequent versions
-			of rasterio.  Then I can add the needed changes here.
-		'''
-		import geopandas as gpd
-		import numpy as np
-
-		gdf = gpd.read_file( self.subdomains_fn )
-		id_groups = gdf.groupby( self.id_field ) # iterator of tuples (id, gdf slice)
-
-		out_shape = self.rasterio_raster.height, self.rasterio_raster.width
-		out_transform = self.rasterio_raster.affine
-
-		arr_list = [ self._rasterize_id( df, value, out_shape, out_transform, background_value=self.background_value ) for value, df in id_groups ]
-		self.sub_domains = arr_list
-	@staticmethod
-	def _rasterize_id( df, value, out_shape, out_transform, background_value=0 ):
-		from rasterio.features import rasterize
-		geom = df.geometry
-		out = rasterize( ( ( g, value ) for g in geom ),
-							out_shape=out_shape,
-							transform=out_transform,
-							fill=background_value )
-		return out
-	def _get_subdomains_dict( self ):
-		import geopandas as gpd
-		gdf = gpd.read_file( self.subdomains_fn )
-		self.names_dict = dict( zip( gdf[self.id_field], gdf[self.name_field] ) )
-
 def read_raster( x ):
 	''' apply function for multiprocessing.pool 
 		helps with clean i/o '''
@@ -159,10 +100,11 @@ def make_decadals( base_path, output_path, variable, model, scenario, decade, nc
 			meta.pop( 'transform' )
 		meta.update( compress='lzw' )
 
-		metric_switch = { 'mean':np.mean, 'total':np.sum, 'min':np.min, 'max':np.max }
+		# NOTE HOW FOR DECADALS WE ARE ONLY PERFORMING MEANS!!!!  THIS IS IMPORTANT!!!
+		metric_switch = { 'mean':np.mean, 'total':np.mean, 'min':np.min, 'max':np.max }
+
 		# variable, metric, units, project, model, scenario = os.path.basename( fn ).split( '.' )[0].split( '_' )[:-2]
 		arr = metric_switch[ agg_metric ]( arr, axis=0 )
-
 
 		# round the data 
 		if variable == 'pr':

@@ -23,8 +23,6 @@ if __name__ == '__main__':
 	ncores = '32'
 	model = 'ts323'
 	scenario = 'historical'
-	# variables = ['tmx','tmn','tmp','pre']
-	# out_varnames = ['tasmax','tasmin','tas','pr']
 	variables = ['tmx','tmn']
 	out_varnames = ['tasmax','tasmin']
 	mean_variable_cru = 'tmp'

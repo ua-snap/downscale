@@ -2,7 +2,7 @@
 
 if __name__ ==	'__main__':
 	import glob, os, itertools, rasterio
-	from downscale import DeltaDownscale, Baseline, Dataset, utils
+	from downscale import DeltaDownscale, Baseline, Dataset, utils, Mask
 	from functools import partial
 	import numpy as np
 	import argparse
@@ -32,9 +32,9 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 
 	# # # # # TESTING
-	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.hur.SNAP_derived.dat.nc'
+	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.hur.dat_snap_conversion.nc'
 	# clim_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru/cru_cl20/hur'
-	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru_ds'
+	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscale'
 	# model = 'ts323'
 	# scenario = 'historical'
 	# variable = 'hur'
@@ -50,9 +50,11 @@ if __name__ ==	'__main__':
 	scenario = 'historical'
 	project = 'cru'
 	anom = False # write out anoms (True) or not (False)
+	interp = True
 
 	# RUN
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
+	filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 	baseline = Baseline( filelist )
 
 	# DOWNSCALE
@@ -62,24 +64,73 @@ if __name__ ==	'__main__':
 	if variable in [ 'pr','pre' ]:
 		rounder = np.rint
 		downscaling_operation = 'mult'
+		find_bounds = True
+		fix_clim = True
+
+		# make AOI_Mask at input resolution for computing 95th percentiles...
+		if aoi_mask_fn is not None:
+			aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
+		else:
+			aoi_mask = None
+	
 	elif variable in ['hur','reh','cld','clt']:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'mult'
+		find_bounds = False
+		fix_clim = False
+		aoi_mask = None
+	
 	elif variable in ['tas', 'tasmin', 'tasmax']:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'add'
+		find_bounds = False
+		fix_clim = False
+		aoi_mask = None
+	
+	else:
+		AttributeError( '{} not found in conditions'.format( variable ) )
 
 	def round_it( arr ):
 		return rounder( arr )
 
+	def round_it( x, mask ):
+		arr = np.ma.masked_array( data=x, mask=mask )
+		return rounder( arr )
+
+	round_data = partial( round_it, mask=( mask==0 ) )
+
+	def round_data_clamp_hur( x ):
+		x[ x < 0.0 ] = 0.0
+		x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
+		return round_data( x )
+
+	def round_data_clamp_clt( x ):
+		x[ x < 0.0 ] = 0.0
+		x[ x > 100.0 ] = 100.0 # per Stephanie McAfee
+		return round_data( x )
+
+	if variable == 'hur':
+		post_downscale_function = round_data_clamp_hur
+	if variable == 'clt':
+		post_downscale_function = round_data_clamp_clt
+	else:
+		post_downscale_function = round_data
+
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
-							interp=True, method='linear', ncpus=32 )
+							method='linear', ncpus=32 )
 
+	# ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
+	# 			downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
+	# 			src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
+	# 			post_downscale_function=round_it, varname=out_varname, modelname=None, anom=True )
+
+	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscale( baseline, clim_begin, clim_end, historical, future=None,
 				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=True )
+				post_downscale_function=post_downscale_function, varname=out_varname, modelname=None, 
+				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
