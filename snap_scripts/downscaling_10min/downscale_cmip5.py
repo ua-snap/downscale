@@ -33,11 +33,11 @@ if __name__ == '__main__':
 	
 	# # # # FOR TESTING # # # 
 	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	# variable = 'pr'
+	# variable = 'tas'
 	# scenario = 'rcp60'
 	# model = 'GFDL-CM3'
-	# units = 'mm'
-	# metric = 'total'
+	# units = 'C'
+	# metric = 'mean'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )

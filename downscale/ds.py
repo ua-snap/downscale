@@ -359,7 +359,7 @@ class DeltaDownscale( object ):
 			print( src_transform )
 			# print( 'anomalies rotated!' )
 
-		# run and output
+		# run and output # this can get you if there are an incomplete number of monthly baseline rasters
 		rstlist = self.baseline.repeat( n=self.anomalies_rot.shape[0] / 12 ) # months
 		
 		if isinstance( self.anomalies_rot, xr.Dataset ):
