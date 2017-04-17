@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-dependencies_list = [ 'xarray','rasterio','pandas','numpy','rasterio','pathos' ]
+dependencies_list = [ 'xarray','rasterio','pandas','numpy','pathos','geopandas','scipy','netCDF4' ]
 scripts_list = []
 
 classifiers = [
