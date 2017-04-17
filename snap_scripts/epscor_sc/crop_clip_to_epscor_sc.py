@@ -13,7 +13,7 @@ def crop_clip( shp_fn, rst_fn, out_fn ):
 	# proj4string = '+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs'
 	proj4string = 'EPSG:3338'
 	subprocess.call(['gdalwarp', '-q', '-tap','-overwrite', '-tap' ,'-t_srs', proj4string,'-co', 'COMPRESS=LZW', '-tr', '2000', '2000', 
-						'-srcnodata', '-3.4e+38', '-dstnodata', '-3.4e+38', '-crop_to_cutline', '-cutline', 
+						'-srcnodata', '-9999', '-dstnodata', '-9999', '-crop_to_cutline', '-cutline', 
 						shp_fn, rst_fn, out_fn ])
 	return out_fn
 
@@ -29,11 +29,10 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 
 	# setup args
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled_FINAL_OCT'
-	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_FINAL_OCT'
-	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
-	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_OCT2016_FINAL/downscaled'
-	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_OCT2016_FINAL/derived/grids'
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/downscaled'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids'
+	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled'
+	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/derived/grids'
 	ncpus = 32
 	subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 

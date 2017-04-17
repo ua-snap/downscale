@@ -172,8 +172,8 @@ if __name__ == '__main__':
 	from pathos import multiprocessing as mp
 
 	# setup args
-	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_OCT2016_FINAL/downscaled'
-	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_OCT2016_FINAL/derived/tabular'
+	base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled'
+	output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/derived/tabular'
 	ncpus = 32
 	project = 'cmip5'
 	variables = [ 'tasmin', 'tasmax', 'tas', 'pr' ]
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 	begin_out = 1900
 	end_out = 2100
-	template_rst = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_OCT2016_FINAL/downscaled/NCAR-CCSM4/historical/tasmax/tasmax_mean_C_ar5_NCAR-CCSM4_historical_01_1901.tif'
+	template_rst = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/EPSCOR_SC_DELIVERY_MARCH2017/downscaled/NCAR-CCSM4/historical/tasmax/tasmax_mean_C_ar5_NCAR-CCSM4_historical_01_1901.tif'
 	rst = rasterio.open( template_rst )
 	# subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	subdomain_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/SCTC_watersheds.shp'
@@ -201,12 +201,13 @@ if __name__ == '__main__':
 		all_data = {}
 		for model, scenario in itertools.product( models, scenarios ):
 			if scenario == 'historical':
-				decades = [(1900,1909),(1910, 1919),(1920, 1929),(1930, 1939),(1940, 1949),
+				decades = [(1910, 1919),(1920, 1929),(1930, 1939),(1940, 1949),
 							(1950, 1959),(1960, 1969),(1970, 1979),(1980, 1989),(1990, 1999),
-							(2000,2005)]
+							(2000,2005)] # (1900,1909),
 			else:
-				decades = [(2006,2009),(2010, 2019),(2020, 2029),(2030, 2039),(2040, 2049),
-							(2050, 2059),(2060, 2069),(2070, 2079),(2080, 2089),(2090, 2099)]
+				decades = [(2010, 2019),(2020, 2029),(2030, 2039),(2040, 2049),
+							(2050, 2059),(2060, 2069),(2070, 2079),(2080, 2089),
+							(2090, 2099)] # (2006,2009),
 
 			for decade in decades:
 				if scenario == 'historical':

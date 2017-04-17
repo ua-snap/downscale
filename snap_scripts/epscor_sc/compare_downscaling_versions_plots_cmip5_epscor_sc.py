@@ -76,7 +76,7 @@ def only_years( files, begin=1901, end=2100, split_on='_', elem_year=-1 ):
 	df = pd.DataFrame( { 'fn':files, 'year':years } )
 	df_slice = df[ (df.year >= begin ) & (df.year <= end ) ]
 	return df_slice.fn.tolist()
-def masked_mean( fn, bounds=None ):
+def masked_mean( fn, mask=None, bounds=None ):
 	''' get mean of the full domain since the data are already clipped 
 	mostly used for processing lots of files in parallel.'''
 	import numpy as np
@@ -87,7 +87,10 @@ def masked_mean( fn, bounds=None ):
 			window = rst.window( *bounds )
 		else:
 			window = rst.window( *rst.bounds )
-		mask = (rst.read_masks( 1 ) == 0)
+		
+		if not mask:
+			mask = (rst.read_masks( 1 ) == 0)
+
 		arr = np.ma.masked_array( rst.read( 1, window=window ), mask=mask )
 	return np.mean( arr )
 
@@ -102,18 +105,29 @@ if __name__ == '__main__':
 	from pathos.mp_map import mp_map
 	import pandas as pd
 	import geopandas as gpd
+	import rasterio
+	from rasterio import features
 	
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	os.chdir( base_dir )
 	scenario = 'rcp60'
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
+	template_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
+	# make a quick mask
+	rst = rasterio.open( template_fn )
+	meta = rst.meta
+	meta.update( compress='lzw', dtype='uint8' )
+	shapes = [ (geom, 1) for geom in shp.geometry ]
+	mask = features.rasterize(shapes, out_shape=rst.shape, fill=0, transform=meta['affine'], all_touched=False, default_value=1, dtype='uint8')
+	mask = (mask == 0)
+
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
 	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	variables_list = [['tasmax', 'tas', 'tasmin']]#,['pr']]
+	variables_list = [['tasmax', 'tas', 'tasmin'],['pr']]#,]
 	# models = ['CRU_TS323']
 	
 	for variables in variables_list:
@@ -147,7 +161,7 @@ if __name__ == '__main__':
 						path = os.path.join( old_dir, scenario, m, v )
 					files = glob.glob( os.path.join( path, '*.tif' ) )
 					files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
-					out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4 )
+					out[ v+'_old' ] = mp_map( masked_mean, files, nproc=4, **{'bounds':bounds} )
 
 			plot_df = pd.DataFrame( out )
 			plot_df.index = pd.date_range( start=str(begin), end=str(end+1), freq='M' )
@@ -188,6 +202,7 @@ if __name__ == '__main__':
 				output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_{}.png'.format( out_metric_fn, m, scenario, begin, end ) )
 			plt.savefig( output_filename, dpi=700 )
 			plt.close()
+			break
 
 
 

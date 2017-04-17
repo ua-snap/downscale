@@ -5,6 +5,8 @@
 # as an object comprehension
 # # # # 
 import numpy as np
+import rasterio
+
 def write_gtiff( output_arr, template_meta, output_filename, compress=True ):
 	'''
 	DESCRIPTION:
@@ -109,6 +111,17 @@ def shiftgrid( lon0, datain, lonsin, start=True, cyclic=360.0 ):
 		lonsout[i0_shift:] = lonsin[start_idx:i0+start_idx]
 	dataout[...,i0_shift:] = datain[...,start_idx:i0+start_idx]
 	return dataout,lonsout
+def rotate( dat, lons, to_pacific=False ):
+	'''rotate longitudes in WGS84 Global Extent'''
+	if to_pacific == True:
+		# to 0 - 360
+		dat, lons = shiftgrid( 0., dat, lons )
+	elif to_pacific == False:
+		# to -180.0 - 180.0 
+		dat, lons = shiftgrid( 180., dat, lons, start=False )
+	else:
+		raise AttributeError( 'to_pacific must be boolean True:False' )
+	return dat, lons
 def bounds_to_extent( bounds ):
 	'''
 	take input rasterio bounds object and return an extent
@@ -169,6 +182,115 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 	xi, yi = grid
 	zi = griddata( x, y, z, xi, yi, interp=method )
 	return zi.astype( output_dtype )
+
+def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
+	'''	
+	anom = [numpy.ndarray] 2-d array representing a single monthly timestep of the data to be downscaled. 
+							Must also be representative of anomalies.
+	base = [str] filename of the corresponding baseline monthly file to use as template and downscale 
+							baseline for combining with anomalies.
+	src_transform = [affine.affine] 6 element affine transform of the input anomalies. [should be greenwich-centered]
+	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
+	'''	
+	import rasterio
+	from rasterio.warp import reproject, RESAMPLING
+
+	resampling = {'average':RESAMPLING.average,
+				'cubic':RESAMPLING.cubic,
+				'lanczos':RESAMPLING.lanczos,
+				'bilinear':RESAMPLING.bilinear,
+				'cubic_spline':RESAMPLING.cubic_spline,
+				'mode':RESAMPLING.mode,
+				'count':RESAMPLING.count,
+				'index':RESAMPLING.index,
+				'nearest':RESAMPLING.nearest }
+	
+	base = rasterio.open( base )
+	baseline_arr = base.read( 1 )
+	baseline_meta = base.meta
+	baseline_meta.update( compress='lzw' )
+	output_arr = np.empty_like( baseline_arr )
+	
+	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
+			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+			dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
+	return output_arr
+
+def add( base, anom ):
+	''' add anomalies to baseline '''
+	return base + anom
+
+def mult( base, anom ):
+	''' multiply anomalies to baseline '''
+	return base * anom
+
+def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
+	'''
+	[hidden] run the meat of downscaling with this runner function for parallel processing
+
+	ARGUMENTS:
+	----------
+	d = [dict] kwargs dict of args to pass to interpolation function
+	f = [ ]
+	operation_switch = []
+
+	RETURNS:
+	--------
+
+	'''
+	import copy, rasterio, os
+		
+	post_downscale_function = d[ 'post_downscale_function' ]
+	interped = f( **d )
+	base = rasterio.open( d[ 'base' ] )
+	base_arr = base.read( 1 )
+	mask = base.read_masks( 1 )
+
+	# set up output file metadata.
+	meta = base.meta
+	meta.update( compress='lzw' )
+	if 'transform' in meta.keys():
+		meta.pop( 'transform' )
+
+	# write out the anomalies
+	if anom == True:
+		anom_filename = copy.copy( d[ 'output_filename' ] )
+		dirname, basename = os.path.split( anom_filename )
+		dirname = os.path.join( dirname, 'anom' )
+		basename = basename.replace( '.tif', '_anom.tif' )
+		try:
+			if not os.path.exists( dirname ):
+				os.makedirs( dirname )
+		except:
+			pass
+		anom_filename = os.path.join( dirname, basename )
+		with rasterio.open( anom_filename, 'w', **meta ) as anom:
+			anom.write( interped, 1 )
+	
+	# make sure the output dir exists and if not, create it
+	dirname = os.path.dirname( d[ 'output_filename' ] )
+	if not os.path.exists( dirname ):
+		os.makedirs( dirname )
+
+	# operation switch
+	output_arr = operation_switch[ d[ 'downscaling_operation' ] ]( base_arr, interped )
+	
+	# post downscale it if func given
+	if post_downscale_function != None:
+		output_arr = post_downscale_function( output_arr )
+		# drop the mask if there is one
+		if hasattr( output_arr, 'mask'):
+			output_arr = output_arr.data
+
+	# make sure data is masked
+	output_arr[ mask == mask_value ] = meta[ 'nodata' ]
+
+	# write it to disk.
+	with rasterio.open( d[ 'output_filename' ], 'w', **meta ) as out:
+		out.write( output_arr, 1 )
+	return d['output_filename']
+
+
 # def downscale( anom_arr, baseline_arr, output_filename,	downscaling_operation, \
 # 	meta, post_downscale_function, mask=None, mask_value=0, *args, **kwargs ):
 # 	'''
@@ -310,3 +432,52 @@ def rasterize( shapes, coords, latitude='lat', longitude='lon', fill=None, **kwa
 # ds.states.where(ds.states == state_ids['California'])
 
 # # # # # # # # # END! NEW FILL Dataset
+
+def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
+	'''
+	sort a list of files properly using the month and year parsed
+	from the filename.  This is useful with SNAP data since the standard
+	is to name files like '<prefix>_MM_YYYY.tif'.  If sorted using base
+	Pythons sort/sorted functions, things will be sorted by the first char
+	of the month, which makes thing go 1, 11, ... which sucks for timeseries
+	this sorts it properly following SNAP standards as the default settings.
+	ARGUMENTS:
+	----------
+	files = [list] list of `str` pathnames to be sorted by month and year. usually from glob.glob.
+	split_on = [str] `str` character to split the filename on.  default:'_', SNAP standard.
+	elem_month = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
+		default:-2. For SNAP standard.
+	elem_year = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
+		default:-1. For SNAP standard.
+	RETURNS:
+	--------
+	sorted `list` by month and year ascending. 
+	'''
+	import pandas as pd
+	months = [ int(fn.split('.')[0].split( split_on )[elem_month]) for fn in files ]
+	years = [ int(fn.split('.')[0].split( split_on )[elem_year]) for fn in files ]
+	df = pd.DataFrame( {'fn':files, 'month':months, 'year':years} )
+	df_sorted = df.sort_values( ['year', 'month' ] )
+	return df_sorted.fn.tolist()
+
+def only_years( files, begin=1901, end=2100, split_on='_', elem_year=-1 ):
+	'''
+	return new list of filenames where they are truncated to begin:end
+	ARGUMENTS:
+	----------
+	files = [list] list of `str` pathnames to be sorted by month and year. usually from glob.glob.
+	begin = [int] four digit integer year of the begin time default:1901
+	end = [int] four digit integer year of the end time default:2100
+	split_on = [str] `str` character to split the filename on.  default:'_', SNAP standard.
+	elem_year = [int] slice element from resultant split filename list.  Follows Python slicing syntax.
+		default:-1. For SNAP standard.
+	RETURNS:
+	--------
+	sliced `list` to begin and end year.
+	'''
+	import pandas as pd
+	years = [ int(fn.split('.')[0].split( split_on )[elem_year]) for fn in files ]
+	df = pd.DataFrame( { 'fn':files, 'year':years } )
+	df_slice = df[ (df.year >= begin ) & (df.year <= end ) ]
+	return df_slice.fn.tolist()
+

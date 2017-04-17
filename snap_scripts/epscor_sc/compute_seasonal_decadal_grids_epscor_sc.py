@@ -98,7 +98,9 @@ def calc_decadal_from_annual( season_name, files, output_path, agg_metric, *args
 
 	meta.update( compress='lzw' )
 
-	metric_switch = { 'mean':np.mean, 'total':np.sum, 'min':np.min, 'max':np.max }
+	# NOTE HOW FOR DECADALS WE ARE ONLY PERFORMING MEANS!!!!  THIS IS IMPORTANT!!!
+	metric_switch = { 'mean':np.mean, 'total':np.mean, 'min':np.min, 'max':np.max }
+
 	variable, metric, units, project, model, scenario = os.path.basename( fn ).split( '.' )[0].split( '_' )[:-2]
 	arr = np.array([ read_raster( i ) for i in files ])
 	arr = metric_switch[ agg_metric ]( arr, axis=0 )
@@ -227,6 +229,18 @@ if __name__ == '__main__':
 	variable = args.variable
 	ncpus = args.ncpus
 	agg_metric = args.agg_metric
+
+	# # # # # FOR TESTING
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_FINAL_OCT_TESTING'
+	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids_FINAL_OCT_TESTING'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# project = 'cmip5'
+	# variable = 'pr'
+	# agg_metric = 'total'
+	# ncpus = 32
+
+	# # # # # # # # # # #
 
 	# switches to deal with different date groups.  Hardwired to CMIP5 and CRU TS323 currently.
 	cmip_switch = { 'historical':(1900,2005), 'rcp26':(2006,2100), 'rcp45':(2006,2100), 'rcp60':(2006,2100), 'rcp85':(2006,2100) }

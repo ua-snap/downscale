@@ -24,7 +24,6 @@ def rasterize( shapes, coords, latitude='latitude', longitude='longitude', fill=
 								dtype=float, **kwargs)
 	spatial_coords = {latitude: coords[latitude], longitude: coords[longitude]}
 	return xr.DataArray(raster, coords=spatial_coords, dims=(latitude, longitude))
-
 def sort_files( files, split_on='_', elem_month=-2, elem_year=-1 ):
 	'''
 	sort a list of files properly using the month and year parsed
@@ -106,14 +105,14 @@ if __name__ == '__main__':
 	# args / set working dir
 	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
 	os.chdir( base_dir )
-	scenarios = ['rcp60', 'rcp85']
+	scenarios = ['rcp60']#, 'rcp85']
 	shp_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/SCTC_studyarea/Kenai_StudyArea.shp'
 	shp = gpd.read_file( shp_fn )
 	bounds = shp.bounds
 
 	# models = ['5ModelAvg','CRU_TS323','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
-	variables_list = [['pr']]# ['tasmax', 'tas', 'tasmin']]#,
+	models = [ 'GFDL-CM3' ] # ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4']
+	variables_list = [['pr']] # ['tasmax', 'tas', 'tasmin']]#,
 	# models = ['CRU_TS323']
 
 	for scenario in scenarios:
@@ -138,7 +137,7 @@ if __name__ == '__main__':
 					figsize = (16,9)
 					out = {}
 					for v in variables:
-						path = os.path.join( base_dir,'downscaled', m, scenario, v )
+						path = os.path.join( base_dir,'downscaled_FINAL_OCT', m, scenario, v )
 						files = glob.glob( os.path.join( path, '*.tif' ) )
 						files = sort_files( only_years( files, begin=begin, end=end, split_on='_', elem_year=-1 ) )
 						out[ v ] = mp_map( masked_mean, files, nproc=4 )
@@ -175,7 +174,7 @@ if __name__ == '__main__':
 
 					ax = plot_df.plot( kind='line', title=title, figsize=figsize, color=colors )
 
-					output_dir = os.path.join( base_dir, 'compare_downscaling_versions_PR' )
+					output_dir = os.path.join( base_dir, 'compare_downscaling_versions_PR_2' )
 					if not os.path.exists( output_dir ):
 						os.makedirs( output_dir )
 
@@ -185,9 +184,9 @@ if __name__ == '__main__':
 						out_metric_fn = 'prec'
 
 					if begin == end:
-						output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}.png'.format( out_metric_fn, m, scenario, begin ) )
+						output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_b.png'.format( out_metric_fn, m, scenario, begin ) )
 					else:
-						output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_{}.png'.format( out_metric_fn, m, scenario, begin, end ) )
+						output_filename = os.path.join( output_dir,'mean_{}_epscor_sc_{}_{}_{}_{}_b.png'.format( out_metric_fn, m, scenario, begin, end ) )
 					plt.savefig( output_filename, dpi=400 )
 					plt.close()
 

@@ -69,7 +69,7 @@ if __name__ == '__main__':
 		# SETUP BASELINE
 		clim_path = os.path.join( base_dir, 'prism', variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
-		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
+		filelist = [ i for i in filelist if '_14_' not in i ] # remove the ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
 		
 		input_path = os.path.join( base_path, model, scenario, variable )
@@ -143,9 +143,10 @@ if __name__ == '__main__':
 
 		round_data = partial( round_it, mask=( mask==0 ) )
 
-		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future, \
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32, \
+		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future,
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
-				post_downscale_function=round_data, varname=variable, modelname=modelname, anom=anom, fix_clim=fix_clim )
+				post_downscale_function=round_data, varname=variable, modelname=modelname, 
+				anom=anom, fix_clim=fix_clim )
 
 		ar5.downscale( output_dir=output_path )

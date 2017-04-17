@@ -75,6 +75,18 @@ if __name__ == '__main__':
 	project = args.project
 	variable = 'tas' # swi only on tas data
 
+	# # TESTING STUFF
+	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# model = 'GFDL-CM3'
+	# scenario = 'rcp60'
+	# variable = 'tas' # 'pr'
+	# begin = 2006
+	# end = 2100
+	# ncpus = 32
+	# metric = 'mean'
+	# project = 'ar5'
+	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/decadal_monthlies'
+	
 	# # for testing
 	# base_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/monthly_decadals'
 	# output_path = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/derived_grids/swi_decadals'

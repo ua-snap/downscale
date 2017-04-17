@@ -4,7 +4,7 @@ if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
-	from downscale import preprocess
+	from downscale import preprocess, Mask, utils
 	import argparse
 	import numpy as np
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 	base_dir = args.base_dir
 
 	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
@@ -40,12 +40,11 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
-	output_dir = os.path.join( base_dir, 'downscaled_FINAL_OCT' )
-	# output_dir = os.path.join( base_dir, 'downscaled_PR_TEST_2' )
+	output_dir = os.path.join( base_dir, 'downscaled' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
-	anom = False # write out anoms (True) or not (False)
+	anom = True # write out anoms (True) or not (False)
 	interp = False # interpolate across space -- Low Res
 	find_bounds = False
 
@@ -135,6 +134,11 @@ if __name__ == '__main__':
 			rounder = np.rint
 			downscaling_operation = 'mult'
 			aoi_mask = aoi_mask_fn
+			# make AOI_Mask input resolution for computing 95th percentiles...
+			if aoi_mask_fn is not None:
+				aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
+			else:
+				aoi_mask = None
 		else:
 			# round to 2 decimals
 			rounder = partial( np.round, decimals=1 )
