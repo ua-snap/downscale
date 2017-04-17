@@ -8,9 +8,9 @@
 	os.chdir( scripts_dir )
 	```
 2. run all tas/pr ...
-	`ipython wrap_downscaled_cmip_slurm.py`
-	`ipython wrap_downscaled_cru_slurm.py`
-	`ipython wrap_downscaled_cru40_slurm.py`
+	`ipython wrap_downscaler_cmip5_slurm.py`
+	`ipython wrap_downscaler_cru_slurm.py`
+	`ipython wrap_downscaler_cru_40_slurm.py`
 
 # SINCE THERE IS NO MIN/MAX TEMP DATA FOR CL20 --> 10min 
 # THERE IS NO MIN/MAX RUN FOR THIS GROUP.
