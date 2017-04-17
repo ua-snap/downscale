@@ -195,19 +195,18 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	import rasterio
 	from rasterio.warp import reproject, RESAMPLING
 
-	try:
-		resampling = {'average':RESAMPLING.average,
-					'cubic':RESAMPLING.cubic,
-					'lanczos':RESAMPLING.lanczos,
-					'bilinear':RESAMPLING.bilinear,
-					'cubic_spline':RESAMPLING.cubic_spline,
-					'mode':RESAMPLING.mode,
-					'count':RESAMPLING.count,
-					'index':RESAMPLING.index,
-					'nearest':RESAMPLING.nearest }
-	except:
-		# if we are missing some of these methods in the gdal version.
-		resampling = RESAMPLING.__members__
+	# resampling = {'average':RESAMPLING.average,
+	# 			'cubic':RESAMPLING.cubic,
+	# 			'lanczos':RESAMPLING.lanczos,
+	# 			'bilinear':RESAMPLING.bilinear,
+	# 			'cubic_spline':RESAMPLING.cubic_spline,
+	# 			'mode':RESAMPLING.mode,
+	# 			'count':RESAMPLING.count,
+	# 			'index':RESAMPLING.index,
+	# 			'nearest':RESAMPLING.nearest }
+
+	# if we are missing some of these methods in the gdal version.
+	resampling = RESAMPLING.__members__
 	
 	base = rasterio.open( base )
 	baseline_arr = base.read( 1 )
