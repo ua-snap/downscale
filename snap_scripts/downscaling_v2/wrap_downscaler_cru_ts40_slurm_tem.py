@@ -43,7 +43,7 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'pct'
 
-		clim_path = os.path.join( base_dir, 'cru', 'cru_cl20', out_varname )
+		clim_path = os.path.join( base_dir, 'cru', 'akcan_2km_extent', 'cru_cl20', out_varname )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
