@@ -19,6 +19,8 @@
 	recursively, which adds each to the proper leaf of the 
 	tree in the receiving set.
 	`ipython move_CCSM4_files.py`
+	*** MOVE THE ANOMALIES TO AN ANOMALIES FOLDER NOW....
+	`ipython move_anomalies_to_common_dir.py`
 
 5. compute 5ModelAvg across all variables / models
 	`ipython wrap_slurm_compute_5ModelAvg_cmip5.py`
