@@ -18,7 +18,8 @@ os.chdir( '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2'
 
 run_scripts = [ 'wrap_downscaler_cmip5_slurm_minmax.py',
 				'wrap_downscaler_cru_40_slurm_minmax.py',
-				'wrap_downscaler_cru_slurm_minmax.py']
+				'wrap_downscaler_cru_slurm_minmax.py',
+				'wrap_downscaler_cru_324_01_slurm_minmax.py' ]
 
 for script in run_scripts:
 	os.system( 'ipython {}'.format( script ) )
