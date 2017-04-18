@@ -29,7 +29,7 @@ if __name__ == '__main__':
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	variables = [ 'pr', 'tasmin', 'tasmax', 'tas', 'hur', 'vap', 'clt', 'rsds' ]
 	# scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4','ts323','ts40']
+	models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4','ts323','ts40','ts324_01']
 	
 	# get list of directories to standardize
 	root_list = [ root for root, subs, files in os.walk( os.path.join( base_dir, 'downscaled' ) ) if os.path.split(root)[1] in models ]
