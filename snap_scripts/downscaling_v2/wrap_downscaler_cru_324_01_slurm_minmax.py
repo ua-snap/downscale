@@ -50,7 +50,7 @@ if __name__ == '__main__':
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )
 
-		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.24.01.1901.2015.' + variable + '.dat.nc.gz'
+		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS324_01/cru_ts3.24.01.1901.2015.' + variable + '.dat.nc.gz'
 		
 		# # make a command to pass to slurm
 		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/downscale_cru_minmax.py'

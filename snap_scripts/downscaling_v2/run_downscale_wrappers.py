@@ -13,7 +13,8 @@ run_scripts = [ 'wrap_downscaler_cmip5_slurm.py',
 				'wrap_downscaler_cru_40_slurm.py',
 				'wrap_downscaler_cru_slurm.py',
 				'wrap_downscaler_cru_slurm_tem.py',
-				'wrap_downscaler_cru_ts40_slurm_tem.py' ]
+				'wrap_downscaler_cru_ts40_slurm_tem.py',
+				'wrap_downscaler_cru_ts324_01_slurm_tem.py' ]
 
 for script in run_scripts:
 	os.system( 'ipython {}'.format( script ) )
