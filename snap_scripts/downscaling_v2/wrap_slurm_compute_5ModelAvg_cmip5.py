@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	import os, subprocess
 	
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	variables = [ 'pr', 'tasmin', 'tasmax', 'tas', 'hur', 'vap' ]
+	variables = [ 'pr', 'tasmin', 'tasmax', 'tas', 'hur', 'vap', 'clt' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
 	slurm_path = os.path.join( base_dir, 'downscaled', 'slurm_log' )

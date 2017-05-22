@@ -44,7 +44,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
-		pass
+		self.climatology = None
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		if self.downscaling_operation == 'add':
@@ -54,7 +54,89 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 		self.anomalies = anomalies
+	def downscale( self, output_dir, prefix=None ):
+		'''
+		updated version of downscale function to mask the non-minmax version and how
+		it works with baseline climatology vs. the full mean series as with the min/max
+		'''
+		import affine
+		from affine import Affine
+		import itertools
+		from functools import partial
+		from pathos.mp_map import mp_map
 
+		operation_switch = { 'add':self.utils.add, 'mult':self.utils.mult }
+
+		def two_digit_month( x ):
+			''' make 1 digit month a standard 2-digit for output filenames '''
+			month = str( x )
+			if len(month) == 1:
+				month = '0'+month
+			return month
+
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
+
+		# handle missing variable / model names
+		if self.varname != None:
+			variable = self.varname
+		elif self.historical.variable != None:
+			variable = self.historical.variable
+		else:
+			variable = 'variable'
+
+		if self.modelname != None:
+			model = self.modelname
+		elif self.historical.model != None:
+			model = self.historical.model
+		else:
+			model = 'model'
+
+		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+
+		# if there is a specific name prefix, use it
+		if prefix != None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
+
+		# rotate to pacific-centered
+		if ( self.anomalies.lon.data > 200.0 ).any() == True:
+			dat, lons = ( self.anomalies, self.anomalies.lon )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			# print( 'anomalies NOT rotated!' )
+		else:
+			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			print( src_transform )
+			# print( 'anomalies rotated!' )
+
+		# # # IMPORTANT: list all files since it without a REPEAT since it is tasmin/max...
+		rstlist = self.baseline.filelist
+		
+		if isinstance( self.anomalies_rot, xr.Dataset ):
+			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
+		elif isinstance( self.anomalies_rot, xr.DataArray ):
+			self.anomalies_rot = self.anomalies_rot.data
+		else:
+			self.anomalies_rot = self.anomalies_rot
+
+		args = zip( self.anomalies_rot, rstlist, output_filenames )
+
+		args = [{'anom':i, 'base':j, 'output_filename':k,\
+				'downscaling_operation':self.downscaling_operation, \
+				'post_downscale_function':self.post_downscale_function,\
+				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
+
+		# partial and wrapper
+		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
+					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
+
+		run = partial( self.utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
+
+		# run it
+		out = mp_map( run, args, nproc=self.ncpus )
+		return output_dir
 	# @staticmethod
 	# def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
 	# 	'''	
