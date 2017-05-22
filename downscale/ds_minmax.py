@@ -38,6 +38,10 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		super( DeltaDownscaleMinMax, self ).__init__( *args, **kwargs )
 		
+		# mask some properties from the super() class. that are unneeded.
+		self.clim_begin = None
+		self.clim_end = None
+
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
@@ -48,9 +52,11 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		if self.downscaling_operation == 'add':
-			anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			anomalies = (self.ds[ self.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
-			anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			# anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			anomalies = (self.ds[ self.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 		self.anomalies = anomalies
@@ -111,6 +117,13 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			print( src_transform )
 			# print( 'anomalies rotated!' )
 
+		# # # # #TSSTING STUFF
+		count, height, width = dat.shape
+		meta = { 'dtype':'float32', 'driver':'GTiff', 'count':1, 'width':width, 'height':height, 'compress':'lzw', 'affine':src_transform }
+		with rasterio.open( '/workspace/UA/malindgren/temporary/TEST_REGRID.tif', 'w', **meta ) as out:
+			out.write( dat[0].astype( np.float32 ), 1 )
+		# # # # # # # # # # # 
+
 		# # # IMPORTANT: list all files since it without a REPEAT since it is tasmin/max...
 		rstlist = self.baseline.filelist
 		
@@ -129,8 +142,8 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
 
 		# partial and wrapper
-		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=self.src_nodata, \
-					dst_nodata=self.dst_nodata, src_transform=src_transform, resample_type=self.resample_type )
+		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=None, \
+					dst_nodata=None, src_transform=src_transform, resample_type=self.resample_type )
 
 		run = partial( self.utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
 

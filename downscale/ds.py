@@ -72,7 +72,7 @@ class DeltaDownscale( object ):
 		self.anomalies = None
 		self.climatology = None
 		self.ds = None
-		self._concat_nc()
+		self._concat_nc() # make a self.ds variable...
 
 		# fix pr climatologies if desired
 		if fix_clim == True:
