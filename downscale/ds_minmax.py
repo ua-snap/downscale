@@ -11,7 +11,7 @@
 # # #
 
 from downscale import DeltaDownscale, utils
-import os
+import os, rasterio
 import numpy as np
 import xarray as xr
 
@@ -65,7 +65,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		updated version of downscale function to mask the non-minmax version and how
 		it works with baseline climatology vs. the full mean series as with the min/max
 		'''
-		import affine
+		import affine, rasterio
 		from affine import Affine
 		import itertools
 		from functools import partial
@@ -117,12 +117,12 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			print( src_transform )
 			# print( 'anomalies rotated!' )
 
-		# # # # #TSSTING STUFF
-		count, height, width = dat.shape
-		meta = { 'dtype':'float32', 'driver':'GTiff', 'count':1, 'width':width, 'height':height, 'compress':'lzw', 'affine':src_transform }
-		with rasterio.open( '/workspace/UA/malindgren/temporary/TEST_REGRID.tif', 'w', **meta ) as out:
-			out.write( dat[0].astype( np.float32 ), 1 )
-		# # # # # # # # # # # 
+		# # # # # #TSSTING STUFF
+		# count, height, width = dat.shape
+		# meta = { 'dtype':'float32', 'driver':'GTiff', 'count':1, 'width':width, 'height':height, 'compress':'lzw', 'affine':src_transform }
+		# with rasterio.open( '/workspace/UA/malindgren/temporary/TEST_REGRID.tif', 'w', **meta ) as out:
+		# 	out.write( dat[0].astype( np.float32 ), 1 )
+		# # # # # # # # # # # # 
 
 		# # # IMPORTANT: list all files since it without a REPEAT since it is tasmin/max...
 		rstlist = self.baseline.filelist

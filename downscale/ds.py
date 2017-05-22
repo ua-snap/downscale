@@ -106,8 +106,7 @@ class DeltaDownscale( object ):
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
-			_ = self.interp_na( )
-
+			self.interp_na( )
 
 		if fix_clim == True:
 			# if there are still values <0.5 set them to 0.5
