@@ -53,10 +53,10 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		if self.downscaling_operation == 'add':
 			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			anomalies = (self.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			anomalies = (self.ds - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
 			# anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			anomalies = (self.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			anomalies = (self.ds / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 		self.anomalies = anomalies
