@@ -32,31 +32,32 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			have the 1961-1990 climatology period for the futures as this version of DeltaDownscale computes
 			deltas by removing the mean in time instead of removing the climatology.
 		'''
-		# setup new args
-		self.mean_ds = mean_ds
-		self.mean_variable = mean_variable
-
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds is None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
+		# setup new args
+		self.mean_ds = mean_ds
+		self.mean_variable = mean_variable
+
+		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
+		
+		print('finished super()!')
+
+		# mask some properties from the super() class. that are unneeded.
+		self.clim_begin = None
+		self.clim_end = None
+
 		
 		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
 
 		# TESTING
 		print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
 
+
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
 			self._interp_na_mean( )
-
-		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
-		
-		# mask some properties from the super() class. that are unneeded.
-		self.clim_begin = None
-		self.clim_end = None
-
-
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
 		self.climatology = None
