@@ -52,6 +52,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		if self.downscaling_operation == 'add':
+			print( 'calc_anom minmax version')
 			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 			anomalies = (self.ds - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
@@ -108,13 +109,12 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
 			dat, lons = ( self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
 			# print( 'anomalies NOT rotated!' )
 		else:
 			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
 			self.anomalies_rot = dat
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
-			print( src_transform )
+			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
 			# print( 'anomalies rotated!' )
 
 		# # # # # #TSSTING STUFF

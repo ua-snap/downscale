@@ -54,6 +54,7 @@ if __name__ ==	'__main__':
 
 	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
+	
 	# sort these files
 	filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
 	baseline = downscale.Baseline( filelist )
@@ -73,10 +74,10 @@ if __name__ ==	'__main__':
 		return rounder( arr )
 
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
-							method='linear', ncpus=32 )
+							method='linear', ncpus=32, interp=True )
 
 	mean_fn = cru_ts.replace( variable, mean_variable_cru )
-	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
+	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end, interp=True )
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, historical=historical, future=None,
