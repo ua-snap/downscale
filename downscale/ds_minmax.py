@@ -81,17 +81,17 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		output_dtype = np.float32
 		
 		# if 0-360 leave it alone
-		if ( self.ds_mean.lon > 200.0 ).any() == True:
-			dat, lons = self.ds_mean.data, self.ds_mean.lon
+		if ( self.mean_ds.lon > 200.0 ).any() == True:
+			dat, lons = self.mean_ds.data, self.mean_ds.lon
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.ds_mean.values, self.ds_mean.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( self.mean_ds.values, self.mean_ds.lon, to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
 		# mesh the lons and lats and unravel them to 1-D
-		xi, yi = np.meshgrid( self._lonpc, self.ds_mean.lat.data )
+		xi, yi = np.meshgrid( self._lonpc, self.mean_ds.lat.data )
 		lo, la = [ i.ravel() for i in (xi,yi) ]
 
 		# setup args for multiprocessing
@@ -110,9 +110,9 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
 				
 		# place back into a new xarray.Dataset object for further processing
-		# self.ds_mean = self.ds_mean.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
-		self.ds_mean.data = dat
-		print( 'ds interpolated updated into self.ds_mean' )
+		# self.mean_ds = self.mean_ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.mean_ds.data = dat
+		print( 'ds interpolated updated into self.mean_ds' )
 		return 1
 	def downscale( self, output_dir, prefix=None ):
 		'''
