@@ -35,7 +35,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		# setup new args
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
-		print *args, **kwargs
+		print kwargs
 
 		super( DeltaDownscaleMinMax, self ).__init__( *args, **kwargs )
 		
