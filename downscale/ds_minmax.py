@@ -50,6 +50,10 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		
 		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
 
+		# TESTING
+		print('type_mean_ds: {} '.format(type(self.mean_ds)))
+
+
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
 			self._interp_na_mean( )
