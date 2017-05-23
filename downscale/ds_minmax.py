@@ -35,13 +35,19 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		# setup new args
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
-		print kwargs
 
 		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		
 		# mask some properties from the super() class. that are unneeded.
 		self.clim_begin = None
 		self.clim_end = None
+
+		if self.interp == True:
+			print( 'running interpolation across NAs -- base resolution' )
+			self.interp_na( )
+
+		# calculate anomalies with the new climatology values
+		self._calc_anomalies()
 
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
