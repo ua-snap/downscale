@@ -43,11 +43,8 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.clim_end = None
 
 		if self.interp == True:
-			print( 'running interpolation across NAs -- base resolution' )
-			self.interp_na( )
-
-		# calculate anomalies with the new climatology values
-		self._calc_anomalies()
+			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
+			self.interp_na_mean( )
 
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
@@ -61,13 +58,62 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		if self.downscaling_operation == 'add':
 			print( 'calc_anom minmax version')
 			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			anomalies = (self.ds - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
 			# anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			anomalies = (self.ds / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
-		self.anomalies = anomalies
+	def _interp_na_mean( self ):
+		'''
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
+
+		return a list of dicts to pass to the xyz_to_grid in parallel
+		'''
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
+
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
+		
+		# if 0-360 leave it alone
+		if ( self.ds_mean.lon > 200.0 ).any() == True:
+			dat, lons = self.ds_mean.data, self.ds_mean.lon
+			self._lonpc = lons
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.utils.rotate( self.ds_mean.values, self.ds_mean.lon, to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
+
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.ds_mean.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
+
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
+				
+		# place back into a new xarray.Dataset object for further processing
+		# self.ds_mean = self.ds_mean.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.ds_mean.data = dat
+		print( 'ds interpolated updated into self.ds_mean' )
+		return 1
 	def downscale( self, output_dir, prefix=None ):
 		'''
 		updated version of downscale function to mask the non-minmax version and how
