@@ -53,11 +53,14 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		# TESTING
 		print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
-
-
+		
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
 			self._interp_na_mean( )
+
+		print( 'calc anoms' )
+		self._calc_anomalies()
+
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
 		self.climatology = None
