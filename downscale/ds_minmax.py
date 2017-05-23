@@ -42,14 +42,17 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.clim_begin = None
 		self.clim_end = None
 
-		if self.interp == True:
-			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
-			self._interp_na_mean( )
 
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
+		
+		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
+
+		if self.interp == True:
+			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
+			self._interp_na_mean( )
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
 		self.climatology = None
@@ -58,10 +61,10 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		if self.downscaling_operation == 'add':
 			print( 'calc_anom minmax version')
 			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			self.anomalies = (self.ds - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds - self.mean_ds ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
 			# anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
-			self.anomalies = (self.ds / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds / self.mean_ds ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
 	def _interp_na_mean( self ):
