@@ -37,7 +37,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_variable = mean_variable
 		print kwargs
 
-		super( DeltaDownscaleMinMax, self ).__init__( *args, **kwargs )
+		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		
 		# mask some properties from the super() class. that are unneeded.
 		self.clim_begin = None
