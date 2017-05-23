@@ -44,7 +44,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
-			self.interp_na_mean( )
+			self._interp_na_mean( )
 
 		# if there is no mean dataset to work with --> party's over
 		if mean_ds == None:
