@@ -36,6 +36,20 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_ds = mean_ds
 		self.mean_variable = mean_variable
 
+		# if there is no mean dataset to work with --> party's over
+		if mean_ds is None:
+			raise Exception( 'you must include the mean variable in the raw resolution \
+								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
+		
+		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
+
+		# TESTING
+		print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
+
+		if self.interp == True:
+			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
+			self._interp_na_mean( )
+
 		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		
 		# mask some properties from the super() class. that are unneeded.
@@ -43,20 +57,6 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.clim_end = None
 
 
-		# if there is no mean dataset to work with --> party's over
-		if mean_ds == None:
-			raise Exception( 'you must include the mean variable in the raw resolution \
-								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
-		
-		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
-
-		# TESTING
-		print('type_mean_ds: {} '.format(type(self.mean_ds)))
-
-
-		if self.interp == True:
-			print( 'running interpolation across NAs -- base resolution -- mean dataset' )
-			self._interp_na_mean( )
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
 		self.climatology = None
