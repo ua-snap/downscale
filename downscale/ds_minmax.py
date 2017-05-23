@@ -37,7 +37,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
 		# setup new args
-		self.mean_ds = mean_ds
+		self.mean_ds = mean_ds.ds[ mean_variable ] # new
 		self.mean_variable = mean_variable
 
 		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
@@ -49,7 +49,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.clim_end = None
 
 		
-		self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
+		# self.mean_ds = self.mean_ds.ds[ self.mean_variable ] # test this..
 
 		# TESTING
 		print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
