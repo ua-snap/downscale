@@ -66,7 +66,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- !ANOMALIES! dataset' )
-			self._interp_na( )
+			self.interp_na( )
 
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
