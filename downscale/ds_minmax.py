@@ -82,7 +82,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			self.anomalies = (self.ds / self.mean_ds ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
-		self.mean_ds = None # watch this one... trying to save on RAM... 
+		# self.mean_ds = None # watch this one... trying to save on RAM... 
 	# def _interp_na_mean( self ):
 	# 	'''
 	# 	np.float32
