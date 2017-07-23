@@ -7,6 +7,7 @@ def fix_naming( fn ):
 	dirname, basename = os.path.split( fn )
 	basename = basename.replace( 'cru_ts323', 'CRU_TS323' ).replace( 'cru_TS323', 'CRU_TS323' )
 	basename = basename.replace( 'cru_ts40', 'CRU_TS40' ).replace( 'cru_TS40', 'CRU_TS40' )
+	basename = basename.replace( 'cru_ts324_01', 'CRU_TS324_01' ).replace( 'cru_TS324_01', 'CRU_TS324_01' )
 	basename = basename.replace( '5MODELAVG', '5ModelAvg' )
 	return os.path.join( dirname, basename )
 
