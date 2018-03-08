@@ -45,18 +45,20 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		print( kwargs )
 
 		# force a false for interpolation of NA's with Super...
-		# interp_val = kwargs.pop( 'interp' )
-		kwargs.update( interp=False )
+		if 'interp' in kwargs.values():
+			interp_val = kwargs.pop( 'interp' )
+			kwargs.update( interp=False )
 
 		# remove the super call since this is python2 and it suuucks...
 		DeltaDownscaleMinMax.__init__( self, **kwargs )
 		# super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
-		
-		# now reset the interpolation value so we can interpolate the anomalies
-		# INSTEAD of interpolating the input data series...  This may be better practice overall.
-		# NOT changing it.
-		self.interp = interp_val
 		print('finished super()!')
+		
+		if 'interp' in kwargs.values(): 
+			# now reset the interpolation value so we can interpolate the anomalies
+			# INSTEAD of interpolating the input data series...  This may be better practice overall.
+			# NOT changing it.
+			self.interp = interp_val
 
 		# mask some properties from the super() class. that are unneeded.
 		self.anomalies = None
