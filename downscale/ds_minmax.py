@@ -50,7 +50,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			kwargs.update( interp=False )
 
 		# remove the super call since this is python2 and it suuucks...
-		DeltaDownscaleMinMax.__init__( self, **kwargs )
+		DeltaDownscale.__init__( self, **kwargs )
 		# super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		print('finished super()!')
 		
