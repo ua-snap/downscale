@@ -33,6 +33,8 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			deltas by removing the mean in time instead of removing the climatology.
 		'''
 		# if there is no mean dataset to work with --> party's over
+		print('mean:{}'.format(mean_ds))
+		
 		if mean_ds is None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
