@@ -40,6 +40,8 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_ds = mean_ds.ds[ mean_variable ] # new
 		self.mean_variable = mean_variable
 
+		print( kwargs )
+
 		# force a false for interpolation of NA's with Super...
 		interp_val = kwargs.pop( 'interp' )
 		kwargs.update( interp=False )
