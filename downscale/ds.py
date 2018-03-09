@@ -352,9 +352,9 @@ class DeltaDownscale( object ):
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			dat, lons = self.utils.shiftgrid( 0., np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			src_transform = self.historical.transform_from_latlon( np.array(self.historical.ds.lat), np.array(lons) )
 			print( src_transform )
 			# print( 'anomalies rotated!' )
 
