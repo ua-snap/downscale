@@ -42,16 +42,17 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_ds = mean_ds.ds[ mean_variable ] # new
 		self.mean_variable = mean_variable
 
-		print( kwargs )
+		print( kwargs.values() )
 
 		# force a false for interpolation of NA's with Super...
-		if 'interp' in kwargs.values():
+		if 'interp' in kwargs.keys():
 			interp_val = kwargs.pop( 'interp' )
 			kwargs.update( interp=False )
 
 		# remove the super call since this is python2 and it suuucks...
-		DeltaDownscale.__init__( self, **kwargs )
-		# super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
+		# DeltaDownscale.__init__( self, **kwargs )
+
+		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		print('finished super()!')
 		
 		if 'interp' in kwargs.values(): 
@@ -238,12 +239,12 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 
 		# rotate to pacific-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
+			dat, lons = ( np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
 			# print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			dat, lons = self.utils.shiftgrid( 0., np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
 			# print( 'anomalies rotated!' )
