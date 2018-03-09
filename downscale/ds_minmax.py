@@ -42,20 +42,24 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.mean_ds = mean_ds.ds[ mean_variable ] # new
 		self.mean_variable = mean_variable
 
-		print( kwargs.values() )
+		print( kwargs.keys() )
 
 		# force a false for interpolation of NA's with Super...
 		if 'interp' in kwargs.keys():
+			print( 'kwargs-interpval:{}'.format(kwargs['interp']) )
 			interp_val = kwargs.pop( 'interp' )
 			kwargs.update( interp=False )
+			print( 'interp_val:{}'.format(interp_val) )
 
 		# remove the super call since this is python2 and it suuucks...
 		# DeltaDownscale.__init__( self, **kwargs )
 
 		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
 		print('finished super()!')
-		
-		if 'interp' in kwargs.values(): 
+		print( 'interp' in kwargs )
+		print(interp_val)
+
+		if 'interp' in kwargs: 
 			# now reset the interpolation value so we can interpolate the anomalies
 			# INSTEAD of interpolating the input data series...  This may be better practice overall.
 			# NOT changing it.
@@ -72,7 +76,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		
 		# # TESTING
 		# print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
-		
+		print( 'self.interp: {}'.format(self.interp) )
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution -- !ANOMALIES! dataset' )
 			self.interp_na( )
