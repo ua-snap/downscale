@@ -55,9 +55,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		# DeltaDownscale.__init__( self, **kwargs )
 
 		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
-		print('finished super()!')
-		print( 'interp' in kwargs )
-		print(interp_val)
+		# print('finished super()!')
 
 		if 'interp' in kwargs: 
 			# now reset the interpolation value so we can interpolate the anomalies

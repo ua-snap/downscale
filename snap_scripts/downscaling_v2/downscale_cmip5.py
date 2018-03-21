@@ -30,13 +30,13 @@ if __name__ == '__main__':
 	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
-	# # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# variable = 'pr'
-	# scenario = 'rcp60'
-	# model = 'GFDL-CM3'
-	# units = 'mm'
-	# metric = 'total'
+	# # # FOR TESTING # # # 
+	base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	variable = 'pr'
+	scenario = 'rcp60'
+	model = 'GFDL-CM3'
+	units = 'mm'
+	metric = 'total'
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
