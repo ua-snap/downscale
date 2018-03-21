@@ -455,6 +455,7 @@ def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
 	''' correct the values for precip -- from @leonawicz'''
 
 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+	print('upperthresh:{}'.format(upperthresh))
 
 	# drop any masks
 	arr = np.array( arr )
