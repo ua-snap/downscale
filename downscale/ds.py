@@ -347,7 +347,7 @@ class DeltaDownscale( object ):
 
 		# rotate to pacific-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
+			dat, lons = ( np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# print( 'anomalies NOT rotated!' )
