@@ -71,7 +71,7 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		self.clim_end = None
 
 		# calc deltas between the mean and the extreme data set 
-		print( 'calc anoms' )
+		print( 'calc anoms minmax' )
 		self._calc_anomalies()
 		
 		# # TESTING
@@ -164,12 +164,12 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 		output_dtype = np.float32
 		
 		# if 0-360 leave it alone
-		if ( self.anomalies.lon > 200.0 ).any() == True:
-			dat, lons = self.anomalies.data, self.anomalies.lon
+		if ( np.array(self.anomalies.lon) > 200.0 ).any() == True:
+			dat, lons = np.array(self.anomalies.data), np.array(self.anomalies.lon)
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.anomalies.values, self.anomalies.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( np.array(self.anomalies.values), np.array(self.anomalies.lon), to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 

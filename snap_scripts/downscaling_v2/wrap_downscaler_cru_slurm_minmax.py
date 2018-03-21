@@ -68,6 +68,6 @@ if __name__ == '__main__':
 							'-ov', out_varname, 
 							'-b', str(begin),
 							'-e', str(end) ])
-		
+		break
 		fn = os.path.join( slurm_path, '_'.join(['downscale', model, variable]) + '.slurm' )
 		_ = run_model( fn, command )

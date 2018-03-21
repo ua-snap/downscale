@@ -1,6 +1,5 @@
-# downscale cru data in a CLI way
-# downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016
+# downscale cru temperature min/max data using the downscale package
+# author: Michael Lindgren (malindgren@alaska.edu)
 
 if __name__ ==	'__main__':
 	import glob, os, itertools, rasterio
@@ -41,8 +40,8 @@ if __name__ ==	'__main__':
 	mean_variable_out = args.mean_variable_out
 	begin = args.begin
 	end = args.end
-	# begin = 1901
-	# end = 2014
+	begin = 1901
+	end = 2014
 
 	# standard args
 	clim_begin = '01-1961'
