@@ -63,7 +63,7 @@ if __name__ == '__main__':
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
-	cru_path = os.path.join( base_path, 'cru_cl20', variable )
+	cru_path = os.path.join( base_path, 'climatologies','cru_cl20','2km', variable )
 
 	if not os.path.exists( cru_path ):
 		os.makedirs( cru_path )
