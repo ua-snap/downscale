@@ -45,6 +45,7 @@ if __name__ == '__main__':
 	# model = 'GFDL-CM3'
 	# units = 'C'
 	# metric = 'mean'
+	# # # # # #END TESTING # # # # 
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
@@ -147,7 +148,7 @@ if __name__ == '__main__':
 			post_downscale_function = round_data_clamp
 		else:
 			post_downscale_function = round_data
-
+			
 		ar5 = downscale.DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, 
 					historical=historical, future=future, downscaling_operation=downscaling_operation,
 					mask=mask, mask_value=0, ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=None, 

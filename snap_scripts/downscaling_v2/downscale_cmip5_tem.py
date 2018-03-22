@@ -1,5 +1,6 @@
-# downscale the prepped cmip5 data downloaded using SYNDA for TEM
+# downscale the prepped cmip5 data used in running the TEM model (IEM)
 # author: Michael Lindgren
+
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
@@ -157,7 +158,7 @@ if __name__ == '__main__':
 			post_downscale_function = round_data
 
 		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future,
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=64,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=post_downscale_function, varname=variable, modelname=modelname, 
 				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )

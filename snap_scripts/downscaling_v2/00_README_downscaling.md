@@ -4,7 +4,6 @@
 1. change working directory to the scripts folder
 	```python
 	scripts_dir = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2'
-
 	os.chdir( scripts_dir )
 	```
 2. run all non-min/max variables...

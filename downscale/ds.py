@@ -214,11 +214,11 @@ class DeltaDownscale( object ):
 		
 		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.ds.data, self.ds.lon
+			dat, lons = np.array(self.ds.data), np.array(self.ds.lon)
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.ds.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( np.array(self.ds.values), np.array(self.ds.lon), to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
