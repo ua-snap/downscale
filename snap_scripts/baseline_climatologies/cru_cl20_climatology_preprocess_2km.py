@@ -39,28 +39,28 @@ if __name__ == '__main__':
 	import geopandas as gpd
 	from shapely.geometry import Point
 	from pathos.mp_map import mp_map
-	import argparse
+	# import argparse
 
-	# parse the commandline arguments
-	parser = argparse.ArgumentParser( description='preprocess CRU CL2.0 data to the AKCAN extent required by SNAP' )
-	parser.add_argument( "-p", "--base_path", action='store', dest='base_path', type=str, help="path to parent directory with a subdirector(ies)y storing the data" )
-	parser.add_argument( "-cru", "--cru_filename", action='store', dest='cru_filename', type=str, help="string path to the .tar.gz file location, downloaded from the CRU site" )
-	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="string abbreviated name of the variable being processed." )
-	parser.add_argument( "-tr", "--template_raster_fn", action='store', dest='template_raster_fn', type=str, help="string path to a template raster dataset to match the CRU CL2.0 to." )
+	# # parse the commandline arguments
+	# parser = argparse.ArgumentParser( description='preprocess CRU CL2.0 data to the AKCAN extent required by SNAP' )
+	# parser.add_argument( "-p", "--base_path", action='store', dest='base_path', type=str, help="path to parent directory with a subdirector(ies)y storing the data" )
+	# parser.add_argument( "-cru", "--cru_filename", action='store', dest='cru_filename', type=str, help="string path to the .tar.gz file location, downloaded from the CRU site" )
+	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="string abbreviated name of the variable being processed." )
+	# parser.add_argument( "-tr", "--template_raster_fn", action='store', dest='template_raster_fn', type=str, help="string path to a template raster dataset to match the CRU CL2.0 to." )
 
-	# parse and unpack the args
-	args = parser.parse_args()
-	base_path = args.base_path
-	cru_filename = args.cru_filename
-	variable = args.variable
-	template_raster_fn = args.template_raster_fn
+	# # parse and unpack the args
+	# args = parser.parse_args()
+	# base_path = args.base_path
+	# cru_filename = args.cru_filename
+	# variable = args.variable
+	# template_raster_fn = args.template_raster_fn
 
-	# # # # FOR TESTING # # # #
-	# base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru'
-	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
-	# variable = 'sunp'
-	# template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
-	# # # # # # # # # # # # # #
+	# # # FOR TESTING # # # #
+	base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_cl20_test_remove'
+	cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_pre.dat.gz'
+	variable = 'pre'
+	template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
+	# # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
 	cru_path = os.path.join( base_path, 'climatologies','cru_cl20','2km', variable )
@@ -91,6 +91,7 @@ if __name__ == '__main__':
 	x = np.linspace( xmin, xmax, cols )
 	y = np.linspace( ymin, ymax, rows )
 	xi, yi = np.meshgrid( x, y )
+	# yi = np.flipud(yi) # I think this is needed...
 	args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
 
 	# run interpolation in parallel
@@ -101,7 +102,7 @@ if __name__ == '__main__':
 	arr[ np.isnan(arr) ] = -9999
 	pcll_affine = transform_from_latlon( y, x )
 
-	meta = {'affine': pcll_affine,
+	meta = {'transform': pcll_affine,
 			'count': 1,
 			'crs': {'init':'epsg:4326'},
 			'driver': u'GTiff',
@@ -151,48 +152,3 @@ if __name__ == '__main__':
 			rst.write( arr, 1 )
 
 	print( 'completed run of {}'.format( variable ) )
-
-
-
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# # # # # EXAMPLE RUN OF THE ABOVE FOR TEM DATA CREATION
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# # REGRID CRU-CL20 to SNAP AKCAN 2km
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# import subprocess, os, glob
-
-# script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/baseline_climatologies'
-# os.chdir( script_path )
-# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-# cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
-# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
-# for cru_filename in cru_filenames:
-# 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
-# 	variable = os.path.basename( cru_filename ).split( '_' )[-1].split('.')[0]
-# 	done = subprocess.call([ 'ipython', 'cru_cl20_preprocess_2km.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
-
-
-
-# ---------------------------------------------------------------------------------
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# # # # # EXAMPLE RUN OF THE ABOVE FOR TEM DATA CREATION
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# # REGRID CRU-CL20 to SNAP AKCAN 2KM
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# import subprocess, os, glob
-
-# script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/tem_inputs_iem'
-# os.chdir( script_path )
-# base_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru'
-# cru_filenames = glob.glob('/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/*.dat.gz')
-# template_raster_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/akcan_template/tas_mean_C_AR5_CCSM4_rcp26_01_2006.tif'
-# for cru_filename in cru_filenames:
-# 	print( 'working on: {}'.format( os.path.basename( cru_filename ) ) )
-# 	variable = os.path.basename( cru_filename ).split( '_' )[-1].split('.')[0]
-# 	done = subprocess.call([ 'ipython', 'cru_cl20_preprocess.py', '--','-p', base_path, '-cru', cru_filename, '-v', variable ,'-tr', template_raster_fn ])
-
-
-
