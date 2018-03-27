@@ -94,6 +94,24 @@ def open_ak_precip( fn ):
     out.write( arr, 1 )
     return out
 
+def fill_missing_mask( arr, mask ):
+    nodata = -9999
+    ind_nodata = np.where( (mask == 0) & (arr != nodata) )
+    ind_fill = np.where( (mask != 0) & (arr == nodata) )
+    height, width = arr.shape
+
+    for i,j in zip(*ind_fill):
+        # all_missing_neighbors = [ (i-1,j+0), (i+0,j-1), (i+0,j+1), (i+1,j+0) ] # rooks
+        all_missing_neighbors = [ (i-1,j+0), (i+0,j-1), (i+0,j+1), (i+1,j+0), (i+1,j+1), (i-1,j+1), (i-1,j-1), (i+1,j-1) ]
+        all_missing_neighbors = [ (i,j) for i,j in all_missing_neighbors if i >= 0 and i < height if j >= 0 and j < width ]
+        df = pd.DataFrame(all_missing_neighbors)
+        vals = arr[(np.array(df[0]), np.array(df[1]))]
+        arr[i,j] = np.mean(vals[vals != nodata])
+
+    for i,j in zip(*ind_nodata):
+        arr[i,j] = nodata
+
+    return arr
 
 def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path, scalevals ):
     from rasterio.merge import merge
@@ -114,12 +132,17 @@ def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path, scaleval
     # get some output bounds information for the merge...
     with rasterio.open( template_fn ) as tmp:
         bounds = tmp.bounds
+        mask = tmp.read_masks( 1 )
 
     # merge 'em
     merged, transform = merge( [ak,can], bounds=bounds, res=(2000,2000), nodata=-9999 )
+
+    # fix some mask mismatches
+    merged = fill_missing_mask( merged[0,...], mask )
+
     # update metadata
     meta = ak.meta
-    count, height, width = merged.shape
+    height, width = merged.shape
     meta.update({
         'driver':'GTiff',
         'height':height,
@@ -156,7 +179,7 @@ def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path, scaleval
 
     output_filename = os.path.join( output_path, '{}_{}_{}_akcan_prism_{}_1961_1990.tif'.format( varname_lookup[variable], metric, units, month ) )
     with rasterio.open( output_filename, 'w', **meta ) as out:
-        out.write( merged )
+        out.write( merged, 1 )
 
     return output_filename
 
