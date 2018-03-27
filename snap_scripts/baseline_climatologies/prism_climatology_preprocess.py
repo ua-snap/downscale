@@ -22,7 +22,7 @@ def _sort_files_chronological( files ):
     df = pd.DataFrame({'months':months,'files':files})
     return df.sort_values('months')['files'].tolist()
 
-def reproject_canada_to3338( fn, template_fn, scalevals=False, dtype='float32' ):
+def reproject_canada_to3338( fn, template_fn, dtype='float32' ): # scalevals=False, 
     '''
     reproject and scale the temp values to floats from ints 
     '''
@@ -57,10 +57,22 @@ def reproject_canada_to3338( fn, template_fn, scalevals=False, dtype='float32' )
 
     # open an in-memory dataset in the destination crs
     dst = rasterio.open( 'reproject', 'w', **kwargs )
-    if scalevals: # scale the temperature PRISM values for Canada...
-        out_arr[ out_arr != dst.nodata ] = out_arr[ out_arr != dst.nodata ] / 10.0
+    # if scalevals: # scale the temperature PRISM values for Canada...
+    #     out_arr[ out_arr != dst.nodata ] = out_arr[ out_arr != dst.nodata ] / 10.0
     dst.write( out_arr, 1 )
     return dst
+
+def scale_ak_temperature_to_int( fn, nodata=-9999 ):
+    with rasterio.open( fn ) as rst:
+        arr = rst.read()
+        meta = rst.meta
+    meta.update( {'driver':'MEM'} )
+
+    arr[ arr != nodata ] = arr[ arr != nodata ] * 10.0
+
+    out = rasterio.open('','w',**meta )
+    out.write( np.rint(arr) )
+    return out
 
 def open_ak_precip( fn ):
     ''' 
@@ -83,7 +95,7 @@ def open_ak_precip( fn ):
     return out
 
 
-def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path ):
+def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path, scalevals ):
     from rasterio.merge import merge
     
     # reproject canada to 3338 and rescale temperature values from ints to floats
@@ -95,9 +107,9 @@ def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path ):
     else: # temperature variables
         scalevals = True
         # open alaska AAI grid
-        ak = rasterio.open( ak_fn ) # already in 3338
+        ak = scale_ak_temperature_to_int( ak_fn, nodata=-9999 ) # already in 3338
     
-    can = reproject_canada_to3338( can_fn, template_fn, scalevals=scalevals, dtype=dtype )
+    can = reproject_canada_to3338( can_fn, template_fn, dtype=dtype )
 
     # get some output bounds information for the merge...
     with rasterio.open( template_fn ) as tmp:
@@ -138,6 +150,10 @@ def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path ):
     if len(month) == 1:
         month = '0{}'.format(month)
 
+    # scale the temperature PRISM values
+    if scalevals: 
+        merged[ merged != meta['nodata'] ] = merged[ merged != meta['nodata'] ] / 10.0
+
     output_filename = os.path.join( output_path, '{}_{}_{}_akcan_prism_{}_1961_1990.tif'.format( varname_lookup[variable], metric, units, month ) )
     with rasterio.open( output_filename, 'w', **meta ) as out:
         out.write( merged )
@@ -156,11 +172,16 @@ if __name__ == '__main__':
 
     # use some hardwired functions to list and sort the data groups to a dict.
     files = filelister( base_dir )
-    variables = ['ppt','tmean','tmin','tmax']
+    variables = ['tmean','tmin','tmax','ppt']
 
     for variable in variables:
         ak_files = files['{}-{}'.format('alaska',variable)]
         can_files = files['{}-{}'.format('canada',variable)]
+
+        if variable == 'ppt':
+            scalevals = False
+        else: # temperature values
+            scalevals = True
         
         for ak, can in zip(ak_files, can_files):
             print( 'merging: {}'.format(variable) )
@@ -170,4 +191,4 @@ if __name__ == '__main__':
             output_path = os.path.join( output_dir, varname_lookup[variable] )
             
             # run the merge
-            done = merge_ak_canada( ak, can, template_fn, variable, output_path )
+            done = merge_ak_canada( ak, can, template_fn, variable, output_path, scalevals )
