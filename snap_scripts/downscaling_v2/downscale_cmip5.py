@@ -1,12 +1,12 @@
-# downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016 (UPDATED: September 21, 2016 -- [ML])
+# downscale the prepped cmip5 data 
+# author: Michael Lindgren -- March 2018
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
 	import downscale
 	from downscale import preprocess, Mask, utils
-	import argparse
 	import numpy as np
+	import argparse
 
 	# # parse the commandline arguments
 	parser = argparse.ArgumentParser( description='downscale the AR5-CMIP5 data to the AKCAN extent required by SNAP' )
@@ -27,11 +27,11 @@ if __name__ == '__main__':
 	base_dir = args.base_dir
 
 	# AOI MASK -- HARDWIRE -- PCLL for CMIP5
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_template/akcan_aoi_mask_PCLL.shp'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/akcan_aoi_mask_PCLL.shp'
 	project = 'ar5'
 	
 	# # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
+	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# variable = 'pr'
 	# scenario = 'rcp60'
 	# model = 'GFDL-CM3'
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 		
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		clim_path = os.path.join( base_dir, 'prism', variable )
+		clim_path = os.path.join( base_dir, 'climatologies', 'prism', variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 			historical_fn, = glob.glob( os.path.join( os.path.dirname( fn ).replace( scenario, 'historical' ), '*.nc' ) )
 			historical = downscale.Dataset( historical_fn, variable, model, scenario, project=project, units=units, metric=metric, begin=1860, end=2005 )
 			future = downscale.Dataset( fn, variable, model, scenario, project=project, units=units, metric=metric, begin=2006, end=2100 )
-
+		
 		# convert from Kelvin to Celcius
 		if variable != 'pr':
 			if historical:
