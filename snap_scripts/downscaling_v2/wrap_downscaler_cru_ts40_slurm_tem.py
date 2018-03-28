@@ -43,7 +43,8 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'pct'
 
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_2km_extent', 'cru_cl20', out_varname )
+		cru_cl20_varnames = {'hur':'reh', 'clt':'clt', 'cld':'clt'} # we only support these variables for now...
+		clim_path = os.path.join( base_dir, 'climatologies','cru_cl20', '2km', cru_cl20_varnames[out_varname] )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
