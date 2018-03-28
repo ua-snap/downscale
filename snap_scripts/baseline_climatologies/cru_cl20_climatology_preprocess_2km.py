@@ -150,7 +150,6 @@ if __name__ == '__main__':
 	
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 2km...
 	for fn in out_paths:
-		print( fn )
 		os.system( 'gdalwarp -q -co COMPRESS=LZW -overwrite -dstnodata -9999 -multi -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
 		# build an output data set based on the template raster extent and reproject _into_ it

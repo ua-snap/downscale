@@ -60,14 +60,22 @@ if __name__ == '__main__':
 	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
 	# variable = 'sunp'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_10min/akcan_with_nwt_15k_template.tif'
-
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
-	cru_path = os.path.join( base_path, 'climatologies','cru_cl20','10min', variable )
+	output_path = os.path.join( base_path, 'climatologies','cru_cl20','10min', variable )
 
-	if not os.path.exists( cru_path ):
-		os.makedirs( cru_path )
+	if not os.path.exists( output_path ):
+		os.makedirs( output_path )
+
+	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
+	colnames = [ 'lat', 'lon' ] + months
+	out_colnames = colnames 
+
+	if variable == 'pre':
+		colnames = colnames + [ 'cv{}'.format(m) for m in months ]
+	if variable == 'elv':
+		colnames = ['lat','lon','01']
 
 	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
 	colnames = [ 'lat', 'lon' ] + months
@@ -90,9 +98,15 @@ if __name__ == '__main__':
 
 	# build the output grid
 	x = np.linspace( xmin, xmax, cols )
-	y = np.linspace( ymin, ymax, rows )
+	y = np.linspace( ymax, ymin, rows ) # [ NEW March 2018 ]... flipped ymax/min order in this operation to be north-up...
 	xi, yi = np.meshgrid( x, y )
-	args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
+
+	if variable == 'elv':
+		args_list = [{'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df['01']),'xi':xi,'yi':yi}]
+	else:
+		args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
+
+	# args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
 
 	# run interpolation in parallel
 	interped_grids = mp_map( regrid, args_list, nproc=12 )
@@ -113,7 +127,7 @@ if __name__ == '__main__':
 			'compress':'lzw'}
 
 	# set up a dir to toss the intermediate files into -- since we are using gdalwarp...
-	intermediate_path = os.path.join( cru_path, 'intermediates' )
+	intermediate_path = os.path.join( output_path, 'intermediates' )
 	if not os.path.exists( intermediate_path ):
 		os.makedirs( intermediate_path )
 
@@ -128,19 +142,16 @@ if __name__ == '__main__':
 	template_raster = rasterio.open( template_raster_fn )
 	resolution = template_raster.res
 	template_meta = template_raster.meta
-	template_meta.update( compress='lzw', dtype='float32', crs={'init':'epsg:3338'}, nodata=-9999 ) # update some output meta for the new GTiffs
-	# if 'transform' in template_meta.keys():
-	# 	template_meta.pop( 'transform' )
+	template_meta.update( compress='lzw', dtype='float32', crs={'init':'epsg:3338'}, nodata=-9999 )
 	a,b,c,d = template_raster.bounds
 	
 	# FLIP IT BACK TO GREENWICH-CENTERED using gdalwarp... then to AKCAN 10min...
 	for fn in out_paths:
-		# back to greenwich LL
 		os.system( 'gdalwarp -q -overwrite -srcnodata -9999 -dstnodata -9999 -multi -wo SOURCE_EXTRA=100 -t_srs EPSG:4326 -te -180 0 180 90 {} {}'.format( fn, fn.replace( 'PCLL', 'LL' ) ) )
 		
 		# setup the output filename and pathing
 		final_fn = fn.replace( '_PCLL', '' )
-		final_fn = os.path.join( cru_path, os.path.basename(final_fn) )
+		final_fn = os.path.join( output_path, os.path.basename(final_fn) )
 		if os.path.exists( final_fn ):
 			os.remove( final_fn )
 
@@ -151,6 +162,8 @@ if __name__ == '__main__':
 
 		# warp to this new empty dataset
 		os.system( 'gdalwarp -q -wo SOURCE_EXTRA=100 -multi -srcnodata -9999 -dstnodata -9999 {} {}'.format( fn.replace( 'PCLL', 'LL' ), final_fn ) )
+		
+		# mask it
 		with rasterio.open( final_fn, 'r+' ) as rst:
 			arr = rst.read( 1 )
 			arr[ mask == 0 ] = -9999
