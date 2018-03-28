@@ -40,8 +40,6 @@ if __name__ ==	'__main__':
 	mean_variable_out = args.mean_variable_out
 	begin = args.begin
 	end = args.end
-	begin = 1901
-	end = 2014
 
 	# standard args
 	clim_begin = '01-1961'
@@ -84,8 +82,5 @@ if __name__ ==	'__main__':
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom, 
 					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=interp )
-
-	if not os.path.exists( output_path ):
-		os.makedirs( output_path )
 
 	ar5.downscale( output_dir=output_path )
