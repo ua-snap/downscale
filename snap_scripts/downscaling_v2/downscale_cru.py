@@ -82,7 +82,4 @@ if __name__ ==	'__main__':
 				post_downscale_function=round_it, varname=out_varname, modelname=None, 
 				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
 
-	if not os.path.exists( output_path ):
-		os.makedirs( output_path )
-
 	ar5.downscale( output_dir=output_path )
