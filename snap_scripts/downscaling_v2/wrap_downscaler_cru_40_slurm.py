@@ -40,7 +40,7 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( base_dir, 'prism', out_varname )
+		clim_path = os.path.join( base_dir, 'climatologies', 'prism', out_varname )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):

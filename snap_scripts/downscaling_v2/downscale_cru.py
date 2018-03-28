@@ -40,7 +40,7 @@ if __name__ ==	'__main__':
 	interp = True # interpolate across space -- Low Res
 
 	# AOI MASK -- HARDWIRE -- GCLL for CRU
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_template/akcan_aoi_mask_GCLL.shp'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/akcan_aoi_mask_GCLL.shp'
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
