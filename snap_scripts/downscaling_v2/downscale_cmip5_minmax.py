@@ -36,9 +36,7 @@ if __name__ == '__main__':
 	project = 'ar5'
 	
 	# # # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# # fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tasmax/tasmax_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
-	# # mean_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tas/tas_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
+	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# variable = 'tasmin'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
