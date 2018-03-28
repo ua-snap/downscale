@@ -79,7 +79,8 @@ if __name__ == '__main__':
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_2km_extent', 'cru_cl20', variable )
+		cru_cl20_varnames = {'hur':'reh', 'clt':'clt'} # we only support these variables for now...
+		clim_path = os.path.join( base_dir, 'climatologies', 'cru_cl20', '2km', cru_cl20_varnames[variable] )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
