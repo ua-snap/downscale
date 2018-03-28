@@ -269,7 +269,7 @@ class DeltaDownscale( object ):
 			self._rotated = False
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( np.array(self.climatology.values), np.array(self.ds.lon), to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
