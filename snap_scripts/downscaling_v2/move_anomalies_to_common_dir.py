@@ -11,7 +11,7 @@ def move( fn, new_fn, *args ):
 
 def make_args( fn ):
 	dirname, basename = os.path.split( fn )
-	new_dirname = dirname.replace( '/anom', '' ).replace( 'downscaled', 'anomalies' )
+	new_dirname = dirname.replace( '/anom', '' ).replace( 'downscaled', 'downscaled_anomalies' )
 	new_fn = os.path.join( new_dirname, basename )
 	return fn, new_fn
 

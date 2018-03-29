@@ -145,12 +145,12 @@ if __name__ == '__main__':
 			post_downscale_function = round_data_clamp
 		else:
 			post_downscale_function = round_data
-			
+		
 		ar5 = downscale.DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, 
 					historical=historical, future=future, downscaling_operation=downscaling_operation,
 					mask=mask, mask_value=0, ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=None, 
 					dst_nodata=None, post_downscale_function=post_downscale_function, varname=variable, 
-					modelname=modelname, anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
+					modelname=modelnames[model], anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
 
 		ar5.downscale( output_dir=output_path )
 		
