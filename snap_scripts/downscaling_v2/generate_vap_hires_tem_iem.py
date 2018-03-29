@@ -23,7 +23,6 @@ def make_vap( hur_fn, tas_fn, out_fn ):
 	with np.errstate( all='ignore' ):
 		vap_arr = convert_to_vap( tas_arr, hur_arr )
 		
-	# vap_arr[ mask == 0 ] = hur.nodata
 	vap_arr = np.around( vap_arr, 2 ) # roundit
 	vap_arr[ mask == 0 ] = nodata # reset mask
 
@@ -46,10 +45,11 @@ def wrap_make_vap( x ):
 if __name__ == '__main__':
 	import os, rasterio, itertools, functools, glob
 	import numpy as np
-	from pathos.mp_map import mp_map
-
+	import multiprocessing as mp
+	
 	# # vars
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
+	ncpus = 64
 	
 	# list ALL relative humidity
 	hur_files = [ os.path.join(r,fn) for r,s,files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) and 'hur_' in fn ]
@@ -60,5 +60,9 @@ if __name__ == '__main__':
 	# make the output files from one of the lists
 	output_filenames = [ fn.replace('/hur','/vap').replace('mean_pct','mean_hPa') for fn in hur_files ]
 
+	# run processing in parallel
 	args = zip( hur_files, tas_files, output_filenames )
-	out = mp_map( wrap_make_vap, args, nproc=64 )
+	pool = mp.Pool( ncpus )
+	out = pool.map( wrap_make_vap, args )
+	pool.close()
+	pool.join()
