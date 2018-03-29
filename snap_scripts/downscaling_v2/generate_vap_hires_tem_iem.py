@@ -10,19 +10,22 @@ def convert_to_vap( tas_arr, hur_arr ):
 
 def make_vap( hur_fn, tas_fn, out_fn ):
 	''' make vapor pressure from hur and tas.'''
-	hur = rasterio.open( hur_fn )
-	tas = rasterio.open( tas_fn )
-
-	hur_arr = hur.read( 1 )
-	tas_arr = tas.read( 1 )
-	mask = hur.read_masks( 1 )
+	with rasterio.open( hur_fn ) as hur:
+		hur_arr = hur.read( 1 )
+		mask = hur.read_masks( 1 )
+		nodata = hur.nodata
+		meta = hur.meta
+		meta.update( compress='lzw' )
+	
+	with rasterio.open( tas_fn ) as tas:
+		tas_arr = tas.read( 1 )
 
 	with np.errstate( all='ignore' ):
 		vap_arr = convert_to_vap( tas_arr, hur_arr )
 		
 	# vap_arr[ mask == 0 ] = hur.nodata
 	vap_arr = np.around( vap_arr, 2 ) # roundit
-	vap_arr[ mask == 0 ] = hur.nodata # reset mask
+	vap_arr[ mask == 0 ] = nodata # reset mask
 
 	dirname, basename = os.path.split( out_fn )
 	try:
@@ -31,9 +34,6 @@ def make_vap( hur_fn, tas_fn, out_fn ):
 	except:
 		pass 
 
-	meta = hur.meta
-	meta.update( compress='lzw' )
-	
 	with rasterio.open( out_fn, 'w', **meta ) as out:
 		out.write( vap_arr, 1 )
 
