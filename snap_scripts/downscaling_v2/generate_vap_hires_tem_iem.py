@@ -34,10 +34,10 @@ def make_vap( hur_fn, tas_fn, out_fn ):
 	meta = hur.meta
 	meta.update( compress='lzw' )
 	
-	with rasterio.open( output_filename, 'w', **meta ) as out:
+	with rasterio.open( out_fn, 'w', **meta ) as out:
 		out.write( vap_arr, 1 )
 
-	return output_filename
+	return out_fn
 
 def wrap_make_vap( x ):
 	''' runner for multiprocessing '''
@@ -61,4 +61,4 @@ if __name__ == '__main__':
 	output_filenames = [ fn.replace('/hur','/vap').replace('mean_pct','mean_hPa') for fn in hur_files ]
 
 	args = zip( hur_files, tas_files, output_filenames )
-	out = mp_map( wrap_make_vap, files, nproc=64 )
+	out = mp_map( wrap_make_vap, args, nproc=64 )

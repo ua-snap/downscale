@@ -40,7 +40,7 @@ if __name__ == '__main__':
 	# variable = 'tasmin'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
-	# model = 'GFDL-CM3'
+	# model = 'CCSM4'
 	# units = 'C'
 	# metric = 'mean'
 	# # # # # #END TESTING # # # # 
@@ -73,9 +73,8 @@ if __name__ == '__main__':
 			begin = 2006
 			end = 2100
 
-		modelname = modelnames[ model ]
 		# SETUP BASELINE -- downscaled `tas` is our baseline data for the tasmin tasmax
-		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
+		clim_path = os.path.join( base_dir, 'downscaled', model, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
 		filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
