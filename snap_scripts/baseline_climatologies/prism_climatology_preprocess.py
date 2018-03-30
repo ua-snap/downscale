@@ -135,7 +135,7 @@ def merge_ak_canada( ak_fn, can_fn, template_fn, variable, output_path, scaleval
         mask = tmp.read_masks( 1 )
 
     # merge 'em
-    merged, transform = merge( [ak,can], bounds=bounds, res=(2000,2000), nodata=-9999 )
+    merged, transform = merge( [can,ak], bounds=bounds, res=(2000,2000), nodata=-9999, precision=5 )
 
     # fix some mask mismatches
     merged = fill_missing_mask( merged[0,...], mask )
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     import numpy as np
 
     base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/raw/prism'
-    output_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism'
+    output_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_flipped_merge_order'
     template_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/tas_mean_C_ar5_IPSL-CM5A-LR_rcp26_01_2006.tif'
 
     # use some hardwired functions to list and sort the data groups to a dict.
