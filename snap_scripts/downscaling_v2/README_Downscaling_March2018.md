@@ -12,6 +12,7 @@
 	- [`tas`, `pr`] cru akcan 2km
 4. run `wrap_downscaler_cru_ts40_slurm_tem.py`
 	- [`hur`, `clt`] cru akcan 2km
+	<--[- wait for above to complete -]-->
 5. run `wrap_downscaler_cmip5_slurm_minmax.py`
 	- [`tasmin`,`tasmax`] cmip5 akcan 2km
 6. run `wrap_downscaler_cru_ts40_slurm_minmax.py`
