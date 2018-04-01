@@ -17,6 +17,7 @@
 	- [`tasmin`,`tasmax`] cmip5 akcan 2km
 6. run `wrap_downscaler_cru_ts40_slurm_minmax.py`
 	- [`tasmin`,`tasmax`] cru_ts40 akcan 2km
+	<--[- wait for above to complete -]-->
 7. run: `mv CCSM4/ NCAR-CCSM4/`
 	- change folder names to the proper modelname which is not served properly from PCMDI
 8. run: `mv ts40/ CRU-TS40/`
