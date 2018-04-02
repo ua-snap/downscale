@@ -24,9 +24,9 @@ if __name__ == '__main__':
 	
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	variables = [ 'pr', 'tas' ]
-	scenarios = [ 'historical', 'rcp45', 'rcp60', 'rcp85' ]
+	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
-	slurm_path = os.path.join( base_dir, 'downscaled_10min_nwt', 'slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled_10min', 'slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 	

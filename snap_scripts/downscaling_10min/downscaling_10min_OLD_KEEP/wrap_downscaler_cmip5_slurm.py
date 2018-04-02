@@ -12,7 +12,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric ):
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cmip5_nwt_far-futures.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cmip5.py'
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path,\
 							 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, '-u', units, '-met', metric ])

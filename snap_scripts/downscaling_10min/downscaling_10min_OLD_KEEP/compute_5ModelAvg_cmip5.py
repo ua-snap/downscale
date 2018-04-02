@@ -1,6 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # 
 # Generate 5 Model Averages --> 10 min data
-# author: Michael Lindgren -- SEPT 2017
+# author: Michael Lindgren -- 2017
 # # # # # # # # # # # # # # # # # # # # # # # # 
 
 def list_files( input_path, begin=1900, end=2005 ):
@@ -77,13 +77,13 @@ if __name__ == '__main__':
 	scenario = args.scenario
 
 	# some setup args
-	base_dir = os.path.join( base_dir, 'downscaled_10min_nwt' )
+	base_dir = os.path.join( base_dir, 'downscaled_10min' )
 	variables = [ variable ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
 	for variable in variables:
 		if scenario == 'historical':
-			begin = 1860
+			begin = 1900
 			end = 2005
 		else:
 			begin = 2006
