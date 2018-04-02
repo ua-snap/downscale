@@ -338,8 +338,13 @@ class DeltaDownscale( object ):
 		else:
 			model = 'model'
 
-		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+		# handle situations where project and model are the same and therefore project is passed as None (i.e. CRU)
+		if self.historical.project is not None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+		else:
+			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units,
+					 model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]			
 
 		# if there is a specific name prefix, use it
 		if prefix != None:
