@@ -76,6 +76,7 @@ if __name__ == '__main__':
 		colnames = colnames + [ 'cv{}'.format(m) for m in months ]
 	if variable == 'elv':
 		colnames = ['lat','lon','01']
+		out_colnames = colnames
 
 	months_lookup = { count+1:month for count, month in enumerate( months ) }
 	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames )
