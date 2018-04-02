@@ -42,7 +42,7 @@ class DatasetFF( object ):
 
 		self.fn = fn # CHRONOLOGICALLY SORTED! [list] of MFDataset-able filenames
 		ds = MFDataset( self.fn )
-		self.ds = ds
+		# self.ds = ds
 		try:
 			t = ds.variables['time']
 			dates = num2date( t[:], calendar=t.calendar, units=t.units )
@@ -135,4 +135,55 @@ class DatasetFF( object ):
 # climdates = np.arange('1961-01-01','1991-01-01', dtype='datetime64[M]')
 
 
+class MaskFF( object ):
+	def __init__( self, aoi, ds, mask_value=1, fill_value=0, *args, **kwargs ):
+		'''
+		make a mask from a shapefile which is already in the CRS and domain of the 
+		input ds.
+
+		ARGUMENTS:
+		---------
+		aoi = [str] full read path of a shapefile with .shp extension
+		ds = [downscale.Dataset] instance of file in a downscale.Dataset object
+		mask_value = [int] value to use for masked areas. default:1.
+		fill_value = [int] value to use for unmasked areas. default:0.
+
+		'''
+		self.aoi = aoi
+		self.ds = ds
+		self.mask_value = mask_value
+		self.fill_value = fill_value
+	@property
+	def mask( self, latitude='lat', longitude='lon', all_touched=True ):
+		''' make a mask from the aoi shapefile and the low-res input NetCDF '''
+		import geopandas as gpd
+		from downscale import utils
+
+		gdf = gpd.read_file( self.aoi )
+		shapes = [ (geom, self.mask_value) for geom in gdf.geometry ]
+		ds = self.ds.ds # grab the ds sub-object from the Dataset object
+		# coords = ds.coords # get lats and lons as a coords dict from xarray
+		coords = self._get_coords() #[FF added] a hack to overcome our masking procedure when we can use xarray
+		return utils.rasterize( shapes, coords=coords, latitude=latitude, longitude=longitude, fill=self.fill_value, **{'all_touched':all_touched} ).data
+	def to_gtiff( self, output_filename ):
+		''' write the mask to geotiff given an output_filename '''
+		meta = {'compress':'lzw'}
+		count, height, width = self.ds.ds[ self.ds.variable ].shape
+		affine = self.ds._calc_affine()
+		meta.update( affine=affine, height=height, width=width, count=1, dtype='int16', driver='GTiff' )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( self.mask.astype( np.int16 ), 1 )
+	def _dump_out_testfile( self, output_filename ):
+		''' hidden function to dump out a single representative raster from the NetCDF for comparison '''
+		meta = {'compress':'lzw'}
+		count, height, width = self.ds.ds[ self.ds.variable ].shape
+		affine = self.ds._calc_affine()
+		meta.update( affine=affine, height=height, width=width, count=1, dtype='float', driver='GTiff' )
+		with rasterio.open( output_filename, 'w', **meta ) as out:
+			out.write( self.ds.ds[self.ds.variable][0], 1 )
+	def _get_coords( self ):
+		import xarray as xr
+		ds = xr.open_dataset(self.ds.fn[0], decode_times=False)
+		coords = {'lon':np.array(ds.lon),'lat':np.flipud(ds.lat)}
+		return coords
 

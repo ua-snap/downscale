@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from downscale import utils
+from downscale.ds import *
 
 class DeltaDownscaleFF( object ):
 	def __init__( self, baseline, clim_begin, clim_end, historical, future=None,
