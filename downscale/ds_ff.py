@@ -429,80 +429,80 @@ class DeltaDownscaleFF( object ):
 		return output_dir
 
 
-# # # # # # # # # NEW FILL Dataset FOR A SPECIFIC SNAP ISSUE WITH pre DATA from CRU 
-# # # # # # # # # # and pr DATA from CMIP5 / CRU
-def find_boundary( arr ):
-	'''
-	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)
-	this is especially useful if the data are land-only.  As in the CRU TS3.x data.
-	'''
-	from skimage.segmentation import find_boundaries
-	bool_arr = np.copy( arr )
-	ind = np.isnan( bool_arr )
-	bool_arr[ ~ind ] = 1
-	bool_arr[ ind ] = 0
-	return find_boundaries( bool_arr, mode='inner' )
+# # # # # # # # # # NEW FILL Dataset FOR A SPECIFIC SNAP ISSUE WITH pre DATA from CRU 
+# # # # # # # # # # # and pr DATA from CMIP5 / CRU
+# def find_boundary( arr ):
+# 	'''
+# 	return a mask of the boundary limit of DATA cells (overlays edge DATA not NA)
+# 	this is especially useful if the data are land-only.  As in the CRU TS3.x data.
+# 	'''
+# 	from skimage.segmentation import find_boundaries
+# 	bool_arr = np.copy( arr )
+# 	ind = np.isnan( bool_arr )
+# 	bool_arr[ ~ind ] = 1
+# 	bool_arr[ ind ] = 0
+# 	return find_boundaries( bool_arr, mode='inner' )
 
-def calc_percentile( arr, aoi_mask, percentile=95, fill_value=0, nodata=None ):
-	''' 
-	calculate the percentile value potentially over a masked domain, 
-	and avoiding nodata and np.nan AND return the nearest actual value to
-	the np.nanpercentile( arr, percentile )
+# def calc_percentile( arr, aoi_mask, percentile=95, fill_value=0, nodata=None ):
+# 	''' 
+# 	calculate the percentile value potentially over a masked domain, 
+# 	and avoiding nodata and np.nan AND return the nearest actual value to
+# 	the np.nanpercentile( arr, percentile )
 
-	arr = [numpy.ndarray] 2D array
-	aoi_mask = [numpy.ndarray] 2D mask array of 0 (nomask) or 1 (mask)
+# 	arr = [numpy.ndarray] 2D array
+# 	aoi_mask = [numpy.ndarray] 2D mask array of 0 (nomask) or 1 (mask)
 
-	'''
-	if aoi_mask is not None:
-		# mask the background
-		arr = arr[ (aoi_mask != fill_value) ]
+# 	'''
+# 	if aoi_mask is not None:
+# 		# mask the background
+# 		arr = arr[ (aoi_mask != fill_value) ]
 
-	if nodata is not None:
-		arr = arr[ arr != nodata ]
+# 	if nodata is not None:
+# 		arr = arr[ arr != nodata ]
 
-	upperthresh = np.nanpercentile( arr, percentile )
-	idx = (np.abs(arr - upperthresh)).argmin()
-	return arr[ idx ]
+# 	upperthresh = np.nanpercentile( arr, percentile )
+# 	idx = (np.abs(arr - upperthresh)).argmin()
+# 	return arr[ idx ]
 
-def correct_boundary( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
-	''' correct the boundary pixels with non-acceptable values '''
+# def correct_boundary( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
+# 	''' correct the boundary pixels with non-acceptable values '''
 	
-	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+# 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 
-	# drop any masks
-	arr = np.array( arr )
+# 	# drop any masks
+# 	arr = np.array( arr )
 
-	ind = np.where( bound_mask == True )
-	vals = arr[ ind ]
-	vals[ vals < 0.5 ] = 0.5
-	vals[ vals > upperthresh ] = upperthresh
-	arr[ ind ] = vals
-	return arr
+# 	ind = np.where( bound_mask == True )
+# 	vals = arr[ ind ]
+# 	vals[ vals < 0.5 ] = 0.5
+# 	vals[ vals > upperthresh ] = upperthresh
+# 	arr[ ind ] = vals
+# 	return arr
 
-def correct_inner( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
-	''' correct the inner pixels with non-acceptable values '''
+# def correct_inner( arr, bound_mask, aoi_mask, percentile=95, fill_value=0 ):
+# 	''' correct the inner pixels with non-acceptable values '''
 
-	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+# 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 	
-	# drop any masks
-	arr = np.array( arr )
+# 	# drop any masks
+# 	arr = np.array( arr )
 
-	ind = np.where( (arr > 0) & bound_mask != True )
-	vals = arr[ ind ]
-	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
-	vals[ vals > upperthresh ] = upperthresh
-	arr[ ind ] = vals
-	return arr 
+# 	ind = np.where( (arr > 0) & bound_mask != True )
+# 	vals = arr[ ind ]
+# 	vals[ vals < 0.5 ] = np.nan # set to the out-of-bounds value
+# 	vals[ vals > upperthresh ] = upperthresh
+# 	arr[ ind ] = vals
+# 	return arr 
 
-def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
-	''' correct the values for precip -- from @leonawicz'''
-	print(calc_percentile( arr, aoi_mask, 95, 0 ))
+# def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
+# 	''' correct the values for precip -- from @leonawicz'''
+# 	print(calc_percentile( arr, aoi_mask, 95, 0 ))
 
-	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+# 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
 
-	# drop any masks
-	arr = np.array( arr )
+# 	# drop any masks
+# 	arr = np.array( arr )
 
-	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
-	arr[ arr > upperthresh ] = upperthresh
-	return arr
+# 	arr[ arr < 0.5 ] = np.nan # set to the out-of-bounds value
+# 	arr[ arr > upperthresh ] = upperthresh
+# 	return arr
