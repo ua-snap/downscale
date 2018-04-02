@@ -4,7 +4,9 @@
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
-	from downscale import preprocess, Baseline, Mask, utils, DeltaDownscaleFF, DatasetFF
+	from downscale import preprocess, Baseline, Mask, utils
+	from downscale.ds_ff import DeltaDownscaleFF
+	from downscale.dataset_ff import DatasetFF, MaskFF
 	import numpy as np
 	import argparse
 
@@ -53,11 +55,12 @@ if __name__ == '__main__':
 	# metric = 'total'
 	# begin = None
 	# end = None
+	# begin, end = (2101,2300)
 	# # END TESTING
 
 	# some setup args
-	base_path = os.path.join( base_dir,'cmip5_nwt','cmip5_raw_ncrcat' ) # NEW PATH FOR THE NCRCAT FILES... WORKS WELL.
-	output_dir = os.path.join( base_dir,'downscaled_10min_nwt' )
+	base_path = os.path.join( base_dir,'cmip5_farfutures','cmip5_raw_ncrcat' ) # NEW PATH FOR THE NCRCAT FILES... WORKS WELL.
+	output_dir = os.path.join( base_dir,'downscaled_10min_TEST' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -88,7 +91,7 @@ if __name__ == '__main__':
 		
 		# SETUP BASELINE
 		variable_lookup_cru = {'pr':'pre', 'tas':'tmp'} # only ready for tas / pr currently
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable_lookup_cru[ variable ] )
+		clim_path = os.path.join( base_dir, 'climatologies', 'cru_cl20', '10min', variable_lookup_cru[ variable ] )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		baseline = Baseline( filelist )
 		
@@ -155,7 +158,7 @@ if __name__ == '__main__':
 			aoi_mask = aoi_mask_fn
 			# make AOI_Mask input resolution for computing 95th percentiles...
 			if aoi_mask_fn is not None:
-				aoi_mask = Mask( aoi_mask_fn, historical, 1, 0 )
+				aoi_mask = MaskFF( aoi_mask_fn, historical, 1, 0 )
 			else:
 				aoi_mask = None
 		else:
