@@ -47,7 +47,7 @@ if __name__ ==	'__main__':
 	clim_begin = '01-1961'
 	clim_end = '12-1990'
 	scenario = 'historical'
-	project = 'cru'
+	project = ''
 	anom = True # write out anoms (True) or not (False)
 	interp = True # interpolate across space -- Low Res
 
