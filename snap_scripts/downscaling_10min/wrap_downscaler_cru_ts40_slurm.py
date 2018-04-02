@@ -21,7 +21,7 @@ if __name__ == '__main__':
 	# # args setup
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	ncores = '32'
-	model = 'ts40'
+	model = 'CRU-TS40'
 	scenario = 'historical'
 	variables = ['tmp', 'pre']
 	out_varnames = ['tas', 'pr']
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable )
+		clim_path = os.path.join( base_dir, 'climatologies', 'cru_cl20', '10min', variable )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled_10min', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.' + variable + '.dat.nc.gz'
 		
 		# # make a command to pass to slurm
-		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cru.py'
+		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cru_far-futures.py'
 		command = ' '.join([ 'ipython', script_path, '--',
 							'-ts', cru_ts,
 							'-cl', clim_path,
@@ -63,3 +63,4 @@ if __name__ == '__main__':
 		
 		fn = os.path.join( slurm_path, '_'.join(['downscale', model, variable]) + '.slurm' )
 		_ = run_model( fn, command )
+		
