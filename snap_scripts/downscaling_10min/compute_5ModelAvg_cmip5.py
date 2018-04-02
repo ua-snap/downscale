@@ -77,7 +77,7 @@ if __name__ == '__main__':
 	scenario = args.scenario
 
 	# some setup args
-	base_dir = os.path.join( base_dir, 'downscaled_10min_nwt' )
+	base_dir = os.path.join( base_dir, 'downscaled_10min' )
 	variables = [ variable ]
 	models = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4' ]
 
