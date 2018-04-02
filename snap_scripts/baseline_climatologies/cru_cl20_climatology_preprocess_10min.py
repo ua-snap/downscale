@@ -57,13 +57,13 @@ if __name__ == '__main__':
 
 	# # # # FOR TESTING # # # #
 	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_sunp.dat.gz'
-	# variable = 'sunp'
+	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_pre.dat.gz'
+	# variable = 'pre'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_10min/akcan_with_nwt_15k_template.tif'
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
-	output_path = os.path.join( base_path, 'climatologies','cru_cl20','10min_V2', variable )
+	output_path = os.path.join( base_path, 'climatologies','cru_cl20','10min', variable )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
@@ -77,11 +77,11 @@ if __name__ == '__main__':
 	if variable == 'elv':
 		colnames = ['lat','lon','01']
 
-	months = [ '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12' ]
-	colnames = [ 'lat', 'lon' ] + months
 	months_lookup = { count+1:month for count, month in enumerate( months ) }
-	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames )
-	
+	cru_df = pd.read_csv( cru_filename, delim_whitespace=True, compression='gzip', header=None, names=colnames, index_col=False )
+	# slice to the pre values only.  We dont want the cv values for now.
+	cru_df = cru_df[ out_colnames ]
+
 	# manually flip to PCLL for interpolation
 	cru_df['lon'][ cru_df['lon'] < 0 ] = cru_df['lon'][ cru_df['lon'] < 0 ] + 360
 
@@ -105,8 +105,6 @@ if __name__ == '__main__':
 		args_list = [{'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df['01']),'xi':xi,'yi':yi}]
 	else:
 		args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
-
-	# args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
 
 	# run interpolation in parallel
 	interped_grids = mp_map( regrid, args_list, nproc=12 )
