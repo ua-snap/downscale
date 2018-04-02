@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5_farfutures','cmip5_raw_ncrcat' ) # NEW PATH FOR THE NCRCAT FILES... WORKS WELL.
-	output_dir = os.path.join( base_dir,'downscaled_10min_TEST' )
+	output_dir = os.path.join( base_dir,'downscaled_10min' )
 	variables = [ variable ]
 	scenarios = [ scenario ]
 	models = [ model ]
@@ -74,9 +74,11 @@ if __name__ == '__main__':
 	modelnames = [ 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'GFDL-CM3', 'NCAR-CCSM4', 'NCAR-CCSM4' ]
 
 	modelnames = dict( zip( all_models, modelnames ) )
-	
-	if not os.path.exists( output_dir ):
-		os.makedirs( output_dir )
+	try:
+		if not os.path.exists( output_dir ):
+			os.makedirs( output_dir )
+	except:
+		pass
 
 	os.chdir( output_dir )
 
