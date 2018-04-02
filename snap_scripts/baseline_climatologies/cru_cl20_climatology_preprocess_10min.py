@@ -63,7 +63,7 @@ if __name__ == '__main__':
 	# # # # # # # # # # # # # #
 
 	# build an output path to store the data generated with this script
-	output_path = os.path.join( base_path, 'climatologies','cru_cl20','10min', variable )
+	output_path = os.path.join( base_path, 'climatologies','cru_cl20','10min_V2', variable )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
@@ -167,6 +167,14 @@ if __name__ == '__main__':
 		with rasterio.open( final_fn, 'r+' ) as rst:
 			arr = rst.read( 1 )
 			arr[ mask == 0 ] = -9999
+
+			# round the precip and temperature outputs to the desired precisions
+			if variable in ['pre','pr','ppt']:
+				arr[ arr != -9999 ] = np.around( arr[ arr != -9999 ], 0 )
+
+			elif variable in ['tmp','tas']:
+				arr[ arr != -9999 ] = np.around( arr[ arr != -9999 ], 0 )
+
 			rst.write( arr, 1 )
 
 	print( 'completed run of {}'.format( variable ) )

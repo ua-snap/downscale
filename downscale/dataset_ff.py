@@ -42,7 +42,7 @@ class DatasetFF( object ):
 
 		self.fn = fn # CHRONOLOGICALLY SORTED! [list] of MFDataset-able filenames
 		ds = MFDataset( self.fn )
-		# self.ds = ds
+		self.ds = ds
 		try:
 			t = ds.variables['time']
 			dates = num2date( t[:], calendar=t.calendar, units=t.units )
