@@ -56,7 +56,7 @@ if __name__ == '__main__':
 	template_raster_fn = args.template_raster_fn
 
 	# # # # FOR TESTING # # # #
-	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_cl20_test_remove'
+	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cru_cl20'
 	# cru_filename = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS20/grid_10min_pre.dat.gz'
 	# variable = 'pre'
 	# template_raster_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/tas_mean_C_ar5_IPSL-CM5A-LR_rcp26_01_2006.tif'

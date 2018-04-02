@@ -12,7 +12,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, begin, en
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cmip5_nwt_far-future.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cmip5_far-future.py'
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path,\
 							 '--', '-b', base_dir, '-m', model, '-v', variable, '-s', scenario, '-u', units, '-met', metric, '-by', str(begin), '-ey', str(end)])
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 	variables = [ 'tas','pr' ]
 	scenarios = [ 'historical','rcp45','rcp60','rcp85' ]
 
-	path = os.path.join( base_dir,'downscaled_10min_nwt_TMP','slurm_log' )
+	path = os.path.join( base_dir,'downscaled_10min','slurm_log' )
 	if not os.path.exists( path ):
 		os.makedirs( path )
 	
