@@ -34,3 +34,4 @@ if __name__ == '__main__':
 	for model, scenario, variable in itertools.product( models,scenarios,variables ):
 		fn = os.path.join( slurm_path, 'slurm_run_format_for_alfresco_{}_{}_{}.slurm'.format(model,scenario,variable) )
 		_ = run_model( fn, model, scenario, variable )
+		
