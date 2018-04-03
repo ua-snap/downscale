@@ -48,15 +48,25 @@ if __name__ == '__main__':
 	import numpy as np
 	from pathos.mp_map import mp_map
 	from functools import partial
+	import argparse
+
+	# # parse the commandline arguments
+	parser = argparse.ArgumentParser( description='reformat AR5-CMIP5 data to 1km resolution for ALFRESCO' )
+	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	args = parser.parse_args()
+
+	# unpack args
+	model = args.model
+	scenario = args.scenario
+	variable = args.variable
 
 	# # # # STEP1 MAKE A MASK FROM THE Version 1 CMIP3 DATA
-	# args
-	model = 'ts40' # ['NCAR-CCSM4',5ModelAvg, GFDL-CM3, | GISS-E2-R, IPSL-CM5A-LR, MRI-CGCM3, | ts323, ts324_01, ts40 ]
-	input_base_dir = os.path.join( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled', model )
-	output_base_dir = os.path.join( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/ALFRESCO_1k', model )
-	# input_base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
-	# output_base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/ALFRESCO_1k'
+	input_base_dir = os.path.join( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled', model, scenario, variable )
+	output_base_dir = os.path.join( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/alfresco_1km', model, scenario, variable )
 
+	# HARDWIRED ARGS...
 	alf_v1 = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/alfresco_formatting/tas_mean_C_alf_ar4_cccma_cgcm3_1_sresa2_01_2001.tif'
 	mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/alfresco_formatting/alf_v1_mask_1km.tif'
 

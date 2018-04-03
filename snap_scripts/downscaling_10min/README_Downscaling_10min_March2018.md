@@ -9,5 +9,7 @@
 2. run `wrap_downscaler_cru_ts40_slurm.py`
 	- [tas,pr] cru ts40 15km
 	<--[- wait for above to complete -]-->
-3. run `wrap_slurm_compute_5ModelAvg_cmip5.py`
+3. run `wrap_slurm_compute_5ModelAvg_cmip5_far-futures.py`
 	- [tas,pr] 5ModelAvg cmip5 15km
+4. run `move_anomalies_to_common_dir_10min.py`
+	- move anomalies to common dir in `project_data`
