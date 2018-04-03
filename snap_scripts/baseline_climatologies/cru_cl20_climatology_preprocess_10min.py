@@ -105,7 +105,7 @@ if __name__ == '__main__':
 	if variable == 'elv':
 		args_list = [{'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df['01']),'xi':xi,'yi':yi}]
 	else:
-		args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi} for month in months ]
+		args_list = [ {'x':np.array(cru_df['lon']),'y':np.array(cru_df['lat']),'z':np.array(cru_df[month]),'xi':xi,'yi':yi,'method':'linear'} for month in months ]
 
 	# run interpolation in parallel
 	interped_grids = mp_map( regrid, args_list, nproc=12 )
@@ -172,7 +172,7 @@ if __name__ == '__main__':
 				arr[ arr != -9999 ] = np.around( arr[ arr != -9999 ], 0 )
 
 			elif variable in ['tmp','tas']:
-				arr[ arr != -9999 ] = np.around( arr[ arr != -9999 ], 0 )
+				arr[ arr != -9999 ] = np.around( arr[ arr != -9999 ], 1 )
 
 			rst.write( arr, 1 )
 
