@@ -19,7 +19,7 @@ def run_model( fn, model, scenario, variable ):
 	return 1
 
 if __name__ == '__main__':
-	import os, subprocess
+	import os, subprocess, itertools
 	
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4' ]

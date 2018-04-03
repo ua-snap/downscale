@@ -46,21 +46,22 @@ def make_alfresco_compatible( fn, mask_fn, input_base_dir, output_base_dir ):
 if __name__ == '__main__':
 	import rasterio, subprocess, os
 	import numpy as np
-	from pathos.mp_map import mp_map
+	# from pathos.mp_map import mp_map
 	from functools import partial
+	import multiprocessing as mp
 	import argparse
 
-	# # parse the commandline arguments
-	parser = argparse.ArgumentParser( description='reformat AR5-CMIP5 data to 1km resolution for ALFRESCO' )
-	parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
-	parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
-	parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
-	args = parser.parse_args()
+	# # # parse the commandline arguments
+	# parser = argparse.ArgumentParser( description='reformat AR5-CMIP5 data to 1km resolution for ALFRESCO' )
+	# parser.add_argument( "-m", "--model", action='store', dest='model', type=str, help="cmip5 model name (exact)" )
+	# parser.add_argument( "-s", "--scenario", action='store', dest='scenario', type=str, help="cmip5 scenario name (exact)" )
+	# parser.add_argument( "-v", "--variable", action='store', dest='variable', type=str, help="cmip5 variable name (exact)" )
+	# args = parser.parse_args()
 
-	# unpack args
-	model = args.model
-	scenario = args.scenario
-	variable = args.variable
+	# # unpack args
+	# model = args.model
+	# scenario = args.scenario
+	# variable = args.variable
 
 	# # # # STEP1 MAKE A MASK FROM THE Version 1 CMIP3 DATA
 	input_base_dir = os.path.join( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled', model, scenario, variable )
@@ -90,5 +91,11 @@ if __name__ == '__main__':
 	f = partial( make_alfresco_compatible, mask_fn=mask_fn, input_base_dir=input_base_dir, output_base_dir=output_base_dir )
 
 	# # # # STEP3 run in parallel
-	done = mp_map( f, filelist, nproc=32 )
+	pool = mp.Pool( 32 )
+	done = pool.map( f, filelist )
+	# done = mp_map( f, filelist, nproc=32 )
+	pool.close()
+	pool.join()
 
+	pool = None
+	del pool
