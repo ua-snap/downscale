@@ -34,4 +34,18 @@ if __name__ == '__main__':
 	for model, scenario, variable in itertools.product( models,scenarios,variables ):
 		fn = os.path.join( slurm_path, 'slurm_run_format_for_alfresco_{}_{}_{}.slurm'.format(model,scenario,variable) )
 		_ = run_model( fn, model, scenario, variable )
-		
+	
+	# CRU 
+	models = [ 'CRU-TS40' ]
+	scenarios = [ 'historical' ]
+
+	slurm_path = os.path.join( base_dir, 'alfresco_1km', 'slurm_log' )
+	if not os.path.exists( slurm_path ):
+		os.makedirs( slurm_path )
+	
+	os.chdir( slurm_path )
+	for model, scenario, variable in itertools.product( models,scenarios,variables ):
+		fn = os.path.join( slurm_path, 'slurm_run_format_for_alfresco_{}_{}_{}.slurm'.format(model,scenario,variable) )
+		_ = run_model( fn, model, scenario, variable )
+	
+	
