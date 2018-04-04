@@ -35,9 +35,17 @@ def make_alfresco_compatible( fn, mask_fn, input_base_dir, output_base_dir ):
 	
 	del rst
 
+
 	# overwrite with a mask
 	meta.update( nodata=-9999, crs={'init':'epsg:3338'}, dtype='float32', compress='lzw' )
 	with rasterio.open( out_fn, 'w', **meta ) as out:
+		if 'pr_' in fn:
+			arr = np.around( arr, 0 )
+		elif 'tas_' in fn:
+			arr = np.around( arr, 1 )
+		else:
+			BaseException( 'only tas / pr are currently supported in the rounder' )
+
 		arr[ mask == 0 ] = -9999
 		out.write( arr.astype( np.float32 ), 1 )
 
@@ -93,7 +101,6 @@ if __name__ == '__main__':
 	# # # # STEP3 run in parallel
 	pool = mp.Pool( 32 )
 	done = pool.map( f, filelist )
-	# done = mp_map( f, filelist, nproc=32 )
 	pool.close()
 	pool.join()
 
