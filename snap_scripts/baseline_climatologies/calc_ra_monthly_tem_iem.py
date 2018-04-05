@@ -87,6 +87,9 @@ if __name__ == '__main__':
 	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/other/2km/girr'
 	lons, lats = coordinates( fn )
 
+	if not os.path.exists( output_path ):
+		os.makedirs( output_path )
+
 	rst = rasterio.open( fn )
 
 	# mask those lats so we dont compute where we dont need to:
