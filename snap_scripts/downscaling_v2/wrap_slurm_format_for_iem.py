@@ -11,7 +11,7 @@ def run_model( fn, model, scenario, variable ):
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
 			'#SBATCH -p main\n'
 	
-	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/format_for_iem.py'
+	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/format_for_iem_tem.py'
 	with open( fn, 'w' ) as f:
 		command = ' '.join([ 'ipython', script_path, '--', '-m', model, '-s', scenario, '-v', variable ])
 		f.writelines( head + "\n" + command + '\n' )
