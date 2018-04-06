@@ -10,3 +10,10 @@ gdal_rasterize -a FIPS -tr 15000 15000 -co COMPRESS=LZW -ot Byte -at -init 0 -a_
 # NOW IT IS IMPORTANT TO BUILD SOME OUTPUT EXTENTS IN DIFFERENT CRS FLAVORS FOR RUN...
 akcan_15k_template.tif
 make_template_extent_10min.txt -- see this for the 'how-to' here.
+
+
+
+# # # here is the procedure used to do ONLY the AKCAN+NWT ~10min (15km) domain
+
+# use gdal rasterize to do the work for us...  quick and easy and industry standard...
+gdal_rasterize -a FIPS -tr 15000 15000 -co COMPRESS=LZW -ot Byte -at -init 0 -a_srs EPSG:3338 -a_nodata 0 merged_akcan_with_nwt.shp akcan_with_nwt_15k_template.tif

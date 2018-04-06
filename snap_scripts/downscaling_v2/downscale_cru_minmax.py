@@ -1,6 +1,5 @@
-# downscale cru data in a CLI way
-# downscale the prepped cmip5 data downloaded using SYNDA for EPSCoR SC project
-# author: Michael Lindgren -- June 09, 2016
+# downscale cru temperature min/max data using the downscale package
+# author: Michael Lindgren (malindgren@alaska.edu)
 
 if __name__ ==	'__main__':
 	import glob, os, itertools, rasterio
@@ -41,8 +40,6 @@ if __name__ ==	'__main__':
 	mean_variable_out = args.mean_variable_out
 	begin = args.begin
 	end = args.end
-	# begin = 1901
-	# end = 2014
 
 	# standard args
 	clim_begin = '01-1961'
@@ -54,6 +51,7 @@ if __name__ ==	'__main__':
 
 	# clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable_out )
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
+	
 	# sort these files
 	filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
 	baseline = downscale.Baseline( filelist )
@@ -73,19 +71,16 @@ if __name__ ==	'__main__':
 		return rounder( arr )
 
 	historical = Dataset( cru_ts, variable, model, scenario, project, units, metric, 
-							method='linear', ncpus=32 )
+							method='linear', ncpus=ncpus, interp=True )
 
 	mean_fn = cru_ts.replace( variable, mean_variable_cru )
-	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end )
+	mean_ds = downscale.Dataset( mean_fn, mean_variable_cru, model, scenario, project=project, units=units, metric=metric, begin=begin, end=end, interp=True )
 
 	# FOR CRU WE PASS THE interp=True so we interpolate across space first when creating the Dataset()
 	ar5 = DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, historical=historical, future=None,
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=ncpus,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, anom=anom, 
 					mean_ds=mean_ds, mean_variable=mean_variable_cru, interp=interp )
-
-	if not os.path.exists( output_path ):
-		os.makedirs( output_path )
 
 	ar5.downscale( output_dir=output_path )

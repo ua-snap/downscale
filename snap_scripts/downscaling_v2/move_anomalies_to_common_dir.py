@@ -1,11 +1,14 @@
 # move the anomalies (deltas) that have been resampled to 2km
 # to a new directory
 def move( fn, new_fn, *args ):
-	import shutil, os
+	import os
 
 	dirname, basename = os.path.split( new_fn )
-	if not os.path.exists( dirname ):
-		os.makedirs( dirname )
+	try:
+		if not os.path.exists( dirname ):
+			os.makedirs( dirname )
+	except:
+		pass
 
 	return os.rename( fn, new_fn )
 
@@ -27,7 +30,7 @@ if __name__ == '__main__':
 	args = [ make_args( os.path.join( root, fn ) ) for root,s,files in os.walk( base_path ) if 'anom' in root for fn in files ]
 
 	# move 'em
-	done = mp_map( lambda x: move( *x ), args, nproc=32 )
+	done = mp_map( lambda x: move( *x ), args, nproc=64 )
 
 	# remove the old 'anom' dirs
 	dirs = np.unique( np.array([ root for root,s,files in os.walk( base_path ) if 'anom' in root ]) ).tolist()

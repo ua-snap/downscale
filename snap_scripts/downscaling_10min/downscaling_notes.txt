@@ -1,0 +1,48 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # #   NOTES FOR RUNNING NWT 10min DOWNSCALING   # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+# # # OLDER AND POSSIBLY DEPRECATED.  SEE README...
+
+1. access the synda application which has been installed on phobos.snap.uaf.edu
+	- make sure to examine the sdt.conf file and update as necessary: sudo vi /etc/synda/sdt/sdt.conf
+	- run with: sudo synda install -s nwt_variables.txt
+	- run: sudo synda autoremove (this removes all older versions of datasets)
+
+2. remove the CCSM4 duplicate files that were noticed in the raw downladed files: 
+	rm /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cmip5_nwt/data/cmip5/output1/NCAR/CCSM4/rcp60/mon/atmos/Amon/r1i1p1/v20160829/tas/tas_Amon_CCSM4_rcp60_r1i1p1_200501-210012.nc
+
+	rm /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cmip5_nwt/data/cmip5/output1/NCAR/CCSM4/rcp45/mon/atmos/Amon/r1i1p1/v20160829/tas/tas_Amon_CCSM4_rcp45_r1i1p1_200501-210012.nc
+
+3. run: move_raw_cmip5_common_dir.py, which will copy all the data to a common and less hierarchical structure.
+
+4. move the GFDL-CM3 RCP60 tas/pr files from an older download since we cannot seem to access these files from any of the available nodes.
+	mkdir /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cmip5_nwt_v2/cmip5_raw_restructure_V2/GFDL-CM3/rcp60
+
+	cp -R /workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/raw/GFDL-CM3/rcp60/tas /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cmip5_nwt_v2/cmip5_raw_restructure_V2/GFDL-CM3/rcp60
+
+	cp -R /workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/raw/GFDL-CM3/rcp60/pr /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/cmip5_nwt_v2/cmip5_raw_restructure_V2/GFDL-CM3/rcp60
+
+	** this should complete the entire set of data to be used in downscaling. **
+
+[ OLD ] 5. prepare the data for downscaling.  run: prep_raw_nwt_cmip5.py
+	- this preprocessing will allow us to work with single files for the entire time available, which is a lot less muddy than working with the other form of the outputs. 
+
+	- there are issues with stacking data with varying start points on their calendars when not using the xarray version of it.  NetCDF cannot handle this and there are errors when working with the GISS-E2-R model.  To get around this see new #5 below.
+
+5. prepare the data for downscaling using the NCO package port for python >>> pynco. run: stack_raw_cmip5_ncrcat.py 
+you must have the NCO commandline tools installed on the machine you are running this on as this python package is just a wrapper around the CLI functionality found therein. This approach is much more robust than the non-xarray version of the stack rolled by me.
+
+6. now we can run the downscaling using the new version of the package
+	run: wrap_downscaler_cmip5_slurm_nwt_far-futures.py
+
+7. when all complete, go to the output folder and change the CCSM4 directory name to NCAR-CCSM4
+	run: mv CCSM4/ NCAR-CCSM4
+
+8. run the derived grid data processing 
+	run: wrap_slurm_run_post_downscaling.py
+	* this will run all of the derived grids and toss them into a new output directory
+
+9. run crop_clip_to_nwt.py across both the downscaled and the derived grid outputs which will begin to build the directory for delivery to GOVT NWT.
+

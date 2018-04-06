@@ -121,8 +121,10 @@ class Dataset( object ):
 		else:
 			self.units = 'units'
 			
-		if project:
+		if project is not None:
 			self.project = project
+		elif project is None:
+			self.project = None
 		else:
 			self.project = 'project'
 

@@ -72,7 +72,7 @@ class DeltaDownscale( object ):
 		self.anomalies = None
 		self.climatology = None
 		self.ds = None
-		self._concat_nc()
+		self._concat_nc() # make a self.ds variable...
 
 		# fix pr climatologies if desired
 		if fix_clim == True:
@@ -106,8 +106,7 @@ class DeltaDownscale( object ):
 
 		if self.interp == True:
 			print( 'running interpolation across NAs -- base resolution' )
-			_ = self.interp_na( )
-
+			self.interp_na( )
 
 		if fix_clim == True:
 			# if there are still values <0.5 set them to 0.5
@@ -215,11 +214,11 @@ class DeltaDownscale( object ):
 		
 		# if 0-360 leave it alone
 		if ( self.ds.lon > 200.0 ).any() == True:
-			dat, lons = self.ds.data, self.ds.lon
+			dat, lons = np.array(self.ds.data), np.array(self.ds.lon)
 			self._lonpc = lons
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.ds.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( np.array(self.ds.values), np.array(self.ds.lon), to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -270,7 +269,7 @@ class DeltaDownscale( object ):
 			self._rotated = False
 		else:
 			# greenwich-centered rotate to 0-360 for interpolation across pacific
-			dat, lons = self.utils.rotate( self.climatology.values, self.ds.lon, to_pacific=True )
+			dat, lons = self.utils.rotate( np.array(self.climatology.values), np.array(self.ds.lon), to_pacific=True )
 			self._rotated = True # update the rotated attribute
 			self._lonpc = lons
 
@@ -339,8 +338,13 @@ class DeltaDownscale( object ):
 		else:
 			model = 'model'
 
-		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+		# handle situations where project and model are the same and therefore project is passed as None (i.e. CRU)
+		if self.historical.project is not None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
 					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+		else:
+			output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units,
+					 model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]			
 
 		# if there is a specific name prefix, use it
 		if prefix != None:
@@ -348,14 +352,14 @@ class DeltaDownscale( object ):
 
 		# rotate to pacific-centered
 		if ( self.anomalies.lon.data > 200.0 ).any() == True:
-			dat, lons = ( self.anomalies, self.anomalies.lon )
+			dat, lons = ( np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
 			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
 			# print( 'anomalies NOT rotated!' )
 		else:
-			dat, lons = self.utils.shiftgrid( 0., self.anomalies, self.anomalies.lon )
+			dat, lons = self.utils.shiftgrid( 0., np.array(self.anomalies), np.array(self.anomalies.lon) )
 			self.anomalies_rot = dat
-			src_transform = self.historical.transform_from_latlon( self.historical.ds.lat, lons )
+			src_transform = self.historical.transform_from_latlon( np.array(self.historical.ds.lat), np.array(lons) )
 			print( src_transform )
 			# print( 'anomalies rotated!' )
 
@@ -456,6 +460,7 @@ def correct_values( arr, aoi_mask, percentile=95, fill_value=0 ):
 	''' correct the values for precip -- from @leonawicz'''
 
 	upperthresh = calc_percentile( arr, aoi_mask, 95, 0 )
+	print('upperthresh:{}'.format(upperthresh))
 
 	# drop any masks
 	arr = np.array( arr )

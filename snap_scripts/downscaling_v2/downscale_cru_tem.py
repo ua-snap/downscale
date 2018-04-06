@@ -32,10 +32,10 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 
 	# # # # # TESTING
-	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.hur.dat_snap_conversion.nc'
-	# clim_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/cru/cru_cl20/hur'
-	# output_path = '/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/downscale'
-	# model = 'ts323'
+	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.hur.dat_snap_conversion.nc'
+	# clim_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/cru_cl20/2km/reh'
+	# output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_CRU_TEM'
+	# model = 'ts40'
 	# scenario = 'historical'
 	# variable = 'hur'
 	# units = 'pct'
@@ -131,8 +131,5 @@ if __name__ ==	'__main__':
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=post_downscale_function, varname=out_varname, modelname=None, 
 				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
-
-	if not os.path.exists( output_path ):
-		os.makedirs( output_path )
 
 	ar5.downscale( output_dir=output_path )

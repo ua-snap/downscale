@@ -1,5 +1,6 @@
-# downscale the prepped cmip5 data downloaded using SYNDA for TEM
+# downscale the prepped cmip5 data used in running the TEM model (IEM)
 # author: Michael Lindgren
+
 if __name__ == '__main__':
 	import glob, os, rasterio, itertools
 	from functools import partial
@@ -78,7 +79,8 @@ if __name__ == '__main__':
 	for variable, model, scenario in itertools.product( variables, models, scenarios ):
 		modelname = modelnames[ model ]
 		# SETUP BASELINE
-		clim_path = os.path.join( base_dir, 'cru', 'akcan_2km_extent', 'cru_cl20', variable )
+		cru_cl20_varnames = {'hur':'reh', 'clt':'clt'} # we only support these variables for now...
+		clim_path = os.path.join( base_dir, 'climatologies', 'cru_cl20', '2km', cru_cl20_varnames[variable] )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		filelist = [ i for i in filelist if '_14_' not in i ] # remove the GD ANNUAL _14_ file.
 		baseline = downscale.Baseline( filelist )
@@ -157,7 +159,7 @@ if __name__ == '__main__':
 			post_downscale_function = round_data
 
 		ar5 = downscale.DeltaDownscale( baseline, clim_begin, clim_end, historical, future,
-				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=32,
+				downscaling_operation=downscaling_operation, mask=mask, mask_value=0, ncpus=64,
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=post_downscale_function, varname=variable, modelname=modelname, 
 				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )

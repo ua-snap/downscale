@@ -36,15 +36,14 @@ if __name__ == '__main__':
 	project = 'ar5'
 	
 	# # # # # FOR TESTING # # # 
-	# base_dir = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data'
-	# # fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tasmax/tasmax_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
-	# # mean_fn = '/workspace/Shared/Tech_Projects/EPSCoR_Southcentral/project_data/cmip5/prepped/IPSL-CM5A-LR/rcp85/tas/tas_IPSL-CM5A-LR_rcp85_r1i1p1_2006_2100.nc'
+	# base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	# variable = 'tasmin'
 	# mean_variable = 'tas'
 	# scenario = 'rcp85'
-	# model = 'GFDL-CM3'
+	# model = 'CCSM4'
 	# units = 'C'
 	# metric = 'mean'
+	# # # # # #END TESTING # # # # 
 
 	# some setup args
 	base_path = os.path.join( base_dir,'cmip5','prepped' )
@@ -74,9 +73,8 @@ if __name__ == '__main__':
 			begin = 2006
 			end = 2100
 
-		modelname = modelnames[ model ]
 		# SETUP BASELINE -- downscaled `tas` is our baseline data for the tasmin tasmax
-		clim_path = os.path.join( base_dir, 'downscaled', modelname, scenario, mean_variable )
+		clim_path = os.path.join( base_dir, 'downscaled', model, scenario, mean_variable )
 		filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
 		# sort these files
 		filelist = utils.only_years( utils.sort_files( filelist ), begin=begin, end=end )
@@ -147,12 +145,12 @@ if __name__ == '__main__':
 			post_downscale_function = round_data_clamp
 		else:
 			post_downscale_function = round_data
-
+		
 		ar5 = downscale.DeltaDownscaleMinMax( baseline=baseline, clim_begin=clim_begin, clim_end=clim_end, 
 					historical=historical, future=future, downscaling_operation=downscaling_operation,
 					mask=mask, mask_value=0, ncpus=32, src_crs={'init':'epsg:4326'}, src_nodata=None, 
 					dst_nodata=None, post_downscale_function=post_downscale_function, varname=variable, 
-					modelname=modelname, anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
+					modelname=modelnames[model], anom=anom, mean_ds=mean_ds, mean_variable=mean_variable )
 
 		ar5.downscale( output_dir=output_path )
 		

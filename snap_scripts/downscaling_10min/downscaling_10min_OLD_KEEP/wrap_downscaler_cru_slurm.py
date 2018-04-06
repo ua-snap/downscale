@@ -21,12 +21,12 @@ if __name__ == '__main__':
 	# # args setup
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	ncores = '32'
-	model = 'ts40'
+	model = 'ts323'
 	scenario = 'historical'
 	variables = ['tmp', 'pre']
 	out_varnames = ['tas', 'pr']
 	
-	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
+	slurm_path = os.path.join( base_dir, 'downscaled_10min','slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 
@@ -40,16 +40,16 @@ if __name__ == '__main__':
 			metric = 'mean'
 			units = 'C'
 
-		clim_path = os.path.join( base_dir, 'prism', out_varname )
-		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
+		clim_path = os.path.join( base_dir, 'cru', 'akcan_10min_extent','cru_cl20', variable )
+		output_path = os.path.join( os.path.join( base_dir, 'downscaled_10min', model, scenario, out_varname ) )
 		
 		if not os.path.exists( output_path ):
 			os.makedirs( output_path )
 
-		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.' + variable + '.dat.nc.gz'
+		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.' + variable + '.dat.nc'
 		
 		# # make a command to pass to slurm
-		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/downscale_cru.py'
+		script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_10min/downscale_cru.py'
 		command = ' '.join([ 'ipython', script_path, '--',
 							'-ts', cru_ts,
 							'-cl', clim_path,

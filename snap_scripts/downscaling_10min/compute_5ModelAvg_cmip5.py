@@ -1,6 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # 
 # Generate 5 Model Averages --> 10 min data
-# author: Michael Lindgren -- 2017
+# author: Michael Lindgren -- SEPT 2017
 # # # # # # # # # # # # # # # # # # # # # # # # 
 
 def list_files( input_path, begin=1900, end=2005 ):
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
 	for variable in variables:
 		if scenario == 'historical':
-			begin = 1900
+			begin = 1860
 			end = 2005
 		else:
 			begin = 2006

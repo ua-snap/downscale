@@ -24,7 +24,7 @@ def generate( files ):
 	# arr_group = mp_map( lambda x:rasterio.open( x ).read( 1 ), files, nproc=32 )
 	arr_group = np.array([ rasterio.open( fn ).read( 1 ) for fn in files ])
 	group_mean = np.mean( arr_group, axis=0 )
-	group_mean[ mask == 0 ] = rst.nodata # add back the oob -3.39999995e+38 
+	group_mean[ mask == 0 ] = rst.nodata # add back the oob 
 
 	fn, = [ i for i in files if 'NCAR-CCSM4' in i ]
 	output_filename = fn.replace( 'NCAR-CCSM4', '5ModelAvg' )

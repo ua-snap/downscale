@@ -11,7 +11,7 @@
 # # #
 
 from downscale import DeltaDownscale, utils
-import os
+import os, rasterio
 import numpy as np
 import xarray as xr
 
@@ -32,29 +32,258 @@ class DeltaDownscaleMinMax( DeltaDownscale ):
 			have the 1961-1990 climatology period for the futures as this version of DeltaDownscale computes
 			deltas by removing the mean in time instead of removing the climatology.
 		'''
-		# setup new args
-		self.mean_ds = mean_ds
-		self.mean_variable = mean_variable
-
-		super( DeltaDownscaleMinMax, self ).__init__( *args, **kwargs )
-		
 		# if there is no mean dataset to work with --> party's over
-		if mean_ds == None:
+		print('mean:{}'.format(mean_ds))
+		
+		if mean_ds is None:
 			raise Exception( 'you must include the mean variable in the raw resolution \
 								as arg `mean_ds`=downscale.Dataset object or use `DeltaDownscale`' )
+		# setup new args
+		self.mean_ds = mean_ds.ds[ mean_variable ] # new
+		self.mean_variable = mean_variable
+
+		print( kwargs.keys() )
+
+		# force a false for interpolation of NA's with Super...
+		if 'interp' in kwargs.keys():
+			print( 'kwargs-interpval:{}'.format(kwargs['interp']) )
+			interp_val = kwargs.pop( 'interp' )
+			kwargs.update( interp=False )
+			print( 'interp_val:{}'.format(interp_val) )
+
+		# remove the super call since this is python2 and it suuucks...
+		# DeltaDownscale.__init__( self, **kwargs )
+
+		super( DeltaDownscaleMinMax, self ).__init__( **kwargs )
+		# print('finished super()!')
+
+		if 'interp' in kwargs: 
+			# now reset the interpolation value so we can interpolate the anomalies
+			# INSTEAD of interpolating the input data series...  This may be better practice overall.
+			# NOT changing it.
+			self.interp = interp_val
+
+		# mask some properties from the super() class. that are unneeded.
+		self.anomalies = None
+		self.clim_begin = None
+		self.clim_end = None
+
+		# calc deltas between the mean and the extreme data set 
+		print( 'calc anoms minmax' )
+		self._calc_anomalies()
+		
+		# # TESTING
+		# print('type_mean_ds: {} '.format( type( self.mean_ds ) ) )
+		print( 'self.interp: {}'.format(self.interp) )
+		if self.interp == True:
+			print( 'running interpolation across NAs -- base resolution -- !ANOMALIES! dataset' )
+			self.interp_na( )
+
 	def _calc_climatolgy( self ):
 		''' MASK THIS FOR MINMAX slice / aggregate to climatology using mean'''
-		pass
+		self.climatology = None
 	def _calc_anomalies( self ):
 		''' calculate deltas but call them anomalies to fit the `downscale` pkg methods '''			
 		if self.downscaling_operation == 'add':
-			anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			print( 'calc_anom minmax version' )
+			# anomalies = (self.historical.ds[ self.historical.variable ] - self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds - self.mean_ds ) #.to_dataset( name=variable )
 		elif self.downscaling_operation == 'mult':
-			anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			# anomalies = (self.historical.ds[ self.historical.variable ] / self.mean_ds.ds[ self.mean_variable ] ) #.to_dataset( name=variable )
+			self.anomalies = (self.ds / self.mean_ds ) #.to_dataset( name=variable )
 		else:
 			NameError( '_calc_anomalies (ar5): value of downscaling_operation must be "add" or "mult" ' )
-		self.anomalies = anomalies
+		# self.mean_ds = None # watch this one... trying to save on RAM... 
+	# def _interp_na_mean( self ):
+	# 	'''
+	# 	np.float32
+	# 	method = [str] one of 'cubic', 'near', 'linear'
 
+	# 	return a list of dicts to pass to the xyz_to_grid in parallel
+	# 	'''
+	# 	from copy import copy
+	# 	import pandas as pd
+	# 	import numpy as np
+	# 	from pathos.mp_map import mp_map
+
+	# 	# remove the darn scientific notation
+	# 	np.set_printoptions( suppress=True )
+	# 	output_dtype = np.float32
+		
+	# 	# if 0-360 leave it alone
+	# 	if ( self.mean_ds.lon > 200.0 ).any() == True:
+	# 		dat, lons = self.mean_ds.data, self.mean_ds.lon
+	# 		self._lonpc = lons
+	# 	else:
+	# 		# greenwich-centered rotate to 0-360 for interpolation across pacific
+	# 		dat, lons = self.utils.rotate( self.mean_ds.values, self.mean_ds.lon, to_pacific=True )
+	# 		self._rotated = True # update the rotated attribute
+	# 		self._lonpc = lons
+
+	# 	# mesh the lons and lats and unravel them to 1-D
+	# 	xi, yi = np.meshgrid( self._lonpc, self.mean_ds.lat.data )
+	# 	lo, la = [ i.ravel() for i in (xi,yi) ]
+
+	# 	# setup args for multiprocessing
+	# 	df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+	# 	args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+	# 			'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+	# 	print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+	# 	dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+	# 	dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+	# 	dat = np.array( dat_list )
+
+	# 	lons = self._lonpc
+	# 	if self._rotated == True: # rotate it back
+	# 		dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
+				
+	# 	# place back into a new xarray.Dataset object for further processing
+	# 	# self.mean_ds = self.mean_ds.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+	# 	self.mean_ds.data = dat
+	# 	print( 'ds interpolated updated into self.mean_ds' )
+	# 	return 1
+
+	def interp_na( self ):
+		'''
+		np.float32
+		method = [str] one of 'cubic', 'near', 'linear'
+
+		return a list of dicts to pass to the xyz_to_grid in parallel
+		'''
+		from copy import copy
+		import pandas as pd
+		import numpy as np
+		from pathos.mp_map import mp_map
+
+		# remove the darn scientific notation
+		np.set_printoptions( suppress=True )
+		output_dtype = np.float32
+		
+		# if 0-360 leave it alone
+		if ( np.array(self.anomalies.lon) > 200.0 ).any() == True:
+			dat, lons = np.array(self.anomalies.data), np.array(self.anomalies.lon)
+			self._lonpc = lons
+		else:
+			# greenwich-centered rotate to 0-360 for interpolation across pacific
+			dat, lons = self.utils.rotate( np.array(self.anomalies.values), np.array(self.anomalies.lon), to_pacific=True )
+			self._rotated = True # update the rotated attribute
+			self._lonpc = lons
+
+		# mesh the lons and lats and unravel them to 1-D
+		xi, yi = np.meshgrid( self._lonpc, self.anomalies.lat.data )
+		lo, la = [ i.ravel() for i in (xi,yi) ]
+
+		# setup args for multiprocessing
+		df_list = [ pd.DataFrame({ 'x':lo, 'y':la, 'z':d.ravel() }).dropna( axis=0, how='any' ) for d in dat ]
+
+		args = [ {'x':np.array(df['x']), 'y':np.array(df['y']), 'z':np.array(df['z']), \
+				'grid':(xi,yi), 'method':self.historical.method, 'output_dtype':output_dtype } for df in df_list ]
+		
+		print( 'processing interpolation to convex hull in parallel using {} cpus.'.format( self.ncpus ) )
+		dat_list = mp_map( self.wrap, args, nproc=self.ncpus )
+		dat_list = [ np.array(i) for i in dat_list ] # drop the output mask
+		dat = np.array( dat_list )
+
+		lons = self._lonpc
+		if self._rotated == True: # rotate it back
+			dat, lons = self.utils.rotate( dat, lons, to_pacific=False )
+				
+		# place back into a new xarray.Dataset object for further processing
+		# self.anomalies = self.anomalies.update( { self.historical.variable:( ['time','lat','lon'], dat ) } )
+		self.anomalies.data = dat
+		print( 'anomalies interpolated updated into self.anomalies' )
+		return 1	
+	def downscale( self, output_dir, prefix=None ):
+		'''
+		updated version of downscale function to mask the non-minmax version and how
+		it works with baseline climatology vs. the full mean series as with the min/max
+		'''
+		import affine, rasterio
+		from affine import Affine
+		import itertools
+		from functools import partial
+		from pathos.mp_map import mp_map
+
+		operation_switch = { 'add':self.utils.add, 'mult':self.utils.mult }
+
+		def two_digit_month( x ):
+			''' make 1 digit month a standard 2-digit for output filenames '''
+			month = str( x )
+			if len(month) == 1:
+				month = '0'+month
+			return month
+
+		time_suffix = [ '_'.join([two_digit_month( t.month ), str(t.year)]) for t in self.anomalies.time.to_pandas() ]
+
+		# handle missing variable / model names
+		if self.varname != None:
+			variable = self.varname
+		elif self.historical.variable != None:
+			variable = self.historical.variable
+		else:
+			variable = 'variable'
+
+		if self.modelname != None:
+			model = self.modelname
+		elif self.historical.model != None:
+			model = self.historical.model
+		else:
+			model = 'model'
+
+		output_filenames = [ os.path.join( output_dir, '_'.join([variable, self.historical.metric, self.historical.units, \
+					self.historical.project, model, self.historical.scenario, ts]) + '.tif')  for ts in time_suffix ]
+
+		# if there is a specific name prefix, use it
+		if prefix != None:
+			output_filenames = [ os.path.join( output_dir, '_'.join([prefix, ts]) + '.tif' ) for ts in time_suffix ]
+
+		# rotate to pacific-centered
+		if ( self.anomalies.lon.data > 200.0 ).any() == True:
+			dat, lons = ( np.array(self.anomalies), np.array(self.anomalies.lon) )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
+			# print( 'anomalies NOT rotated!' )
+		else:
+			dat, lons = self.utils.shiftgrid( 0., np.array(self.anomalies), np.array(self.anomalies.lon) )
+			self.anomalies_rot = dat
+			src_transform = self.historical.transform_from_latlon( self.ds.lat, lons )
+			# print( 'anomalies rotated!' )
+
+		# # # # # #TSSTING STUFF
+		# count, height, width = dat.shape
+		# meta = { 'dtype':'float32', 'driver':'GTiff', 'count':1, 'width':width, 'height':height, 'compress':'lzw', 'affine':src_transform }
+		# with rasterio.open( '/workspace/UA/malindgren/temporary/TEST_REGRID.tif', 'w', **meta ) as out:
+		# 	out.write( dat[0].astype( np.float32 ), 1 )
+		# # # # # # # # # # # # 
+
+		# # # IMPORTANT: list all files since it without a REPEAT since it is tasmin/max...
+		rstlist = self.baseline.filelist
+		
+		if isinstance( self.anomalies_rot, xr.Dataset ):
+			self.anomalies_rot = self.anomalies_rot[ self.historical.variable ].data
+		elif isinstance( self.anomalies_rot, xr.DataArray ):
+			self.anomalies_rot = self.anomalies_rot.data
+		else:
+			self.anomalies_rot = self.anomalies_rot
+
+		args = zip( self.anomalies_rot, rstlist, output_filenames )
+
+		args = [{'anom':i, 'base':j, 'output_filename':k,\
+				'downscaling_operation':self.downscaling_operation, \
+				'post_downscale_function':self.post_downscale_function,\
+				'mask':self.mask, 'mask_value':self.mask_value } for i,j,k in args ]
+
+		# partial and wrapper
+		f = partial( self.utils.interp_ds, src_crs=self.src_crs, src_nodata=None, \
+					dst_nodata=None, src_transform=src_transform, resample_type=self.resample_type )
+
+		run = partial( self.utils._run_ds, f=f, operation_switch=operation_switch, anom=self.anom, mask_value=self.mask_value )
+
+		# run it
+		out = mp_map( run, args, nproc=self.ncpus )
+		return output_dir
 	# @staticmethod
 	# def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
 	# 	'''	

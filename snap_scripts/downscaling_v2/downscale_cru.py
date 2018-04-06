@@ -40,7 +40,7 @@ if __name__ ==	'__main__':
 	interp = True # interpolate across space -- Low Res
 
 	# AOI MASK -- HARDWIRE -- GCLL for CRU
-	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/akcan_template/akcan_aoi_mask_GCLL.shp'
+	aoi_mask_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/templates/akcan_2km/akcan_aoi_mask_GCLL.shp'
 
 	# RUN 2.0
 	filelist = glob.glob( os.path.join( clim_path, '*.tif' ) )
@@ -81,8 +81,5 @@ if __name__ ==	'__main__':
 				src_crs={'init':'epsg:4326'}, src_nodata=None, dst_nodata=None,
 				post_downscale_function=round_it, varname=out_varname, modelname=None, 
 				anom=anom, interp=interp, find_bounds=find_bounds, fix_clim=fix_clim, aoi_mask=aoi_mask )
-
-	if not os.path.exists( output_path ):
-		os.makedirs( output_path )
 
 	ar5.downscale( output_dir=output_path )
