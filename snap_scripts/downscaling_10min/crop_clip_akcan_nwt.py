@@ -1,3 +1,4 @@
+
 def crop_clip( shp_fn, rst_fn, out_fn ):
 	'''
 	crop/clip to the shapefile we want using gdalwarp.
