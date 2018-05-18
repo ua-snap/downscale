@@ -85,23 +85,28 @@ if __name__ == '__main__':
 
 	fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/insolation_L48/prism_raw_template/PRISM_tmean_30yr_normal_800mM2_01_bil.tif'
 	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/insolation_L48/climatologies'
-	lons, lats = coordinates( fn )
+	lons, lats = coordinates( fn, input_crs={'init':'epsg:4269'} )
 
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
 
 	rst = rasterio.open( fn )
 
+	# [ NOT IMPLEMENTED YET ]
+
+
 	# mask those lats so we dont compute where we dont need to:
 	data_ind = np.where( rst.read_masks( 1 ) != 0 )
-	pts = zip( lons[ data_ind ].ravel().tolist(), lats[ data_ind ].ravel().tolist() )
+	# pts = zip( lons[ data_ind ].ravel().tolist(), lats[ data_ind ].ravel().tolist() )
+	lats_masked = lats[ data_ind ].ravel().tolist()
+	lat_rad = (np.array(lats_masked)*np.pi)/180.0
 
-	# radians from pts
-	p1 = Proj( init='epsg:4269' )
-	p2 = Proj( init='epsg:4326' )
-	transform_p = partial( transform, p1=p1, p2=p2 )
-	pts_radians = [ transform_p( x=lon, y=lat, radians=True ) for lon,lat in pts ]
-	lat_rad = pd.DataFrame( pts_radians, columns=['lon','lat']).lat
+	# # radians from pts
+	# p1 = Proj( init='epsg:4269' )
+	# p2 = Proj( init='epsg:4326' )
+	# transform_p = partial( transform, p1=p1, p2=p2 )
+	# pts_radians = [ transform_p( x=lon, y=lat, radians=True ) for lon,lat in pts ]
+	# lat_rad = pd.DataFrame( pts_radians, columns=['lon','lat']).lat
 
 	# calc ordinal days to compute
 	ordinal_days = range( 1, 365+1, 1 )

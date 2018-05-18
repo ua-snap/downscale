@@ -57,7 +57,7 @@ if __name__ == '__main__':
 							index=df.apply( lambda x: '{}-{}'.format(x.year, x.month), axis=1))
 
 				years = np.array([ i.split('-')[0] for i in cur_df.index ])
-				cur_df = cur_df[ years != '2000s' ]
+				cur_df = cur_df[ years != '2z000s' ]
 				year, month = cur_df[~np.isnan(cur_df[colname])].index.tolist()[-1].split('-')
 				years = np.array([ i.split('-')[0] for i in cur_df.index ]) # get the years AGAIN
 				# futures only here...
