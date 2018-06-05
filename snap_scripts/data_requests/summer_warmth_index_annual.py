@@ -92,27 +92,30 @@ if __name__ == '__main__':
 
 
 # # # # # NOTES:
-	# # TESTING STUFF
-	# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
-	# model = 'GFDL-CM3'
-	# scenario = 'rcp60'
-	# variable = 'tas'
-	# begin = 2006
-	# end = 2100
-	# ncpus = 32
-	# metric = 'mean'
-	# project = 'ar5'
-	# output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/derived'
-	# # # # # # # # # # 
 
 # # run example
 # import os, itertools, subprocess
-# import 
+
 # base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
 # output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/derived'
 # models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4', '5ModelAvg' ]
 # scenarios = [ 'historical', 'rcp45', 'rcp60', 'rcp85' ]
 # project = 'ar5'
-# for model, scenario in itertools.product( models, scenarios):
-# 	_ = subprocess.call(['summer_warmth_index_annual.py', '-b', base_path, '-o', output_path, '-m', model, '-s', scenario, '-p', project, '-v', 'tas' ])
 
+# os.chdir('/workspace/UA/malindgren/repos/downscale/snap_scripts/data_requests')
+# for model, scenario in itertools.product( models, scenarios ):
+# 	_ = subprocess.call(['python', 'summer_warmth_index_annual.py','-b', base_path, '-o', output_path, '-m', model, '-s', scenario, '-p', project, '-v', 'tas' ])
+
+# # # # # # # # # 
+# # TESTING STUFF
+# base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
+# model = 'GFDL-CM3'
+# scenario = 'rcp60'
+# variable = 'tas'
+# begin = 2006
+# end = 2100
+# ncpus = 32
+# metric = 'mean'
+# project = 'ar5'
+# output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/derived'
+# # # # # # # # # # 
