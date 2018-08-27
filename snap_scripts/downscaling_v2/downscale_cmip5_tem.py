@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	# model = 'MRI-CGCM3'
 	# units = 'pct'
 	# metric = 'mean'
-	# level = 1000 # mb / Pa
+	# level = 100000 # mb / Pa
 	# level_name = 'plev'
 
 	# if level is not None:
@@ -140,9 +140,10 @@ if __name__ == '__main__':
 		round_data = partial( round_it, mask=( mask==0 ) )
 
 		def round_data_clamp_hur( x ):
+			''' see group emails circa 6/7/2012 '''
 			x = round_data( x )
 			x[ x < 0.0 ] = 0.0
-			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee
+			x[ x > 100.0 ] = 95.0 # per Stephanie McAfee -- approved by Scott Rupp et al.
 			return x
 
 		def round_data_clamp_clt( x ):
