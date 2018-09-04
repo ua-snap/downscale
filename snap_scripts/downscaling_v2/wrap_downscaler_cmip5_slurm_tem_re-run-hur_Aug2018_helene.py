@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'CCSM4' ]
-	variables = [ 'hur' ]
+	variables = [ 'hurs' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
 
 	path = os.path.join( base_dir,'downscaled','slurm_log' )
@@ -56,6 +56,11 @@ if __name__ == '__main__':
 			metric = 'mean'
 			level = '70000' # Pa (pascals) units stored in CMIP5 NetCDF files
 			level_name = 'plev'
+		elif variable == 'hurs':
+			units = 'pct'
+			metric = 'mean'
+			level = None
+			level_name = None
 		elif variable == 'clt':
 			units = 'pct'
 			metric = 'mean'
