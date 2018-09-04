@@ -54,7 +54,7 @@ if __name__ == '__main__':
 		elif variable == 'hur':
 			units = 'pct'
 			metric = 'mean'
-			level = '100000' # Pa (pascals) units stored in CMIP5 NetCDF files
+			level = '70000' # Pa (pascals) units stored in CMIP5 NetCDF files
 			level_name = 'plev'
 		elif variable == 'clt':
 			units = 'pct'
