@@ -30,7 +30,7 @@ class Preprocess( object ):
 		self.years = years
 		self.filelist = self.list_files( )
 		self._fileyears_dict = self._get_files_years( ) #
-		# self.ds = self._concat_nc_list( ) #
+		self.ds = self._concat_nc_list( ) #
 
 	def list_files( self ):
 		import os, glob
