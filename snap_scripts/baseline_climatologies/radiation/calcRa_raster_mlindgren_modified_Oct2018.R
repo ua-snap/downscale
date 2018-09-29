@@ -24,7 +24,7 @@ outdir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatol
 #skip=6: This skips the first 6 lines of header that provide basic metadata for the data (# rows, # cols, xllcorner, yll corner cellsize,a nd the no data value)
 #na.strings = '-9999"; this defines the value -9999 as NA for easier indexing
 # lat <- as.matrix(read.table('/workspace/Shared/Tech_Projects/ESGF_Data_Access/project_data/tem_data_sep2016/radiance/radians.txt',skip=6,na.strings='-9999'))
-lat <- as.matrix( read.table( './radians_ml_new_version.txt',skip=6,na.strings='-9999' ) )
+lat <- as.matrix( read.table( '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/other/2km/girr/radians_ml_new_version.txt',skip=6,na.strings='-9999' ) )
 #FIND THE SIZE OF THE LATITUDE MATRIX -- WILL NEED FOR PRE-ALLOCATING SUBSEQUENT MATRICES 
 nrow <- nrow(lat)  #1320
 ncol <- ncol(lat)  #2015
