@@ -15,7 +15,7 @@ def coordinates( fn=None, meta=None, numpy_array=None, input_crs=None, to_latlon
 	if fn:
 		# Read raster
 		with rasterio.open( fn ) as r:
-			T0 = r.affine  # upper-left pixel corner affine transform
+			T0 = r.transform  # upper-left pixel corner affine transform
 			p1 = Proj( r.crs )
 			A = r.read( 1 )  # pixel values
 
@@ -23,10 +23,10 @@ def coordinates( fn=None, meta=None, numpy_array=None, input_crs=None, to_latlon
 		A = numpy_array
 		if input_crs != None:
 			p1 = Proj( input_crs )
-			T0 = meta[ 'affine' ]
+			T0 = meta[ 'transform' ]
 		else:
 			p1 = None
-			T0 = meta[ 'affine' ]
+			T0 = meta[ 'transform' ]
 	else:
 		BaseException( 'check inputs' )
 
@@ -63,14 +63,16 @@ def calc_ra( day, lat ):
 
 	'''
 	import numpy as np
-	
+
 	#Calculate the earth-sun distance, which is a function solely of Julian day.  It is a single value for each day
 	d = 1+(0.033*np.cos( (2*np.pi*day/365) ) )
 
 	#Calculate declination, a function of Julian day.  It is a single value for each day.
 	dc = 0.409*np.sin(((2*np.pi/365)*day)-1.39)
 	w = np.nan_to_num(np.real( np.arccos( ( -1*np.tan( dc )*np.tan( lat ) ) ).astype(np.complex_)))
-	return (24*60/np.pi) * d * 0.082 * (w*np.sin(lat)*np.sin(dc)+np.cos(lat)*np.cos(dc)*np.sin(w))
+	out = (24*60/np.pi) * d * 0.082 * (w*np.sin(lat)*np.sin(dc)+np.cos(lat)*np.cos(dc)*np.sin(w))
+	out[lat == -9999] = -9999
+	return out
 
 
 if __name__ == '__main__':
@@ -83,8 +85,11 @@ if __name__ == '__main__':
 	from shapely.geometry import Point
 	from pyproj import Proj, transform
 
-	fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled/NCAR-CCSM4/rcp26/hur/hur_mean_pct_ar5_NCAR-CCSM4_rcp26_01_2006.tif'
-	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/other/2km/girr'
+	fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled/NCAR-CCSM4/rcp45/tas/tas_mean_C_ar5_NCAR-CCSM4_rcp45_01_2006.tif'
+	# new_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/fix_rsds/tmp_4326_extent.tif'
+	# os.system('gdalwarp -multi -of GTiff -t_srs EPSG:4326 -s_srs EPSG:3338 {} {}'.format(fn, new_fn ))
+	# fn = new_fn
+	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/fix_rsds/mlindgren'
 	lons, lats = coordinates( fn )
 
 	if not os.path.exists( output_path ):
@@ -94,19 +99,22 @@ if __name__ == '__main__':
 
 	# mask those lats so we dont compute where we dont need to:
 	data_ind = np.where( rst.read_masks( 1 ) != 0 )
-	pts = zip( lons[ data_ind ].ravel().tolist(), lats[ data_ind ].ravel().tolist() )
+	pts = zip( lons.ravel().tolist(), lats.ravel().tolist() )
 
 	# radians from pts
+	# lat_rad = lats * (np.pi / 180) # THIS APPEARS TO FOLLOW STEPHANIES radians.txt file...
+
 	p1 = Proj( init='epsg:3338' )
 	p2 = Proj( init='epsg:4326' )
+	# pts2 = zip( lons.ravel().tolist(), lats.ravel().tolist() )
 	transform_p = partial( transform, p1=p1, p2=p2 )
 	pts_radians = [ transform_p( x=lon, y=lat, radians=True ) for lon,lat in pts ]
-	lat_rad = pd.DataFrame( pts_radians, columns=['lon','lat']).lat
+	lat_rad = pd.DataFrame( pts_radians, columns=['lon','lat'] ).lat
 
 	# calc ordinal days to compute
 	ordinal_days = range( 1, 365+1, 1 )
 	# make a monthly grouper of ordinal days
-	ordinal_to_months = [ str(datetime.date.fromordinal( i ).month) for i in ordinal_days ]
+	ordinal_to_months = [ str( datetime.date.fromordinal( i ).month ) for i in ordinal_days ]
 	# convert those months to strings
 	ordinal_to_months = [ ('0'+month if len( month ) < 2 else month) for month in ordinal_to_months  ]
 
@@ -116,8 +124,8 @@ if __name__ == '__main__':
 	Ra_monthlies = pd.Series( Ra ).groupby( ordinal_to_months ).apply( lambda x: np.array(x.tolist()).mean( axis=0 ) )
 
 	# iteratively put them back in the indexed locations we took them from
-	meta = rst.meta
-	meta.pop( 'affine' )
+	meta = rst.meta.copy()
+	# meta.pop( 'affine' )
 	meta.update( compress='lzw', count=1, dtype='float32' )
 	for month in Ra_monthlies.index:
 		arr = rst.read( 1 )

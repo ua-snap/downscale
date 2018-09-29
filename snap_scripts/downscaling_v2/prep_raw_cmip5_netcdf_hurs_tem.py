@@ -79,13 +79,13 @@ if __name__ == '__main__':
 			os.makedirs( output_path )
 
 		experiment = 'r1i1p1'
-		try:
-			pp = preprocess.Preprocess( raw_path, variable, model, scenario, experiment, years )
-			pp.write_nc( output_path, True )
-		except:
-			print( 'ERROR!' )
-			log.write( 'error : %s - %s - %s - %s - %s - %s \n\n' % (raw_path, variable, model, scenario, experiment, years)  )
-			pass
+		# try:
+		pp = preprocess.Preprocess( raw_path, variable, model, scenario, experiment, years )
+		pp.write_nc( output_path, True )
+		# except:
+		# 	print( 'ERROR!' )
+		# 	log.write( 'error : %s - %s - %s - %s - %s - %s \n\n' % (raw_path, variable, model, scenario, experiment, years)  )
+		# 	pass
 
 	# close the log file
 	log.flush()
