@@ -63,15 +63,23 @@ def calc_ra( day, lat ):
 
 	'''
 	import numpy as np
+	# lat = lat[lat != -9999]
 
 	#Calculate the earth-sun distance, which is a function solely of Julian day.  It is a single value for each day
 	d = 1+(0.033*np.cos( (2*np.pi*day/365) ) )
 
 	#Calculate declination, a function of Julian day.  It is a single value for each day.
 	dc = 0.409*np.sin(((2*np.pi/365)*day)-1.39)
-	w = np.nan_to_num(np.real( np.arccos( ( -1*np.tan( dc )*np.tan( lat ) ) ).astype(np.complex_)))
+	# w = np.real( np.arccos( ( -1*np.tan( dc )*np.tan( lat ) ) ).astype(np.complex_))
+	# w2 = np.real( np.emath.arccos( (-1*np.tan( dc )*np.tan( lat )).astype( np.complex_  ) )
+	w = np.real( np.arccos( (-1*np.tan(dc)*np.tan(lat)).astype(np.complex_) ) )
+	# a = ( -1*np.tan( dc )*np.tan( lat ) )
+	# b = np.arccos( a.astype(np.complex_) ) # maybe try to use this instead: np.emath.arccos???
+	# c = np.real( b )
+	# d = np.nan_to_num( c )
+
 	out = (24*60/np.pi) * d * 0.082 * (w*np.sin(lat)*np.sin(dc)+np.cos(lat)*np.cos(dc)*np.sin(w))
-	out[lat == -9999] = -9999
+	# out[lat == -9999] = -9999
 	return out
 
 
@@ -86,12 +94,9 @@ if __name__ == '__main__':
 	from pyproj import Proj, transform
 
 	fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled/NCAR-CCSM4/rcp45/tas/tas_mean_C_ar5_NCAR-CCSM4_rcp45_01_2006.tif'
-	# new_fn = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/fix_rsds/tmp_4326_extent.tif'
-	# os.system('gdalwarp -multi -of GTiff -t_srs EPSG:4326 -s_srs EPSG:3338 {} {}'.format(fn, new_fn ))
-	# fn = new_fn
-	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/fix_rsds/mlindgren'
+	output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/other/2km/girr'
 	lons, lats = coordinates( fn )
-
+	
 	if not os.path.exists( output_path ):
 		os.makedirs( output_path )
 
@@ -99,10 +104,7 @@ if __name__ == '__main__':
 
 	# mask those lats so we dont compute where we dont need to:
 	data_ind = np.where( rst.read_masks( 1 ) != 0 )
-	pts = zip( lons.ravel().tolist(), lats.ravel().tolist() )
-
-	# radians from pts
-	# lat_rad = lats * (np.pi / 180) # THIS APPEARS TO FOLLOW STEPHANIES radians.txt file...
+	pts = list(zip( lons.ravel().tolist(), lats.ravel().tolist() ))
 
 	p1 = Proj( init='epsg:3338' )
 	p2 = Proj( init='epsg:4326' )
@@ -125,11 +127,12 @@ if __name__ == '__main__':
 
 	# iteratively put them back in the indexed locations we took them from
 	meta = rst.meta.copy()
-	# meta.pop( 'affine' )
-	meta.update( compress='lzw', count=1, dtype='float32' )
+	meta.update( compress='lzw', count=1, dtype='float32', nodata=-9999 )
+	mask = rst.read(1)
 	for month in Ra_monthlies.index:
 		arr = rst.read( 1 )
-		arr[ data_ind ] = Ra_monthlies.loc[ month ].tolist()
+		arr.flat = Ra_monthlies.loc[ month ].tolist()
 		output_filename = os.path.join( output_path, 'girr_w-m2_{}.tif'.format(str( month ) ) )
 		with rasterio.open( output_filename, 'w', **meta ) as out:
+			arr[mask == -9999] = -9999
 			out.write( arr.astype( np.float32 ), 1 )

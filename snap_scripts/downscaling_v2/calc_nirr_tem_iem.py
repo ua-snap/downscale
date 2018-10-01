@@ -21,8 +21,6 @@ def generate_nirr( cld_fn, girr_arr, output_filename ):
 
 	meta = cld.meta
 	meta.update( compress='lzw' )
-	if 'transform' in meta.keys():
-		meta.pop( 'affine' )
 	
 	try:
 		if not os.path.exists( os.path.dirname( output_filename ) ):
@@ -51,11 +49,11 @@ if __name__ == '__main__':
 	girr = dict( zip( months, girr ) )
 
 	# list the cloud files for a series
-	# models = [ 'IPSL-CM5A-LR', 'GISS-E2-R', 'MRI-CGCM3', 'NCAR-CCSM4', 'GFDL-CM3', '5ModelAvg' ]
-	models = [ 'CRU-TS40' ]
-	variables = ['clt']
-	# scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-	scenarios = [ 'historical' ]
+	models = [ 'IPSL-CM5A-LR', 'GISS-E2-R', 'MRI-CGCM3', 'NCAR-CCSM4', 'GFDL-CM3', '5ModelAvg' ]
+	# models = [ 'CRU-TS40' ]
+	variables = ['clt' ]
+	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
+	# scenarios = [ 'historical' ]
 	path_list = [ os.path.join( base_path, 'downscaled', model, scenario, variable, '*.tif' ) for model in models for variable in variables for scenario in scenarios ]
 
 	for path in path_list:
@@ -63,7 +61,7 @@ if __name__ == '__main__':
 		clt = pd.Series( glob.glob( path ) )
 		print( 'file count: %d' % len( clt ) )
 
-		output_filenames = clt.apply( lambda x: x.replace('clt', 'rsds').replace( '_pct_', '_MJ-m2-d1_' ) ).tolist()
+		output_filenames = clt.apply( lambda x: x.replace('clt', 'rsds').replace( '_pct_', '_MJ-m2-d1_' ).replace('/rsds/','/rsds_fix/') ).tolist()
 		month_grouper = clt.apply( lambda x: os.path.basename( x ).split( '.' )[0].split( '_' )[-2] )
 		args_list = [ ( cltx, girr[ month ], out ) for cltx, out, month in zip( clt.tolist(), output_filenames, month_grouper ) ]
 

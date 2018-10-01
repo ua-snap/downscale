@@ -41,7 +41,7 @@ n[,1] <- (n[,2]-ndm)+1 #Subtract number of days in a month from the end date and
 rm(ndm,m) #Delete ndm b/c not needed any more; clean up looping variable
 
 #DEFINE A VECTOR OR MONTH DESIGNATIONS FOR READING IN FILES AND NAMING OUTPUT FILES 
-month<-c(1:12)
+month<-c('01','02','03','04','05','06','07','08','09','10','11','12')
 
 #RUN THE FUNCTION AND SAVE OUTPUT TO TEXT FILES
 #This version of the file calculates Ra for each day within the month and then averages daily radiation to get a monthly value, rather than using a "representative" day.
@@ -68,9 +68,9 @@ for (m in 1:12) {  #month loop
     # out <- raster(ra,xmn=-2173223.206087799, xmx=1728212.22687, ymn=108069.78588, ymx = 2748069.78588, crs = '+proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs')
     out <- raster(ra, crs=crs(rst))
     extent(out) <- extent(rst) 
-    out = mask( out, rst, maskvalue=-9999, updatevalue=-9999 ) # mask the data.
+    out = mask( out, is.na(rst), maskvalue=1, updatevalue=NA ) # mask the data.
                                                                                                               # +proj=aea +lat_1=55 +lat_2=65 +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
     #Write data to the file
-    writeRaster(out,filename=paste(outdir,'ak_Ra_',month[m],'.tif',sep=''),format='GTiff', options='COMPRESS=LZW', datatype='FLT4S', overwrite=T)
+    writeRaster(out,filename=paste(outdir,'girr_w-m2_',month[m],'.tif',sep=''),format='GTiff', options='COMPRESS=LZW', datatype='FLT4S', overwrite=T)
     rm(ra,out)  #delete files that will be regenerated for the next month
 } #close month loop
