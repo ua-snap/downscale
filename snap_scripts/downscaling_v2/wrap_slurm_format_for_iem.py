@@ -24,7 +24,8 @@ if __name__ == '__main__':
 	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
 	models = [ 'GFDL-CM3', 'IPSL-CM5A-LR', 'MRI-CGCM3', 'GISS-E2-R', 'NCAR-CCSM4' ]
 	scenarios = [ 'historical', 'rcp26', 'rcp45', 'rcp60', 'rcp85' ]
-	variables = ['tas', 'pr', 'hur', 'vap','rsds']
+	# variables = ['tas', 'pr', 'hur', 'vap','rsds']
+	variables = ['hurs','rsds'] # for a fix of these vars...
 
 	slurm_path = os.path.join( base_dir, 'iem_1km', 'slurm_log' )
 	if not os.path.exists( slurm_path ):

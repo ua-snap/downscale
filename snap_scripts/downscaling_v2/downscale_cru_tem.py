@@ -73,7 +73,7 @@ if __name__ ==	'__main__':
 		else:
 			aoi_mask = None
 	
-	elif variable in ['hur','reh','cld','clt']:
+	elif variable in ['hur','hurs','reh','cld','clt']:
 		rounder = partial( np.around, decimals=1 )
 		downscaling_operation = 'mult'
 		find_bounds = False
