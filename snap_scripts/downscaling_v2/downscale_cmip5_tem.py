@@ -126,7 +126,7 @@ if __name__ == '__main__':
 		if variable == 'pr':
 			rounder = np.rint
 			downscaling_operation = 'mult'
-		elif variable in ['hur','cld','clt']:
+		elif variable in ['hur', 'hurs','cld','clt']:
 			rounder = partial( np.round, decimals=1 )
 			downscaling_operation = 'mult'
 		else:
@@ -152,7 +152,7 @@ if __name__ == '__main__':
 			x[ x > 100.0 ] = 100.0 # per Stephanie McAfee
 			return x
 
-		if variable == 'hur':
+		if variable in ['hur','hurs']:
 			post_downscale_function = round_data_clamp_hur
 		elif variable == 'clt':
 			post_downscale_function = round_data_clamp_clt
