@@ -9,7 +9,7 @@ def make_iem_compatible( fn, mask_fn, input_base_dir, output_base_dir ):
 	dirname, basename = os.path.split( fn )
 	
 	# output filename to a new directory -- preserving the model/scenario/variable hierarchy
-	out_fn = os.path.join( dirname.replace( input_base_dir, output_base_dir ), basename.replace( '_ar5_', '_iem_ar5_' ) )
+	out_fn = os.path.join( dirname.replace( input_base_dir, output_base_dir ), basename.replace( '_ar5_', '_iem_ar5_' ) ).replace('_CRU-TS40_','_iem_CRU-TS40_')
 	
 	# read in the mask file where 0=nodata
 	mask = rasterio.open( mask_fn ).read( 1 )

@@ -23,8 +23,8 @@ if __name__ == '__main__':
 	ncores = '32'
 	model = 'ts40'
 	scenario = 'historical'
-	variables = ['hur','cld'] #['tmp','hur','pre','cld']
-	out_varnames = ['hur','clt'] #['tas','hur','pr','clt']
+	variables = ['hurs'] #['hur','cld'] #['tmp','hur','pre','cld']
+	out_varnames = ['hurs'] #['hur','clt'] #['tas','hur','pr','clt']
 	
 	slurm_path = os.path.join( base_dir, 'downscaled','slurm_log' )
 	if not os.path.exists( slurm_path ):
@@ -39,11 +39,11 @@ if __name__ == '__main__':
 		elif variable == 'tmp':
 			metric = 'mean'
 			units = 'C'
-		elif variable in ['hur','cld','clt']:
+		elif variable in ['hurs','cld','clt']:
 			metric = 'mean'
 			units = 'pct'
 
-		cru_cl20_varnames = {'hur':'reh', 'clt':'clt', 'cld':'clt'} # we only support these variables for now...
+		cru_cl20_varnames = {'hurs':'reh', 'clt':'clt', 'cld':'clt'} # we only support these variables for now...
 		clim_path = os.path.join( base_dir, 'climatologies','cru_cl20', '2km', cru_cl20_varnames[out_varname] )
 		output_path = os.path.join( os.path.join( base_dir, 'downscaled', model, scenario, out_varname ) )
 		
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 			os.makedirs( output_path )
 
 		cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.' + variable + '.dat.nc.gz'
-		if variable == 'hur': # since we made this variable and it lives with the raw files with a slightly diff name
+		if variable == 'hurs': # since we made this variable and it lives with the raw files with a slightly diff name
 			cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.' + variable + '.dat_snap_conversion.nc'
 		
 		# # make a command to pass to slurm

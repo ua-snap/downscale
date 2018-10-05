@@ -1,5 +1,5 @@
 # # # # # # # # # # # # # # 
-# # convert tas/hur to vap
+# # convert tas/hurs to vap
 # # # # # # # # # # # # # # 
 
 def convert_to_vap( tas_arr, hur_arr ):
@@ -52,16 +52,16 @@ if __name__ == '__main__':
 	ncpus = 64
 	
 	# list ALL relative humidity
-	hur_files = [ os.path.join(r,fn) for r,s,files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) and 'hur_' in fn ]
+	hurs_files = [ os.path.join(r,fn) for r,s,files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) and 'hurs_' in fn and '_anom.tif' not in fn and 'CRU' in fn ]
 
 	# since the pathing is the same except for variable, metric, units we can just change the list to make a tas list
-	tas_files = [ fn.replace('/hur','/tas').replace('mean_pct','mean_C') for fn in hur_files ]
+	tas_files = [ fn.replace('/hurs','/tas').replace('mean_pct','mean_C') for fn in hurs_files ]
 
 	# make the output files from one of the lists
-	output_filenames = [ fn.replace('/hur','/vap').replace('mean_pct','mean_hPa') for fn in hur_files ]
+	output_filenames = [ fn.replace('/hurs','/vap').replace('mean_pct','mean_hPa') for fn in hurs_files ]
 
 	# run processing in parallel
-	args = zip( hur_files, tas_files, output_filenames )
+	args = zip( hurs_files, tas_files, output_filenames )
 	pool = mp.Pool( ncpus )
 	out = pool.map( wrap_make_vap, args )
 	pool.close()
