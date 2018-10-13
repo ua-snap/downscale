@@ -52,7 +52,7 @@ if __name__ == '__main__':
 	ncpus = 64
 	
 	# list ALL relative humidity
-	hurs_files = [ os.path.join(r,fn) for r,s,files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) and 'hurs_' in fn and '_anom.tif' not in fn and 'CRU' in fn ]
+	hurs_files = [ os.path.join(r,fn) for r,s,files in os.walk( base_dir ) for fn in files if fn.endswith( '.tif' ) and 'hurs_' in fn and '_anom.tif' not in fn ]
 
 	# since the pathing is the same except for variable, metric, units we can just change the list to make a tas list
 	tas_files = [ fn.replace('/hurs','/tas').replace('mean_pct','mean_C') for fn in hurs_files ]

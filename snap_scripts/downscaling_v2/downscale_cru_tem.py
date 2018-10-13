@@ -32,16 +32,16 @@ if __name__ ==	'__main__':
 	out_varname = args.out_varname
 
 	# # # # # TESTING
-	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.hur.dat_snap_conversion.nc'
+	# cru_ts = '/Data/Base_Data/Climate/World/CRU_grids/CRU_TS40/cru_ts4.00.1901.2015.hurs.dat_snap_conversion.nc'
 	# clim_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/cru_cl20/2km/reh'
-	# output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_CRU_TEM'
+	# output_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_CRU_TEM_hurs'
 	# model = 'ts40'
 	# scenario = 'historical'
-	# variable = 'hur'
+	# variable = 'hurs'
 	# units = 'pct'
 	# metric = 'mean'
 	# ncpus = 32
-	# out_varname = 'hur'
+	# out_varname = 'hurs'
 	# # # # # # # # # 
 
 	# standard args
