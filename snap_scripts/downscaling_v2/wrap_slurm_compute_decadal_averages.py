@@ -22,15 +22,14 @@ def run( fn, path, output_path, ncpus ):
 if __name__ == '__main__':
 	import os, subprocess
 	
-	base_dir = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data'
-	models = []
+	models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4','5ModelAvg','CRU-TS40',]
 	variables = [ 'pr', 'tasmin', 'tasmax', 'tas', 'hurs', 'vap', 'clt', 'rsds', ]
 	ncpus = 32
 
 	input_base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled'
 	output_base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_decadals'
 
-	slurm_path = os.path.join( base_dir, 'downscaled_decadals', 'slurm_log' )
+	slurm_path = os.path.join( output_base_path, 'slurm_log' )
 	if not os.path.exists( slurm_path ):
 		os.makedirs( slurm_path )
 	
@@ -45,4 +44,4 @@ if __name__ == '__main__':
 				fn = os.path.join( slurm_path, 'slurm_run_compute_decadals_'+variable+'_'+scenario+'.slurm' )
 				path = os.path.join( input_base_path, model, scenario, variable )
 				output_path = os.path.join( output_base_path, model, scenario, variable )
-				_ = run( fn, path, output_path, ncpus )
+				_ = run( fn, path, output_path, str(ncpus) )

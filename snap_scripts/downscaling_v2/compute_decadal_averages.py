@@ -37,8 +37,11 @@ def make_decadal( x, output_path ):
 	out_fn = template.fn.replace( template.year, decade )
 	out_fn = os.path.join( output_path, os.path.basename(out_fn) )
 
-	if not os.path.exists( output_path ):
-		_ = os.makedirs( output_path )
+	try:
+		if not os.path.exists( output_path ):
+			_ = os.makedirs( output_path )
+	except:
+		pass
 
 	with rasterio.open( out_fn, 'w', **meta ) as out:
 		arr = np.round(arr, sig_digits)
