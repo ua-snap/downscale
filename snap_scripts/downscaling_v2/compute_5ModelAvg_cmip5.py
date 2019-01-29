@@ -18,8 +18,8 @@ def generate( files ):
 	meta.update( compress='lzw' )
 	mask = rst.read_masks( 1 )
 
-	if 'transform' in meta.keys():
-		meta.pop( 'transform' )
+	# if 'transform' in meta.keys():
+	# 	meta.pop( 'transform' )
 
 	# arr_group = mp_map( lambda x:rasterio.open( x ).read( 1 ), files, nproc=32 )
 	arr_group = np.array([ rasterio.open( fn ).read( 1 ) for fn in files ])
