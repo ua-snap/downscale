@@ -14,7 +14,8 @@ def tfg_days( x, err='off' ):
 
     # positive or negative monthly temps
     s1 = np.sign( x )
-    # products of consecutive months' signs: positive indicates no change; negative indicates a potential freeze or thaw transition
+    # products of consecutive months' signs: positive indicates no change; 
+    #   negative indicates a potential freeze or thaw transition
     s = s1[:11] * s1[1:]
     idx, = np.where( s < 0 )
     # may be length zero (no transitions)
@@ -113,6 +114,7 @@ def tfg_days( x, err='off' ):
 
 if __name__ == '__main__':
     import numpy as np
+    
     # test data
     x_list = [ np.array([-16, -5, -1, 3, 5, 10, 12, 16, 11, -3, -15, -16]),
           np.array([-16, -5, -1, 3, 5, 10, 12, 16, 11, np.nan, -15, -16]),

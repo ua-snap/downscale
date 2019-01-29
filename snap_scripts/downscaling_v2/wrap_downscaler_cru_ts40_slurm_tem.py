@@ -8,7 +8,7 @@ def run_model( fn, command ):
 			'#SBATCH --account=snap\n' + \
 			'#SBATCH --mail-type=FAIL\n' + \
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
-			'#SBATCH -p main\n'
+			'#SBATCH -p viz\n'
 	
 	with open( fn, 'w' ) as f:
 		f.writelines( head + '\n' + command + '\n' )

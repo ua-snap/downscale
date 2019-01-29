@@ -10,7 +10,7 @@ def run_model( fn, base_dir, variable, model, scenario, units, metric, level=Non
 			'#SBATCH --account=snap\n' + \
 			'#SBATCH --mail-type=FAIL\n' + \
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
-			'#SBATCH -p main\n'
+			'#SBATCH -p main,viz\n'
 	
 	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/downscale_cmip5_tem.py'
 	with open( fn, 'w' ) as f:
