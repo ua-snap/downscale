@@ -9,7 +9,7 @@ def run_model( fn, model, scenario, variable ):
 			'#SBATCH --account=snap\n' + \
 			'#SBATCH --mail-type=FAIL\n' + \
 			'#SBATCH --mail-user=malindgren@alaska.edu\n' + \
-			'#SBATCH -p main\n'
+			'#SBATCH -p main,viz\n'
 	
 	script_path = '/workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/format_for_alfresco.py'
 	with open( fn, 'w' ) as f:
