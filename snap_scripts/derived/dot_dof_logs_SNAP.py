@@ -109,7 +109,7 @@ def tfg_days( x, err='off' ):
     else:
         dot, dof, grow = itertools.repeat( np.array([np.nan]), 3 )
         # print( "Condition unconsidered: {}".format( x.strip() ) )
-    return dof, dot, grow
+    return np.array([dof, dot, grow])
 
 def open_raster( fn ):
     ''' cleanly open the raster '''
@@ -117,27 +117,41 @@ def open_raster( fn ):
         arr = rst.read(1).copy()
     return arr
 
+def run_tfg_days( x ):
+    '''wrapper to run the tfg days using the apply_along_axis mechanics'''
+    out = np.full( x.shape, np.nan )
+    if not np.isnan(x).any():
+        vals = tfg_days( x ).squeeze()
+        out[[0,1,2]] = vals
+    return out
+
+
 def run( x ):
     ''' run it '''
+    # unpack
     x, out_base_fn = x
     year, sub_df = x
+    
+    nodata = -9999 # hardwired for SNAP data
 
     files = sub_df.fn.tolist()
     arr = np.array([ open_raster(fn) for fn in files ])
-    count,rows,cols = arr.shape
-    out_arr = np.full((3,rows,cols), -9999, dtype=np.int32 )
+    arr[ arr == nodata ] = np.nan
 
-    for i,j in np.ndindex(arr.shape[-2:]):
-        out_arr[:,i,j] = tfg_days( arr[:,i,j] )
-        
+    out_arr = np.apply_along_axis( run_tfg_days, axis=0, arr=arr )
+    out_arr = out_arr[:3,...] # slice it back
+
     for idx,metric in enumerate(['dof','dot','logs']):
         out_fn = out_base_fn.format(metric, metric, str(year))
         dirname = os.path.dirname( out_fn )
         
-        if not os.path.exists( dirname ):
-            _ = os.makedirs( dirname )
+        try:
+            if not os.path.exists( dirname ):
+                _ = os.makedirs( dirname )
+        except:
+            pass
 
-        # get meta and mask for output arr and gtiff generation
+        # get meta and mask for output arr and GTiff generation
         with rasterio.open(files[0]) as rst:
             meta = rst.meta.copy()
             meta.update( compress='lzw', dtype=np.int32 )
@@ -147,8 +161,8 @@ def run( x ):
         with rasterio.open( out_fn, 'w', **meta ) as out:
             cur_arr = out_arr[ idx, ... ]
             cur_arr[ mask ] = -9999
-            out.write( cur_arr , 1 )
-    
+            out.write( cur_arr.astype(np.int32) , 1 )
+
     return out_fn
 
 if __name__ == '__main__':
@@ -159,9 +173,9 @@ if __name__ == '__main__':
     import multiprocessing as mp
 
     ncpus = 64
-    models = ['5ModelAvg','GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4',]
+    models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4','5ModelAvg',]
     # models = ['CRU-TS40',]
-    scenarios = ['historical','rcp26','rcp45','rcp60','rcp85']
+    scenarios = ['historical','rcp26','rcp45','rcp60','rcp85',]
     # scenarios = ['historical']
     
     for model, scenario in itertools.product( models, scenarios ):
@@ -178,7 +192,7 @@ if __name__ == '__main__':
         df = df.sort_values(['year', 'month']).reset_index( drop=True )
         args = list(df.groupby('year'))
         args = [ ((year,sub_df),os.path.join(out_path,'{}','{}_'+model+'_'+scenario+'_{}.tif' )) for year,sub_df in args ]
-
+        
         pool = mp.Pool( ncpus )
         out = pool.map( run, args )
         pool.close()
