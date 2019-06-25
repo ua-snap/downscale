@@ -1,6 +1,9 @@
-# # # # 
-# PYTHON VERSION OF MATT's DOF/DOT/LOGS -- this is a hack and not highly optimized.
-# # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# PYTHON VERSION OF MATTHEW LEONAWICZ's DOF/DOT/LOGS R Script
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# Author: Michael Lindgren -- 2019 -- malindgren@alaska.edu
+# LICENSE: MIT
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 def tfg_days( x, err='off' ):
     ''' calculate DOF/DOT/LOGS for a vector of 12 chronological monthly values '''
@@ -119,12 +122,11 @@ def open_raster( fn ):
 
 def run_tfg_days( x ):
     '''wrapper to run the tfg days using the apply_along_axis mechanics'''
-    out = np.full( x.shape, np.nan )
+    out = np.full( 3, np.nan )
     if not np.isnan(x).any():
         vals = tfg_days( x ).squeeze()
         out[[0,1,2]] = vals
     return out
-
 
 def run( x ):
     ''' run it '''
@@ -165,12 +167,20 @@ def run( x ):
 
     return out_fn
 
+def run_par_update_arr( idx ):
+    tmp_out = np.ctypeslib.as_array(out_shared)
+    i,j = idx
+    tmp_out[:,i,j] = run_tfg_days( arr[:,i,j] )
+    
+
 if __name__ == '__main__':
 
     import os, glob, rasterio, itertools
     import numpy as np
     import pandas as pd
+    import xarray as xr
     import multiprocessing as mp
+    from multiprocessing import sharedctypes
 
     ncpus = 64
     models = ['GFDL-CM3','GISS-E2-R','IPSL-CM5A-LR','MRI-CGCM3','NCAR-CCSM4','5ModelAvg',]
@@ -181,7 +191,7 @@ if __name__ == '__main__':
     for model, scenario in itertools.product( models, scenarios ):
         print(model, scenario)
         base_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled/{}/{}/tas'.format(model,scenario)
-        out_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/derived/{}/{}'.format(model,scenario)
+        out_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/derived_v2_parallel/{}/{}'.format(model,scenario)
         
         files = glob.glob(os.path.join(base_path, '*.tif'))
         colnames = ['variable', 'metric', 'units', 'project', 'model', 'scenario', 'month', 'year']
@@ -194,8 +204,69 @@ if __name__ == '__main__':
         args = list(df.groupby('decade'))
         args = [ ((year,sub_df),os.path.join(out_path,'{}','{}_'+model+'_'+scenario+'_{}.tif' )) for year,sub_df in args ]
         
-        pool = mp.Pool( ncpus )
-        out = pool.map( run, args )
-        pool.close()
-        pool.join()
+        # get template file information
+        with rasterio.open(files[0]) as tmp:
+            meta = tmp.meta.copy()
+            shape = tmp.shape
+            rows,cols = shape
+            arr = tmp.read(1)
+            arr[arr == tmp.nodata] = np.nan
+
+        for arg in args:
+            x, out_base_fn = arg
+            year, sub_df = x
+
+            nodata = -9999 # hardwired for SNAP data
+
+            files = sub_df.fn.tolist()
+            times = pd.DatetimeIndex([ pd.Timestamp.strptime('{1}-{0}-15'.format(*os.path.basename(fn).split('.')[0].split('_')[-2:]), '%Y-%m-%d') for fn in files ])
+            arr = np.array([ open_raster(fn) for fn in files ])
+            arr[ arr == nodata ] = np.nan
+
+            # make xarray dset
+            ds = xr.Dataset({'dat':(['time','yc', 'xc'], arr.copy())},
+                            coords={'xc': ('xc', np.arange(cols)),
+                                    'yc': ('yc', np.arange(rows)),
+                                    'time':times })
+
+            # groupby and average to decadal series (12 values)
+            da = ds.dat.groupby('time.month').mean(axis=0)
+            arr = da.values.copy()
+            del da, ds # cleanup
+
+            indexes = list(zip(*np.where(~np.isnan(arr[0]))))
+            # indexes = list(np.ndindex(arr.shape[-2:])) # old way
+
+            # make the output arrays?
+            count = 3
+            out = np.ctypeslib.as_ctypes(np.zeros((count,rows,cols), dtype=np.float))
+            out_shared = sharedctypes.RawArray(out._type_, out)
+            p = mp.Pool(ncpus)
+            p.map( run_par_update_arr, indexes )
+            p.close()
+            p.join()
+
+            # bring these c-types arrays back to numpy arrays.
+            out = np.ctypeslib.as_array(out_shared).astype(np.float32)
+
+            # update the np.nans to something more useable and SNAP-ish
+            for i in out:
+                i[np.isnan(arr[0])] = -9999
+
+            # dump to disk
+            for idx,metric in enumerate(['dof','dot','logs']):
+                out_fn = out_base_fn.format(metric, metric, str(year))
+                dirname = os.path.dirname( out_fn )
+                
+                try:
+                    if not os.path.exists( dirname ):
+                        _ = os.makedirs( dirname )
+                except:
+                    pass
+
+                # write to GTiff
+                meta.update( compress='lzw', dtype=np.int32, count=1, nodata=-9999 )
+                with rasterio.open( out_fn, 'w', **meta ) as out_rst:
+                    cur_arr = out[ idx, ... ]
+                    out_rst.write( cur_arr.astype(np.int32), 1 )
 
