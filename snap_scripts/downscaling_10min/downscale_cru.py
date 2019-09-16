@@ -68,7 +68,7 @@ if __name__ ==	'__main__':
 
 	# post_downscale_function -- rounding
 	if variable == 'pr' or variable == 'pre':
-		print variable
+		print(variable)
 		rounder = np.rint
 		downscaling_operation = 'mult'
 		find_bounds = True
