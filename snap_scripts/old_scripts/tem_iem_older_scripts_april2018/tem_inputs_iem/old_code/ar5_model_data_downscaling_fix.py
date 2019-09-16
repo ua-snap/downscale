@@ -196,7 +196,7 @@ if __name__ == '__main__':
 	# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 	# condition to deal with reading in historical data if needed.
 	if modeled_fn is not None and historical_fn is not None:
-		print 'here'
+		# print 'here'
 		# parse the input name for some file metadata
 		output_naming_dict = standardized_fn_to_vars( modeled_fn )
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 		years = dates.apply( lambda x: x.year )
 		begin_time = years.min()
 		end_time = years.max()
-		print 'here'
+		# print 'here'
 		del clim_ds
 	elif historical_fn is not None and modeled_fn is None:
 		# parse the input name for some file metadata
@@ -245,7 +245,7 @@ if __name__ == '__main__':
 	# standardize the output pathing
 	if output_naming_dict[ 'variable' ] == 'clt':
 		variable_out = 'cld'
-		print 'here'
+		# print 'here'
 	else:
 		variable_out = output_naming_dict[ 'variable' ]
 
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 	if anomalies_calc_type == 'absolute':
 		anomalies = ds.groupby( 'time.month' ) - climatology
 	elif anomalies_calc_type == 'proportional':
-		print 'here'
+		# print 'here'
 		anomalies = ds.groupby( 'time.month' ) / climatology
 	else:
 		NameError( 'anomalies_calc_type can only be one of "absolute" or "proportional"' )
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 	combinations = [ (month, year) for year in years for month in months ]
 
 	output_filenames = [ os.path.join( output_path, '_'.join([variable_out, 'metric', output_naming_dict['model'], output_naming_dict['scenario'], output_naming_dict['experiment'], month, year]) + '.tif' ) for month, year in combinations ]
-	print 'here'
+	# print 'here'
 	# load the baseline CRU CL2.0 data 
 	# [NOTE]: THIS ASSUMES THEY ARE THE ONLY FILES IN THE DIRECTORY -- COULD BE A GOTCHA
 	cru_files = glob.glob( os.path.join( cru_path, '*.tif' ) )
@@ -306,7 +306,7 @@ if __name__ == '__main__':
 	# this is a hack to make a masked array with the cru data
 	cru_stack = [ np.ma.masked_where( cru == cru.min(), cru ) for cru in cru_stack ]
 	cru_gen = cru_generator( len(output_filenames), cru_stack )
-	print 'here'
+	# print 'here'
 	
 	# cleanup some uneeded vars that are hogging RAM
 	del climatology, anomalies

@@ -86,7 +86,7 @@ if __name__ == '__main__':
 	# end temporary
 
 	for path in path_list:
-		print path 
+		# print path 
 		files = glob.glob( path )
 
 		# run it in parallel
@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
 	# for root, subs, files in os.walk( input_path ):
 	# 	if root.endswith( 'downscaled' ):
-	# 		print 'running: %s' % root
+	# 		# print 'running: %s' % root
 	# 		# add back in the file paths from the root
 	# 		files = [ os.path.join( root, i ) for i in files ]
 

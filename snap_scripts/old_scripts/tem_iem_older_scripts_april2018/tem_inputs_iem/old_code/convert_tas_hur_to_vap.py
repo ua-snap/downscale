@@ -58,7 +58,7 @@ if __name__ == '__main__':
 	models = [ 'IPSL-CM5A-LR', 'GISS-E2-R', 'MRI-CGCM3', 'CCSM4', 'GFDL-CM3' ]
 
 	for model in models:
-		print model
+		# print model
 		tas_files = sorted( glob.glob( os.path.join( tas_input_path, model, 'tas', 'downscaled', '*.tif' ) ) )
 		hur_files = sorted( glob.glob( os.path.join( hur_input_path, model, 'hur', 'downscaled', '*.tif' ) ) )
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 # def return_files( input_path, var ):
 # 	output_files = []
 # 	for root, subs, files in os.walk( input_path ):
-# 		# print root
+# 		# # print root
 # 		if root.endswith( 'downscaled' ) and len( files ) != 0 and var in root:
 # 			pool = mp.Pool( processes=ncores )
 # 			files = pool.map( lambda x: os.path.join( root, x ), files )

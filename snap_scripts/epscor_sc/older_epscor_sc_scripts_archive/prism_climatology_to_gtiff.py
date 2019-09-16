@@ -135,7 +135,7 @@ def fill_mask_mismatch( in_arr, value_to_fill=-100, final_value=-9999, count_mis
 	ind = np.where( arr == value_to_fill )
 	ind = zip( *ind )
 	count1, count2 = count_missing
-	# print count_missing
+	# # print count_missing
 	if count1 == count2:
 		# fill in the remainders with 255 and return
 		for ii in ind:
@@ -161,7 +161,7 @@ def fill_mask_mismatch( in_arr, value_to_fill=-100, final_value=-9999, count_mis
 				arr[ missing ] = 0 # remove the flag for missing
 				in_arr[ missing ] = new_val
 			else:
-				print 'error'
+				# print 'error'
 
 		count_missing = ( count_missing[1], len( arr[ arr == 1 ] ) )
 		return fill_mask_mismatch( in_arr, value_to_fill, final_value, count_missing )

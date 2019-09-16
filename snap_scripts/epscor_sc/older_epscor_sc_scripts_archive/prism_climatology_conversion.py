@@ -237,7 +237,7 @@ for variable in variables:
 # 	# remember that month 14 is the annual average
 # 	files = glob.glob( os.path.join( input_path, group, '*.txt' ) )
 # 	for fn in files:
-# 		print fn
+# 		# print fn
 # 		rst = rasterio.open( fn )
 # 		arr = rst.read( 1 ) # get the first and only band
 # 		output_filename = os.path.join( output_path, os.path.basename(fn).replace( '.txt', '.tif' ) )

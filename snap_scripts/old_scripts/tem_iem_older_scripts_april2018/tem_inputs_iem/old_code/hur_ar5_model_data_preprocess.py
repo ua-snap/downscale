@@ -205,8 +205,8 @@ if __name__ == '__main__':
 			else:
 				files = files[ begin_idx:end_idx + 1 ]
 
-			print files
-			print '\n'
+			# print files
+			# print '\n'
 
 			begin_year_in = str(df.ix[ begin_idx ][0])
 			end_year_in = str(df.ix[ end_idx ][1])
@@ -245,7 +245,7 @@ if __name__ == '__main__':
 			# in its young state.
 			# concat_to_nc( files, output_filename, dim='time', begin_time=begin_year[:4], end_time=end_year[:4] )
 		except:
-			print '\n--> ERROR !!!\n\n%s\n\n' % files
+			# print '\n--> ERROR !!!\n\n%s\n\n' % files
 			problem_files_log.writelines( files )
 			pass
 

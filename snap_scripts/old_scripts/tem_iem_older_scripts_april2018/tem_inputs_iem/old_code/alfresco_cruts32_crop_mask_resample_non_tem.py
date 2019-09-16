@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 # for input_path in input_paths:
 # 	if model in input_path:
-# 		print input_path
+# 		# print input_path
 # 		os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 # 		os.system( 'python alfresco_cmip5_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
 # for input_path in input_paths:
 # 	if model in input_path:
-# 		print input_path
+# 		# print input_path
 # 		os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 # 		os.system( 'python alfresco_cmip5_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 # group = 'iem'
 
 # for input_path in input_paths:
-# 	print input_path
+# 	# print input_path
 # 	os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 # 	os.system( 'python alfresco_cmip5_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
 # group = 'alf'
 
 # for input_path in input_paths:
-# 	print input_path
+# 	# print input_path
 # 	os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 # 	os.system( 'python alfresco_cmip5_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 
@@ -191,7 +191,7 @@ template_raster_mask_fn = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/proje
 group = 'iem'
 
 # for input_path in input_paths:
-# 	print input_path
+# 	# print input_path
 os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 os.system( 'python alfresco_cruts32_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 
@@ -201,7 +201,7 @@ template_raster_mask_fn = '/workspace/UA/malindgren/projects/ALFRESCO_DATA_CLIP/
 group = 'alf'
 
 # for input_path in input_paths:
-# 	print input_path
+# 	# print input_path
 os.chdir( '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/CODE/tem_ar5_inputs/downscale_cmip5/bin' )
 os.system( 'python alfresco_cruts32_crop_mask_resample_non_tem.py -p ' + input_path + ' -o ' + output_base_path + ' -m ' + template_raster_mask_fn + ' -g ' + group )
 

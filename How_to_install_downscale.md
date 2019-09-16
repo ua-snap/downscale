@@ -26,3 +26,7 @@ python setup.py install
 ```
 ## You now have downscale installed.
 
+# RUN SOMETHING
+---
+## 
+ipython /workspace/UA/malindgren/repos/downscale/snap_scripts/downscaling_v2/downscale_cru.py -- -ts /Data/Base_Data/Climate/World/CRU_grids/CRU_TS323/cru_ts3.23.1901.2014.pre.dat.nc -cl /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/prism/pr -o /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/downscaled_TEST/ts323/historical/pr -m ts323 -v pre -u mm -met total -nc 32 -ov pr

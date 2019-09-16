@@ -268,7 +268,7 @@ if __name__ == '__main__':
 # 		month_dict = {}
 # 		for month in month_grouped:
 # 			args = month_grouped[ month ]
-# 			print month
+# 			# print month
 			
 # 			# parallel map
 # 			pool = mp.Pool( ncpus )

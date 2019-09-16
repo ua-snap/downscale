@@ -17,7 +17,7 @@ for root, dirs, files in os.walk( base_dir ):
 		files = [ fn for fn in files if fn.endswith( '.nc' ) ]
 
 		for fn in files:
-			print 'running %s' % fn
+			# print 'running %s' % fn
 			# split out the sub_dirs to have both model_name and variable folder hierarchy
 			# from the prepped folder directory
 			output_dir = os.path.join( output_base_dir, model, variable )

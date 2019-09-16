@@ -27,7 +27,7 @@ for model in models:
 		_ = [ os.makedirs( os.path.join( output_path, name ) ) for name in names if not os.path.exists( os.path.join( output_path, name ) ) ]
 
 		for count, name in enumerate( names ):
-			print count
+			# print count
 			group = name_group[ count ]
 			out_group = [ os.path.join( output_path, name, os.path.basename( i ) ) for i in group[1] ]
 

@@ -83,10 +83,10 @@ if __name__ == '__main__':
 		files = [ os.path.join(dir_name, fn) for fn in file_list if 'metadata.xml' in fn ]
 		# l = glob.glob( os.path.join( dir_name, 'metadata.xml' ) )
 		if len( files ) > 0:
-			print files[0]
+			# print files[0]
 			# run the function in a list comprehension
 	 		[ new_fn_from_meta( meta_fn, output_path ) for meta_fn in files ]
-	print 'complete! new files located in %s' % output_path
+	# print 'complete! new files located in %s' % output_path
 
 
 # # # TESTING STUFF BELOW # # # 

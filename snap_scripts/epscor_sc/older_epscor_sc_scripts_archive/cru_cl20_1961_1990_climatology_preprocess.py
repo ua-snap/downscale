@@ -286,5 +286,5 @@ if __name__ == '__main__':
 # template_raster_fn = '/workspace/Shared/Tech_Projects/ALFRESCO_Inputs/project_data/TEM_Data/templates/tas_mean_C_AR5_GFDL-CM3_historical_01_1860.tif'
 
 # for variable, cru_filename in var_fn_dict.iteritems():
-# 	print 'working on : %s' % variable
+# 	# print 'working on : %s' % variable
 # 	os.system( 'ipython -- cru_cl20_1961_1990_climatology_preprocess.py -p ' + base_path + ' -cru ' + cru_filename + ' -v ' + variable + ' -tr ' + template_raster_fn )
