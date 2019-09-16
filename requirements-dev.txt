@@ -3,4 +3,7 @@ rasterio>=1.0
 numpy>=1.12.0
 pandas>=0.18
 xarray>=0.7
+scipy
+netCDF4
+scikit-image
 geopandas
