@@ -1,0 +1,148 @@
+# # download the PRISM 1981-2010 data.
+# # see here: http://prism.oregonstate.edu/projects/alaska.php
+
+if __name__ == '__main__':
+	import os
+	import multiprocessing as mp
+
+	os.chdir('/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1981-2010')
+	commandlist = []
+	for variable in ['ppt','tmax','tmean','tmin',]:
+		for i in ['01','02','03','04','05','06','07','08','09','10','11','12','annual']:
+			command = 'wget http://prism.oregonstate.edu/projects/public/alaska/grids/{0}/PRISM_{0}_ak_30yr_normal_800mM1_{1}_asc.zip'.format( variable, i )
+
+			commandlist = commandlist + [command]
+
+	pool = mp.Pool( 12 )
+	out = pool.map( os.system, commandlist )
+	pool.close()
+	pool.join()
+
+# # UNZIP -- BASH
+mkdir zips
+mkdir extracted
+cd /workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1981-2010/zips
+for i in *.zip; do
+	unzip "$i" -d ../extracted/
+done
+
+/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1981-2010/extracted/ak_tmean_1981_2010.12.txt
+
+
+# # # CONVERT THE DATA TO GTIFF and reproject to EPSG:3338 with 800m pixels
+def convert( fn, out_fn ):
+	return subprocess.call(['gdalwarp', '-q', '-overwrite','-of', 'GTiff', '-co', 'COMPRESS=LZW', '-s_srs', 'NAD83', '-t_srs', 'EPSG:3338', '-tr', '800', '800', '-srcnodata', '-9999', '-dstnodata', '-9999', fn, out_fn])
+	return arr
+
+def run(x):
+	return convert( *x )
+
+if __name__ == '__main__':
+	import os, glob, subprocess
+	import rasterio
+	import multiprocessing as mp
+
+	out_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1981-2010/GTiff'
+
+	files = glob.glob('/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1981-2010/extracted/*.txt')
+	out_files = [ os.path.join(out_path, os.path.basename(fn).split('.txt')[0].replace('.','_') + '.tif') for fn in files ]
+
+	args = list(zip(files, out_files))
+	
+	pool = mp.Pool(32)
+	out = pool.map(run, args)
+	pool.close()
+	pool.join()
+
+
+
+
+
+# # # # # 
+# # download the PRISM 1971-2000 data.
+# # see here: http://prism.oregonstate.edu/normals/special_projects.php
+
+if __name__ == '__main__':
+	import os
+	
+	os.chdir('/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1971-2000/zips')
+
+	# precip
+	os.system( 'wget https://irma.nps.gov/DataStore/DownloadFile/427975' )
+	os.system( 'unzip 427975' )
+	# os.system( 'rm -r 427975' )
+
+	# tmin
+	os.system( 'wget https://irma.nps.gov/DataStore/DownloadFile/429039' )
+	os.system( 'unzip 429039' )
+	# os.system( 'rm -r 429039' )
+
+	# tmax
+	os.system( 'wget https://irma.nps.gov/DataStore/DownloadFile/427982' )
+	os.system( 'unzip 427982' )
+	# os.system( 'rm -r 427982' )
+
+	# tavg
+	os.system( 'wget https://irma.nps.gov/DataStore/DownloadFile/427985' )
+	os.system( 'unzip 427985' )
+	# os.system( 'rm -r 427985' )
+
+
+
+# # # CONVERT THE 1971-2000 DATA TO GTIFF in native CRS
+def convert( fn, out_fn ):
+	with rasterio.open(fn) as rst:
+		meta = rst.meta.copy()
+		arr = rst.read(1).astype(np.float32)
+		# rescale to floats
+		arr[arr != rst.nodata] = arr[arr != rst.nodata] / 100 
+		arr[arr == rst.nodata] = -9999
+
+	meta.update(compress='lzw', driver='GTiff',dtype='float32',nodata=-9999)
+	with rasterio.open( out_fn, 'w', **meta ) as out:
+		out.write( arr.astype(np.float32), 1 )
+
+	return out_fn
+
+def run(x):
+	return convert( *x )
+
+if __name__ == '__main__':
+	import os, glob
+	import rasterio
+	import multiprocessing as mp
+
+	out_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1971-2000/GTiff'
+
+	variables =  ['ppt','tmax','tmean','tmin']
+	args=[]
+	for variable in variables:
+		file_path = '/workspace/Shared/Tech_Projects/DeltaDownscaling/project_data/climatologies/prism_climatology_assessment/1971-2000/extracted/{}'.format(variable)
+
+		files = [ os.path.join(file_path, variable+i) for i in ['01','02','03','04','05','06','07','08','09','10','11','12','anl'] ]
+
+		out_files = [ os.path.join(out_path,  os.path.basename(fn) +'.tif') for fn in files ]
+		args = args + list(zip(files, out_files))
+		
+
+	pool = mp.Pool(32)
+	out = pool.map(run, args)
+	pool.close()
+	pool.join()
+
+
+
+
+
+# # STANDARDIZE BOTH SERIES EPSG:3338, dtypes, rescaling, etc.
+# ppt01.tif
+# ak_ppt_1981_2010_01.tif
+
+# naming conventions
+older = variable+month+'.tif'
+newer = 'ak_'+variable+'_1981_2010_'+month+'.tif'
+
+
+
+
+
