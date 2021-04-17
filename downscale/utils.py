@@ -178,9 +178,11 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 	method = 'linear' -- hardwired currently and this is acceptable for
 			a simple fill.
 	'''
-	from matplotlib.mlab import griddata
+	#from matplotlib.mlab import griddata
+	from scipy.interpolate import griddata # trying this for newer version of MPL
 	xi, yi = grid
-	zi = griddata( x, y, z, xi, yi, interp=method )
+	# zi = griddata( x, y, z, xi, yi, method=method )
+	zi = griddata( (x, y), z, grid, method=method )
 	return zi.astype( output_dtype )
 
 def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
@@ -193,7 +195,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
 	'''	
 	import rasterio
-	from rasterio.warp import reproject, RESAMPLING
+	from rasterio.warp import reproject, Resampling
 
 	# resampling = {'average':RESAMPLING.average,
 	# 			'cubic':RESAMPLING.cubic,
@@ -206,7 +208,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	# 			'nearest':RESAMPLING.nearest }
 
 	# if we are missing some of these methods in the gdal version.
-	resampling = RESAMPLING.__members__
+	resampling = Resampling.__members__
 	
 	base = rasterio.open( base )
 	baseline_arr = base.read( 1 )
@@ -215,7 +217,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	output_arr = np.empty_like( baseline_arr )
 	
 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+			dst_transform=baseline_meta['transform'], dst_crs=baseline_meta['crs'],\
 			dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 	return output_arr
 
@@ -252,8 +254,10 @@ def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
 	# set up output file metadata.
 	meta = base.meta
 	meta.update( compress='lzw' )
-	if 'transform' in meta.keys():
-		meta.pop( 'transform' )
+	# not sure why we would remove the transform?
+	# going to try with this commented out
+	#if 'transform' in meta.keys():
+	#	meta.pop( 'transform' )
 
 	# write out the anomalies
 	if anom == True:

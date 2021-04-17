@@ -7,3 +7,4 @@ scipy
 netCDF4
 scikit-image
 geopandas
+matplotlib==3.4.1
