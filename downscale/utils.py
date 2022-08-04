@@ -148,22 +148,7 @@ def padded_bounds( rst, npixels, crs ):
 	resolution = rst.res[0]
 	new_bounds = [ bound+(expand*resolution) for bound, expand in zip( rst.bounds, npixels ) ]
 	return new_bounds
-# def xyz_to_grid( x, y, z, grid, method='cubic', output_dtype=np.float32, *args, **kwargs ):
-# 	'''
-# 	interpolate points to a grid. simple wrapper around
-# 	scipy.interpolate.griddata. Points and grid must be
-# 	in the same coordinate system
-# 	x = 1-D np.array of x coordinates / x,y,z must be same length
-# 	y = 1-D np.array of y coordinates / x,y,z must be same length
-# 	z = 1-D np.array of z coordinates / x,y,z must be same length
-# 	grid = tuple of meshgrid as made using numpy.meshgrid()
-# 			order (xi, yi)
-# 	method = one of 'cubic', 'near', 'linear'
-# 	'''
-# 	from scipy.interpolate import griddata
-# 	zi = griddata( (x, y), z, grid, method=method )
-# 	zi = np.flipud( zi ).astype( output_dtype )
-# 	return zi
+
 def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args, **kwargs ):
 	'''
 	interpolate points to a grid. simple wrapper around
@@ -178,9 +163,11 @@ def xyz_to_grid( x, y, z, grid, method='linear', output_dtype=np.float32, *args,
 	method = 'linear' -- hardwired currently and this is acceptable for
 			a simple fill.
 	'''
-	from matplotlib.mlab import griddata
+	# This was verified with np.isclose to give equivalent results
+    #  to matplotlib.mlab.griddata 
+	from scipy.interpolate import griddata
 	xi, yi = grid
-	zi = griddata( x, y, z, xi, yi, interp=method )
+	zi = griddata( (x, y), z, grid, method=method )
 	return zi.astype( output_dtype )
 
 def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resample_type='bilinear',*args, **kwargs ):
@@ -193,7 +180,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	resample_type = [str] one of ['bilinear', 'count', 'nearest', 'mode', 'cubic', 'index', 'average', 'lanczos', 'cubic_spline']
 	'''	
 	import rasterio
-	from rasterio.warp import reproject, RESAMPLING
+	from rasterio.warp import reproject, Resampling
 
 	# resampling = {'average':RESAMPLING.average,
 	# 			'cubic':RESAMPLING.cubic,
@@ -206,7 +193,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	# 			'nearest':RESAMPLING.nearest }
 
 	# if we are missing some of these methods in the gdal version.
-	resampling = RESAMPLING.__members__
+	resampling = Resampling.__members__
 	
 	base = rasterio.open( base )
 	baseline_arr = base.read( 1 )
@@ -215,7 +202,7 @@ def interp_ds( anom, base, src_crs, src_nodata, dst_nodata, src_transform, resam
 	output_arr = np.empty_like( baseline_arr )
 	
 	reproject( anom, output_arr, src_transform=src_transform, src_crs=src_crs, src_nodata=src_nodata, \
-			dst_transform=baseline_meta['affine'], dst_crs=baseline_meta['crs'],\
+			dst_transform=baseline_meta['transform'], dst_crs=baseline_meta['crs'],\
 			dst_nodata=dst_nodata, resampling=resampling[ resample_type ], SOURCE_EXTRA=1000 )
 	return output_arr
 
@@ -252,8 +239,10 @@ def _run_ds( d, f, operation_switch, anom=False, mask_value=0 ):
 	# set up output file metadata.
 	meta = base.meta
 	meta.update( compress='lzw' )
-	if 'transform' in meta.keys():
-		meta.pop( 'transform' )
+	# not sure why we would remove the transform?
+	# going to try with this commented out
+	#if 'transform' in meta.keys():
+	#	meta.pop( 'transform' )
 
 	# write out the anomalies
 	if anom == True:

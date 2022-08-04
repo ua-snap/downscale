@@ -62,3 +62,6 @@ target/
 # this one may be a gotcha
 *._*
 
+# jupyter notebook files
+.ipynb_checkpoints
+
